@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_0_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_0_1  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_0_0]</title>
+<title>OMS Chippy [Beta V1_0_1]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -200,7 +200,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_0_0]</span>
+      <span class="ver">[Beta&nbsp;V1_0_1]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -216,7 +216,7 @@
       <span id="recTime" class="rectime rave-ctl"></span>
       <button class="bgtoggle rave-ctl" id="aspectBtn" title="orientation — 16:9 (YouTube) / 9:16 (Shorts, TikTok, Reels)"><span class="ori-h"></span><span class="ori-v"></span></button>
       <button class="bgtoggle rave-ctl" id="recBtn" title="record the RAVE ON visuals — click again to stop &amp; download">⏺</button>
-      <button class="bgtoggle on" id="bgBtn" title="continuous play — keep the sound going when you switch browser tabs">∞</button>
+      <button class="bgtoggle on" id="bgBtn" title="persistence — keeps playing when you switch to another tab">∞</button>
     </div>
   </div>
 
@@ -295,7 +295,7 @@
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_0_0</div>
+      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_0_1</div>
       <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
       <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
 
@@ -702,7 +702,7 @@
       bgNode.connect(z); z.connect(actx.destination);
       bgNode.port.onmessage=()=>{ if(bgPumpEnabled && playing && document.hidden){ if(actx.state==="suspended") actx.resume(); tick(); } };
       URL.revokeObjectURL(url);
-    }).catch(()=>{ /* if it fails, background play just won't work; foreground unaffected */ });
+    }).catch(()=>{ /* if it fails, persistence just won't work; foreground unaffected */ });
     // backup pump — a plain interval. Chrome throttles this hard in background tabs
     // (~1/min), but it costs nothing and covers cases where the worklet message is delayed.
     setInterval(()=>{ if(bgPumpEnabled && playing && document.hidden){ if(actx.state==="suspended") actx.resume(); tick(); } }, 100);
@@ -1756,7 +1756,7 @@
     bgPumpEnabled=!bgPumpEnabled;
     bgBtn.textContent = "∞";
     bgBtn.classList.toggle("on", bgPumpEnabled);
-    setMsg(bgPumpEnabled ? "Background play on — audio keeps going in other tabs" : "Background play off", bgPumpEnabled?GRN:CY);
+    setMsg(bgPumpEnabled ? "Persistence on — keeps playing when you switch tabs" : "Persistence off", bgPumpEnabled?GRN:CY);
   };
 
   // tabs
