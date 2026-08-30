@@ -1,6 +1,6 @@
-# OMS Chippy [Beta V1_3_0] — USER GUIDE
+# OMS Chippy [Beta V1_4_0] — USER GUIDE
 
-**Version:** Beta V1_3_0
+**Version:** Beta V1_4_0
 **Date:** August 29, 2026
 **License:** GPL-3.0 (software)
 

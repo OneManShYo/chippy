@@ -1,6 +1,24 @@
 # OMS Chippy — Changelog
 
-## V1_3_0 — Performance & Recording Release (2026-08-29)
+## V1_4_0 — Glover Light-Show, FX Voice & Party Grid Release (2026-08-30)
+
+### Added
+- **GLOVER tab** (renamed from RAVE ON) — a full-screen light-show with six selectable "tricks", each its own distinct visual behind the always-present Chippy family: **Tracers** (comets with long bleeding trails), **Liquid** (flowing water wave-bands), **Tutting** (full-canvas LED grid + a line hopping in 90° angles), **Strobe** (radial sun-rays + randomly flashing beams), **Orbits** (spirograph light-painting filling the canvas), **Bloom** (an LED wall of color panels blooming Simon-style).
+- **Voice module 8 = FX** — a dedicated effects voice with 7 types: Riser Up/Down (smooth filter sweeps), Glitch Up/Down (chopped d-d-d stutter), Impact (short stab), Sweep (broad riser), and **Ship Horn** (detuned-saw foghorn "BWAAAM" pitched to the track root). All white-noise/synth, generated, no audio files.
+- **Per-voice audio-effect (reverb) button** on each module's second row (concentric-circles icon) — routes that voice through a generated-impulse reverb for a tail/space. Distinct from the FX voice.
+- **Random title maker** — generated loop names from classed word banks (retired rave brands + DJ-hero monikers he contributed, plus connective flavor), e.g. "Coxy's Warehouse", "Phat Caffeine 47". Genre field added to the INFO box.
+
+### Changed
+- **The Party Grid** — the automation constraint matrix formalized: Selecta owns bar-length (allowed-set + change rate), Genre owns tempo (valid BPM range per genre, the hard clamp), Time Slot owns level/density/pace. Selecta renamed; Warehouse+Rave merged; runaway-BPM bug fixed. Party opens at 128 bars and syncs the UI live as it evolves.
+- **Controls section modularized** — Transport/Generate/Feel/Party wrapped in Eurorack-style boxes; matrix lane labels wrapped as a module; section-header spacing normalized so all rows match.
+- Transport reordered (play, randomize, next, kill) and the next button restyled to a clean SVG glyph.
+
+### Fixed
+- Master kill switch mutes the mix without stopping the transport. FX voice level renormalized to a usable range. Various matrix/header padding and alignment cleanups.
+
+---
+
+## V1_4_0 — Performance & Recording Release (2026-08-29)
 
 Minor-version roll: closes out the V1.0 iteration line (V1.0.1 → V1.0.31) as a substantial feature release. Keyboard control, recording, and the transport readout were all overhauled.
 

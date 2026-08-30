@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_3_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_4_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_3_0]</title>
+<title>OMS Chippy [Beta V1_4_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -93,6 +93,10 @@
 
   /* RAVE ON */
   #raveWrap { position:relative; width:100%; aspect-ratio:16/9; max-height:78vh; background:#000; border:1px solid #2a2a2a; border-radius:6px; overflow:hidden; }
+  #gloverTricks { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .glovbtn { flex:1; min-width:80px; padding:9px 8px; border-radius:5px; cursor:pointer; background:#0a0a0a; border:1px solid #2a2a2a; color:#888; font-family:'Courier New',monospace; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; transition:all .12s; }
+  .glovbtn:hover { color:#ccc; border-color:#444; }
+  .glovbtn.active { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.10); box-shadow:0 0 8px rgba(0,212,255,.25); }
   #raveWrap.vertical { aspect-ratio:9/16; max-height:82vh; width:auto; margin:0 auto; }
   #rave { display:block; width:100%; height:100%; }
   .tab {
@@ -104,7 +108,7 @@
   .panel { display:none; }
   .panel.active { display:block; }
 
-  .body { padding:14px 18px 4px; }
+  .body { padding:2px 18px 4px; }
 
   /* summary */
   .summary { background:#0a0a0a; border:1px solid #2a2a2a; border-radius:6px; padding:10px 12px; margin-bottom:10px; }
@@ -131,7 +135,9 @@
   .btn.mag { border-color:#ff006e; color:#ff006e; }
   .btn.mag:hover { background:rgba(255,0,110,.1); }
   .btn:disabled { opacity:.4; cursor:default; }
-  .time { font-size:12px; color:#00d4ff; font-family:'Courier New',monospace; min-width:104px; }
+  .time { font-size:11px; color:#00d4ff; font-family:'Courier New',monospace; min-width:104px;
+    background:#0a0a0a; border:1px solid #2a2a2a; border-radius:4px; padding:0 9px;
+    margin-right:2px; text-align:right; height:20px; line-height:20px; box-sizing:border-box; }
   .loadhint { font-size:11px; color:#666; font-family:'Courier New',monospace; margin-left:auto; }
 
   /* control-strip controls — consistent baseline + spacing */
@@ -220,10 +226,16 @@
   .devmod .dm-rand.flash { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.15); }
   .devmod .dm-kill:hover { color:#ff5a7a; border-color:#ff5a7a; }
   .devmod .dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
+  .devmod .dm-fx:hover { color:#00e08a; border-color:#00e08a; }
+  .devmod .dm-fx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
   .btn.dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   .devmod .dm-btn:focus { outline:none; box-shadow:0 0 0 2px rgba(0,212,255,.6); }
 
-  .sec-hdr { display:flex; align-items:center; gap:8px; margin:11px 0 6px; }
+  .sec-hdr { display:flex; align-items:center; gap:8px; margin:11px 0 6px; min-height:22px; }
+  /* the MATRIX header holds the taller counter box; trim its vertical margin so the row spacing
+     matches the other section headers (the box height was expanding the gaps above/below). */
+  /* MATRIX header uses the standard section-header margin (same as CONTROLS/VOICES) so all three
+     rows are the same height. The counter box is sized to fit within that row, vertically centered. */
   .sec-hdr .bar { width:3px; height:13px; border-radius:1px; }
   .sec-hdr .txt { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; font-family:'Courier New',monospace; }
   .sec-hdr .rule { flex:1; height:1px; background:#262626; }
@@ -240,7 +252,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_3_0]</span>
+      <span class="ver">[Beta&nbsp;V1_4_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -250,12 +262,12 @@
 
   <div class="tabbar">
     <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop auto-DJ set">TRACKS</div>
-    <div class="tab" id="raveTab" data-panel="rave" title="Full-screen light show — Chippy raves to whatever's playing">RAVE ON</div>
+    <div class="tab" id="raveTab" data-panel="rave" title="Glover — Chippy gives you a full-screen light show. Pick a trick below.">GLOVER</div>
     <div class="tab" id="aboutTab" data-panel="about" title="What Chippy is, who made it, and the license">ABOUT</div>
     <div class="bar-right">
       <button class="bgtoggle on" id="bgBtn" title="persistence — keeps playing when you switch to another tab">∞</button>
       <button class="bgtoggle" id="aspectBtn" title="orientation — 16:9 (YouTube) / 9:16 (Shorts, TikTok, Reels)"><span class="ori-h"></span><span class="ori-v"></span></button>
-      <button class="bgtoggle" id="recBtn" title="record the RAVE ON visuals — click again to stop &amp; download">⏺</button>
+      <button class="bgtoggle" id="recBtn" title="record the Glover visuals — click again to stop &amp; download">⏺</button>
       <span id="recTime" class="rectime">00:00</span>
     </div>
   </div>
@@ -268,6 +280,7 @@
       <div style="flex:1;min-width:0;padding:12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
         <div class="summary-title" id="patName">Chippy Loop 01</div>
         <div class="summary-grid" style="margin-top:4px;">
+          <span class="k">genre</span><span id="patGenre">House</span>
           <span class="k">source</span><span id="patSrc">generated · House · seed 1337</span>
           <span class="k">key</span><span id="patKey">A minor</span>
           <span class="k">length</span><span id="patLen">4 bars · 16 steps/bar</span>
@@ -328,7 +341,7 @@
     <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">MATRIX</span><span class="rule"></span><span class="time mono" id="timeDisp">bar 1 · beat 1</span></div>
+    <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">MATRIX</span><span class="rule"></span><span class="time mono" id="timeDisp">bar 1 · beat 1</span></div>
     <div id="chartWrap" title="MATRIX — the live piano roll. Top strip = whole-loop overview with Chippy; below = the 7 voice lanes scrolling past the playhead."><canvas id="tl"></canvas></div>
 
    </div><!-- /panelGen -->
@@ -337,12 +350,20 @@
     <div id="raveWrap">
       <canvas id="rave"></canvas>
     </div>
+    <div id="gloverTricks">
+      <button class="glovbtn active" data-trick="tracers">Tracers</button>
+      <button class="glovbtn" data-trick="liquid">Liquid</button>
+      <button class="glovbtn" data-trick="tutting">Tutting</button>
+      <button class="glovbtn" data-trick="strobe">Strobe</button>
+      <button class="glovbtn" data-trick="orbits">Orbits</button>
+      <button class="glovbtn" data-trick="bloom">Bloom</button>
+    </div>
    </div><!-- /panelRave -->
 
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_3_0</div>
+      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_4_0</div>
       <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
       <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
 
@@ -428,7 +449,8 @@
     {id:"lead",   name:"Lead",    color:CY,  osc:"pulse12",  on:true,  lvl:0.5, decay:0.18 },
     {id:"synth",  name:"Synth",   color:"#4aa3df", osc:"pulse50", on:true, lvl:0.42, decay:0.30 },
     {id:"accent", name:"Accents", color:YEL, osc:"pulse25",  on:true, lvl:0.4, decay:0.10 },
-    {id:"fills",  name:"Fills",   color:PUR, osc:"noise",    on:true, lvl:0.45, decay:0.08, noiseLo:400, noiseHi:4000 }
+    {id:"fills",  name:"Fills",   color:PUR, osc:"noise",    on:true, lvl:0.45, decay:0.08, noiseLo:400, noiseHi:4000 },
+    {id:"fx",     name:"FX",      color:ORG, osc:"riserUp",  on:true, lvl:0.5, decay:0.5, noiseLo:200, noiseHi:9000 }
   ];
   const V={}; VOICES.forEach(v=>V[v.id]=v);
 
@@ -639,10 +661,12 @@
         for(let s=G-8;s<G;s+=1){ if(R()<0.7) P.fills.push({step:o+s,dur:1,note:null}); }
         P.accent.push({step:o+G-2,dur:2,note:stab(),accent:true});
         P.accent.push({step:o+G-1,dur:1,note:stab(),accent:true});
+        P.fx=P.fx||[]; P.fx.push({step:o+G-16,dur:16,note:null,accent:true});   // long riser into the drop
       } else if(at8){
         // MEDIUM: a short fill on the last beat + one accent stab
         for(let s=G-4;s<G;s+=1){ if(R()<0.6) P.fills.push({step:o+s,dur:1,note:null}); }
         P.accent.push({step:o+G-2,dur:2,note:stab(),accent:true});
+        P.fx=P.fx||[]; if(R()<0.8) P.fx.push({step:o+G-8,dur:8,note:null,accent:true});   // riser
       } else if(at4){
         // SMALL: a light tick fill on the last 2 sixteenths, occasional accent
         if(R()<0.7) P.fills.push({step:o+G-2,dur:1,note:null});
@@ -700,7 +724,8 @@
   // ============================================================
   //  WEB AUDIO SYNTH
   // ============================================================
-  let actx=null, master=null, noiseBuf=null;
+  let actx=null, master=null, noiseBuf=null, pinkBuf=null, brownBuf=null, reverbBus=null, reverbWet=null;
+  let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
   const pulseWaves={};   // duty -> PeriodicWave cache
 
   function makePulseWave(duty){
@@ -714,6 +739,16 @@
     if(actx) return;
     actx=new (window.AudioContext||window.webkitAudioContext)();
     master=actx.createGain(); master.gain.value=0.5; master.connect(actx.destination);
+    curDest=master;
+    // REVERB BUS — a convolver with a GENERATED impulse response (decaying noise, no file needed).
+    // Per-voice FX sends route here for a reverb-like tail/space. reverbSend feeds the wet signal.
+    reverbBus=actx.createConvolver();
+    { const len=actx.sampleRate*2.2, ir=actx.createBuffer(2, len, actx.sampleRate);
+      for(let ch=0; ch<2; ch++){ const d=ir.getChannelData(ch);
+        for(let i=0;i<len;i++){ d[i]=(Math.random()*2-1)*Math.pow(1-i/len, 2.6); } }
+      reverbBus.buffer=ir; }
+    reverbWet=actx.createGain(); reverbWet.gain.value=0.9;
+    reverbBus.connect(reverbWet); reverbWet.connect(master);
     pulseWaves[0.125]=makePulseWave(0.125);
     pulseWaves[0.25] =makePulseWave(0.25);
     pulseWaves[0.5]  =makePulseWave(0.5);
@@ -721,6 +756,16 @@
     noiseBuf=actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
     const d=noiseBuf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    // pink noise (-3dB/oct, Voss-ish via a simple IIR) and brown noise (-6dB/oct, integrated white)
+    pinkBuf=actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const pd=pinkBuf.getChannelData(0);
+    { let b0=0,b1=0,b2=0; for(let i=0;i<pd.length;i++){ const w=Math.random()*2-1;
+        b0=0.99765*b0+w*0.0990460; b1=0.96300*b1+w*0.2965164; b2=0.57000*b2+w*1.0526913;
+        pd[i]=(b0+b1+b2+w*0.1848)*0.16; } }
+    brownBuf=actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const bd=brownBuf.getChannelData(0);
+    { let last=0; for(let i=0;i<bd.length;i++){ const w=Math.random()*2-1;
+        last=(last+0.02*w)/1.02; bd[i]=last*3.5; } }
     setupBgPump();
   }
 
@@ -761,7 +806,7 @@
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
-    o.connect(g); g.connect(master); o.start(when); o.stop(when+dur+0.02);
+    o.connect(g); g.connect(curDest); o.start(when); o.stop(when+dur+0.02);
   }
   function playTri(hz, dur, level, when){
     const o=actx.createOscillator(), g=actx.createGain();
@@ -769,7 +814,7 @@
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
-    o.connect(g); g.connect(master); o.start(when); o.stop(when+dur+0.02);
+    o.connect(g); g.connect(curDest); o.start(when); o.stop(when+dur+0.02);
   }
   function playNoise(lo, hi, dur, level, when){
     const src=actx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
@@ -779,10 +824,92 @@
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.002);
     g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
-    src.connect(bp); bp.connect(g); g.connect(master);
+    src.connect(bp); bp.connect(g); g.connect(curDest);
     src.start(when); src.stop(when+dur+0.02);
   }
-  // proper EDM/chip kick: sine body with a fast downward pitch sweep + click
+  // FX SWEEP — a noise riser/faller. Takes a noise buffer (white/pink/brown). UP = start silent+low,
+  // filter sweeps up, volume swells in (tension into a drop). DOWN = start bright+high, sweep down,
+  // fade out. Both START SUPER QUIET and BUILD — the defining riser characteristic.
+  // FX SWEEP — white noise through a resonant LOW-PASS whose cutoff sweeps (the pro riser technique).
+  // Low-pass (not bandpass) = you hear the full body under the cutoff the whole time, swelling brighter
+  // as it opens. UP = cutoff climbs low→high (riser). DOWN = high→low (downlifter). impact = fast slam.
+  function playSweep(lo, hi, dur, level, when, up, impact){
+    const src=actx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    const lp=actx.createBiquadFilter(); lp.type="lowpass";
+    lp.Q.value=impact ? 2 : 6;                     // resonance bump = the sharp whoosh
+    const f0 = up ? lo : hi, f1 = up ? hi : lo;
+    // accelerating cutoff curve — hangs then snaps (t^4 ease), the impact feel
+    const N=48, curve=new Float32Array(N);
+    for(let i=0;i<N;i++){ const x=i/(N-1); curve[i]=Math.max(40, f0+(f1-f0)*Math.pow(x,4)); }
+    lp.frequency.setValueAtTime(f0, when);
+    lp.frequency.setValueCurveAtTime(curve, when, dur);
+    const g=actx.createGain();
+    if(impact){
+      // impact: instant loud, short, punchy body
+      g.gain.setValueAtTime(level, when);
+      g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+    } else if(up){
+      // riser up: swell from quiet, peak at the snap, quick cut before the drop
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002,level), when+dur*0.95);
+      g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+    } else {
+      // down: swell in, hold, tail falls away
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002,level), when+dur*0.30);
+      g.gain.setValueAtTime(Math.max(0.0002,level), when+dur*0.7);
+      g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+    }
+    src.connect(lp); lp.connect(g); g.connect(curDest);
+    src.start(when); src.stop(when+dur+0.03);
+  }
+  // GLITCH — noise low-pass sweep like a riser, but the gain is CHOPPED into rapid on/off bursts
+  // (the "d-d-d-d-d" stutter). Cutoff climbs (up) or drops (down) across the audible band.
+  function playGlitch(lo, hi, dur, level, when, up){
+    const src=actx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.Q.value=7;
+    const f0=up?lo:hi, f1=up?hi:lo;
+    lp.frequency.setValueAtTime(f0, when);
+    lp.frequency.linearRampToValueAtTime(f1, when+dur);
+    const g=actx.createGain(); g.gain.setValueAtTime(0.0001, when);
+    // chop into fast gated bursts that accelerate slightly (tighter stutter toward the end)
+    const steps=Math.max(6, Math.round(dur/0.045));
+    for(let i=0;i<steps;i++){
+      const seg=dur/steps, ts=when+i*seg;
+      const amp=level*(0.6+0.4*(i/steps));                 // grows as it climbs
+      g.gain.setValueAtTime(amp, ts);                      // burst on
+      g.gain.setValueAtTime(amp, ts+seg*0.5);
+      g.gain.exponentialRampToValueAtTime(0.0001, ts+seg*0.9);  // gap
+    }
+    src.connect(lp); lp.connect(g); g.connect(curDest);
+    src.start(when); src.stop(when+dur+0.03);
+  }
+  // SHIP HORN / FOGHORN — the cheesy "BWAAAM". Detuned saw oscillators (thick beating body) pitched
+  // low, through a low-pass, into a soft waveshaper (grungy cut), with a swell-in horn envelope.
+  let _hornShaper=null;
+  function playHorn(hz, dur, level, when){
+    const detunes=[-8, 0, 7, 12];
+    const bus=actx.createGain(); bus.gain.value=1;
+    const lp=actx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1400; lp.Q.value=1.2;
+    if(!_hornShaper){ const n=1024, c=new Float32Array(n);
+      for(let i=0;i<n;i++){ const x=i/(n-1)*2-1; c[i]=Math.tanh(x*2.2); } _hornShaper=c; }
+    const shaper=actx.createWaveShaper(); shaper.curve=_hornShaper; shaper.oversample="2x";
+    const g=actx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(level, when+0.10);
+    g.gain.setValueAtTime(level, when+dur*0.65);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+    detunes.forEach(dt=>{
+      const o=actx.createOscillator(); o.type="sawtooth";
+      o.frequency.value=hz; o.detune.value=dt;
+      o.connect(bus); o.start(when); o.stop(when+dur+0.05);
+    });
+    const sub=actx.createOscillator(); sub.type="sine"; sub.frequency.value=hz/2;
+    const subG=actx.createGain(); subG.gain.value=0.6;
+    sub.connect(subG); subG.connect(g);
+    sub.start(when); sub.stop(when+dur+0.05);
+    bus.connect(lp); lp.connect(shaper); shaper.connect(g); g.connect(curDest);
+  }
   // accent = the downbeat "boss kick": louder, longer, deeper — so the 1 always dominates
   // Kick flavors — each is a pitch-dropping tone + a noise transient, tuned differently.
   // f0/fEnd = pitch sweep, drop = sweep time, tail = body length, click = transient amount,
@@ -806,21 +933,45 @@
     o.frequency.exponentialRampToValueAtTime(fEnd, when + (accent?K.drop*1.4:K.drop));
     g.gain.setValueAtTime(Math.max(0.0001,amp), when);
     g.gain.exponentialRampToValueAtTime(0.0001, when+tail);
-    o.connect(g); g.connect(master); o.start(when); o.stop(when+tail+0.05);
+    o.connect(g); g.connect(curDest); o.start(when); o.stop(when+tail+0.05);
     // transient click for punch
     const c=actx.createBufferSource(); c.buffer=noiseBuf; c.loop=true;
     const cf=actx.createBiquadFilter(); cf.type=K.noisy?"bandpass":"highpass"; cf.frequency.value=K.clickHz;
     const cg=actx.createGain(); cg.gain.setValueAtTime((accent?level*1.35:level*0.92)*K.click,when);
     cg.gain.exponentialRampToValueAtTime(0.0001, when+(K.noisy?0.05:0.02));
-    c.connect(cf); cf.connect(cg); cg.connect(master); c.start(when); c.stop(when+0.06);
+    c.connect(cf); cf.connect(cg); cg.connect(curDest); c.start(when); c.stop(when+0.06);
   }
 
   // fire one event's voice at absolute audio time `when`
   function fireVoice(ev, when){
     const v=V[ev.voice]; if(!v.on) return;
     const dur=Math.max(v.decay, ev.dur*0.9);
+    // per-voice AUDIO FX routing: if this voice's reverb is on, send its dry signal to master AND a
+    // wet copy to the reverb bus (tail/space). Else straight to master. curDest is read by playX().
+    if(v.fxRev && reverbBus){
+      const tap=actx.createGain(); tap.gain.value=1;
+      tap.connect(master);            // dry
+      const send=actx.createGain(); send.gain.value=0.6;
+      tap.connect(send); send.connect(reverbBus);   // wet send
+      curDest=tap;
+    } else { curDest=master; }
     // DRUMS lane = dedicated kick synth; the selected kick flavor keeps it an anchor kick
     if(ev.voice==="drums"){ playKick(v.lvl, when, ev.accent, v.kick||"909"); return; }
+    // FX = white-noise effects, ALL in the audible/present band (~300Hz–12k, no sub territory).
+    // What differs is the CHARACTER, not the pitch range:
+    //  Riser = smooth pitch/filter sweep · Glitch = chopped stutter (d-d-d-d) · Impact = short stab.
+    if(v.osc && ["riserUp","riserDn","glitchUp","glitchDn","impact","sweep","horn"].includes(v.osc)){
+      const o=v.osc;
+      const lo=350, hi=11000;                       // shared audible band for all FX
+      const L=v.lvl*0.12;                            // FX level (doubled again for audibility)
+      if(o==="horn"){ playHorn(midiToHz(rootMidi()-12), Math.max(0.8,dur), v.lvl*0.5, when); return; } // low root foghorn
+      if(o==="glitchUp"){ playGlitch(lo, hi, Math.max(0.4,dur), L, when, true); return; }
+      if(o==="glitchDn"){ playGlitch(lo, hi, Math.max(0.4,dur), L, when, false); return; }
+      if(o==="impact"){ playSweep(hi*0.5, lo, Math.min(0.22,dur), L*1.3, when, false, true); return; } // short punchy stab
+      if(o==="riserUp"){ playSweep(lo, hi, Math.max(0.4,dur), L, when, true, false); return; }
+      if(o==="riserDn"){ playSweep(lo, hi, Math.max(0.4,dur), L, when, false, false); return; }
+      playSweep(lo, hi, Math.max(0.4,dur), L, when, true, false); return;   // sweep = broad riser
+    }
     if(v.osc==="noise"){
       // crash = long bright wash; snare/clap = bright short burst; else the voice's own band
       if(ev.crash){ playNoise(3000,12000, 0.5, v.lvl*0.7, when); return; }
@@ -1034,7 +1185,8 @@
     { const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM); }
     const gs=document.getElementById("genreSel"); if(gs) gs.value=genre;
     const ls=document.getElementById("lenSel"); if(ls) ls.value=String(BARS);
-    const pn=document.getElementById("patName"); if(pn) pn.textContent="Party · "+GENRE[genre].name;
+    const pn=document.getElementById("patName"); if(pn) pn.textContent=makeTitle();
+    const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE[genre].name;
     const ps=document.getElementById("patSrc"); if(ps) ps.textContent="party · "+GENRE[genre].name+" · "+BARS+" bars · seed "+pp.seed.toString(16);
     const pk=document.getElementById("patKey"); if(pk) pk.textContent=keyTonic+" minor"+(transpose?(" ("+(transpose>0?"+":"")+transpose+" st)"):"");
     const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar";
@@ -1048,8 +1200,8 @@
   const OVH=34;                 // overview (Chippy) strip height
   const GAP=8;                  // gap between overview and song roll
   const LANEH=26;               // per-lane height
-  const RPAD=6;                 // roll inner top/bottom padding
-  const ROLLH=RPAD*2 + LANEH*7; // song-roll height fits exactly 7 lanes — no dead space
+  const RPAD=8;                 // roll inner top/bottom padding — small even margin, like the voice modules
+  const ROLLH=RPAD*2 + LANEH*8; // song-roll height fits the 8 voice lanes
   const H=OVH+GAP+ROLLH;        // total canvas height
   let W=0;
   const rollTop = () => OVH+GAP;
@@ -1184,15 +1336,29 @@
     }
     ctx.restore();
     // lane labels — drawn last, outside clip, on a dark backing chip
+    // uniform box width = widest label + padding, so all label modules align (not text-sized).
+    ctx.font="9px 'Courier New',monospace";
+    let maxTw=0; VOICES.forEach(v=>{ maxTw=Math.max(maxTw, ctx.measureText(v.name.toUpperCase()).width); });
+    const bw=Math.ceil(maxTw)+12, bh=20;   // taller chips fill the lane → tighter gaps, matches note density
+    // labels stay PINNED to their lane rows (so they correlate with the notes). The whole lane block
+    // is already inset from the matrix frame by RPAD, so the wrapper hugging the chips has room.
+    const chipY = i => top + i*lh + (lh-bh)/2;        // centered in each lane
+    const outX=PAD+5, outW=bw+10;
+    const outY=chipY(0) - 5, outH=(chipY(VOICES.length-1)+bh) - chipY(0) + 10;
+    ctx.fillStyle="rgba(10,10,10,0.85)";
+    rr(outX, outY, outW, outH, 5); ctx.fill();
+    ctx.strokeStyle="#2a2a2a"; ctx.lineWidth=1;
+    rr(outX, outY, outW, outH, 5); ctx.stroke();
+    const bx=outX+5;
     VOICES.forEach((v,i)=>{
-      const y=top+i*lh;
+      const by=chipY(i);
       const label=v.name.toUpperCase();
-      ctx.font="9px 'Courier New',monospace";
-      const tw=ctx.measureText(label).width;
-      ctx.fillStyle="rgba(0,0,0,0.72)";
-      ctx.fillRect(PAD+1, y+1, tw+7, 12);
+      ctx.fillStyle="rgba(20,20,20,0.9)";
+      rr(bx, by, bw, bh, 3); ctx.fill();
+      ctx.strokeStyle="#333"; ctx.lineWidth=1;
+      rr(bx, by, bw, bh, 3); ctx.stroke();
       ctx.fillStyle=v.on? v.color : "#555";
-      ctx.fillText(label, PAD+4, y+10);
+      ctx.fillText(label, bx+5, by+bh/2+3);
     });
   }
   function rr(x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath();
@@ -1382,6 +1548,7 @@
   // ============================================================
   const raveCv=document.getElementById("rave"), rx=raveCv.getContext("2d");
   let raveActive=false, raveW=0, raveH=0;
+  let gloverTrick="tracers";
   let raveVertical=false;   // false = 16:9 (1920×1080), true = 9:16 (1080×1920)
   function resizeRave(){
     // Fixed true-1080p backing store so screen/canvas capture is real YouTube/Shorts resolution.
@@ -1410,35 +1577,84 @@
           crash=env(hit.crash,500), bar=env(hit.bar,160), lead=env(hit.lead,180);
     const cx=raveW/2, cy=raveH/2;
 
-    // background: dark, flashes toward a color on the kick
+    // GLOVER TRICK modifiers — each trick reshapes the same beat-reactive layers.
+    const TK={
+      tracers: { fade:0.10, beams:0, rings:0, dots:0, spin:0, strobe:0, tut:0, tracer:1 }, // comets w/ long bleeding trails
+      liquid:  { fade:0.20, beams:0, rings:0, dots:0, spin:0, strobe:0, tut:0, liqWave:1 }, // flowing water wave-bands
+      tutting: { fade:1, beams:0, rings:0, dots:1.6, spin:0, strobe:0, tut:1 },
+      strobe:  { fade:0.22, beams:1, rings:1, dots:1, spin:0.25, strobe:0, tut:0, beamStrobe:1 }, // background beams flash randomly
+      orbits:  { fade:0.16, beams:0, rings:0, dots:0, spin:0, strobe:0, tut:0, orbit:1 }, // spirograph light-painting, no default bg
+      bloom:   { fade:1, beams:0, rings:0, dots:0, spin:0, strobe:0, tut:0, ledWall:1 } // LED-wall color panels blooming
+    };
+    const tk=TK[gloverTrick]||TK.tracers;
+
+    // background: trails via partial fade
     rx.globalAlpha=1;
-    rx.fillStyle="#050505"; rx.fillRect(0,0,raveW,raveH);
-    if(kick>0.02){
-      rx.globalAlpha=0.10*kick;
+    if(tk.fade>=1){ rx.fillStyle="#050505"; rx.fillRect(0,0,raveW,raveH); }
+    else { rx.globalAlpha=tk.fade; rx.fillStyle="#050505"; rx.fillRect(0,0,raveW,raveH); rx.globalAlpha=1; }
+    const kflash = tk.strobe ? (kick>0.5?0.9:0.06) : 0.10*kick;
+    if(kick>0.02 || tk.strobe){
+      rx.globalAlpha=kflash;
       rx.fillStyle=RAVE_COLORS[Math.floor(bar*RAVE_COLORS.length)%RAVE_COLORS.length];
       rx.fillRect(0,0,raveW,raveH);
       rx.globalAlpha=1;
     }
 
-    // radial light beams sweeping from center, rotating slowly, pulsing on the beat
-    const beams=10;
-    rx.save(); rx.translate(cx,cy); rx.rotate(t*0.25);
+    // BLOOM — an LED wall / quilt of color: a full-canvas grid of rectangles that softly bloom in
+    // and out of color (Simon-says style). No motion — just panels fading up and down, each on its
+    // own slow cycle. Sits behind the Chippy family.
+    if(tk.ledWall){
+      const cols=10, rows=6;
+      const cw=raveW/cols, ch=raveH/rows, gap=Math.max(2, Math.min(cw,ch)*0.06);
+      for(let gy=0; gy<rows; gy++){
+        for(let gx=0; gx<cols; gx++){
+          const i=gx+gy*cols;
+          // each panel blooms on its own phase/speed; energy lifts the overall brightness a touch
+          const phase = i*0.9;
+          const spd = 0.5 + (i%5)*0.12;
+          const bloom = (Math.sin(t*spd + phase)*0.5+0.5);        // 0..1 fade in/out
+          const alpha = 0.05 + bloom*bloom*(0.5 + 0.3*lead);      // eased bloom, gentle
+          const col = RAVE_COLORS[(i + Math.floor(t*0.4)) % RAVE_COLORS.length];
+          rx.globalAlpha = alpha;
+          rx.fillStyle = col;
+          rx.fillRect(gx*cw+gap, gy*ch+gap, cw-gap*2, ch-gap*2);
+        }
+      }
+      rx.globalAlpha=1;
+    }
+
+    // radial light beams
+    const beams=Math.round(10*tk.beams);
+    if(beams>0){
+    rx.save(); rx.translate(cx,cy); rx.rotate(t*tk.spin);
     for(let i=0;i<beams;i++){
-      const a=(i/beams)*Math.PI*2;
-      const len=Math.max(raveW,raveH)*(0.55+0.35*kick);
+      // STROBE: each beam flashes on/off independently at a rapid random rate — not synced, just
+      // a chaotic scatter of flashing rays.
+      if(tk.beamStrobe){
+        const flick = Math.sin(t*22*(1+i*0.13) + i*3.7);   // per-beam fast oscillator, different rate each
+        if(flick < 0.2) continue;                          // that beam is dark this instant
+      }
+      // LIQUID: each beam's angle sways with a smooth sine wave (phase-offset per beam so the whole
+      // fan ripples like water), and length gently undulates — fluid flow, not sharp beat-pulse.
+      const sway = tk.liquid ? Math.sin(t*1.1 + i*0.7)*0.22 : 0;
+      const undulate = tk.liquid ? (0.85 + 0.25*Math.sin(t*0.9 + i*0.5)) : 1;
+      const a=(i/beams)*Math.PI*2 + sway;
+      const len=Math.max(raveW,raveH)*(0.55+0.35*kick)*undulate;
       const col=RAVE_COLORS[(i+Math.floor(bar*3))%RAVE_COLORS.length];
       const g=rx.createLinearGradient(0,0,Math.cos(a)*len,Math.sin(a)*len);
       g.addColorStop(0, hexA(col, 0.16+0.30*kick));
       g.addColorStop(1, hexA(col, 0));
       rx.fillStyle=g;
       rx.beginPath(); rx.moveTo(0,0);
-      const w=0.10+0.05*bass;
+      // liquid widens the beams a touch and breathes them smoothly for a softer, flowing look
+      const w=(0.10+0.05*bass) * (tk.liquid ? (1.4+0.4*Math.sin(t*1.3+i)) : 1);
       rx.arc(0,0,len, a-w, a+w); rx.closePath(); rx.fill();
     }
     rx.restore();
+    }
 
-    // concentric rings pulsing out on the kick
-    const ringN=4;
+    // concentric rings
+    const ringN=Math.round(4*tk.rings);
     for(let i=0;i<ringN;i++){
       const ph=(t*0.6+i/ringN)%1;
       const rad=ph*Math.max(raveW,raveH)*0.6*(1+0.3*kick);
@@ -1449,20 +1665,148 @@
     }
     rx.globalAlpha=1;
 
-    // scatter of dancing dots reacting to snare/lead
-    const dots=40;
+    // TUTTING — full-canvas grid of the same small blinky LEDs, plus a line that cycles between
+    // grid points in sharp 90° hops (the geometric/boxy tutting feel). Dots keep their size/blink.
+    if(tk.tut){
+      const cell=Math.min(raveW,raveH)/10;                 // same density as before
+      const cols=Math.ceil(raveW/cell)+1, rows=Math.ceil(raveH/cell)+1;
+      // draw the LED grid across the whole canvas
+      for(let gy=0; gy<rows; gy++){
+        for(let gx=0; gx<cols; gx++){
+          const i=gx+gy*cols;
+          const px=gx*cell, py=gy*cell;
+          const sz=2+3*Math.abs(Math.sin(i*3+t*4))+4*snare;   // unchanged dot size + blink
+          rx.fillStyle=RAVE_COLORS[i%RAVE_COLORS.length];
+          rx.globalAlpha=0.5+0.5*lead;
+          rx.fillRect(px-sz, py-sz, sz*2, sz*2);
+        }
+      }
+      // cycling line: hop point-to-point along the grid, only orthogonal steps (right-angle path)
+      const step=Math.floor(t*6);                          // one hop ~6x/sec
+      const pathN=6;                                        // how many points the line connects
+      rx.globalAlpha=0.85; rx.lineWidth=2; rx.lineCap="round";
+      rx.strokeStyle=RAVE_COLORS[step%RAVE_COLORS.length];
+      rx.beginPath();
+      let gx=(step*3)%cols, gy=(step*2)%rows;
+      rx.moveTo(gx*cell, gy*cell);
+      for(let k=0;k<pathN;k++){
+        // alternate horizontal / vertical hops → sharp 90° angles, grid-locked
+        if(k%2===0){ gx=(gx + 1 + (k*2))%cols; } else { gy=(gy + 1 + k)%rows; }
+        rx.lineTo(gx*cell, gy*cell);
+      }
+      rx.stroke();
+      rx.globalAlpha=1;
+    } else {
+    // scatter of dancing dots — non-tutting tricks (unchanged)
+    const dots=Math.round(40*tk.dots);
     for(let i=0;i<dots;i++){
-      const a=i*2.399 + t*0.5;                 // golden-angle spread, slow spin
-      const rr0=(i/dots)*Math.min(raveW,raveH)*0.46*(1+0.10*snare);
+      const a=i*2.399 + t*0.5;
+      const rr0=(i/Math.max(1,dots))*Math.min(raveW,raveH)*0.46*(1+0.10*snare);
       const px=cx+Math.cos(a)*rr0, py=cy+Math.sin(a)*rr0;
-      const sz=2+3*Math.abs(Math.sin(a*3+t*4))+4*snare;
+      const sz=2+3*Math.abs(Math.sin(i*3+t*4))+4*snare;
       rx.fillStyle=RAVE_COLORS[i%RAVE_COLORS.length];
       rx.globalAlpha=0.5+0.5*lead;
       rx.beginPath(); rx.arc(px,py,sz,0,Math.PI*2); rx.fill();
     }
     rx.globalAlpha=1;
+    }
 
-    // Papa Chippy's kids — colored, half-size, orbiting and bouncing to the beat
+    // LIQUID — flowing water: layered horizontal sine-wave ribbons drift and undulate across the
+    // whole canvas like light rippling on water / aurora waves. Smooth and continuous (no rays).
+    // Sits BEHIND the Chippy family.
+    if(tk.liqWave){
+      const bands=5;
+      for(let b=0;b<bands;b++){
+        const baseY = raveH*(0.18+0.16*b);
+        const amp = raveH*(0.05+0.03*b)*(1+0.5*bass);       // wave height breathes with bass
+        const speed = 0.5+0.25*b;
+        const col = RAVE_COLORS[(b+Math.floor(bar*2))%RAVE_COLORS.length];
+        rx.beginPath();
+        rx.moveTo(0, baseY);
+        for(let x=0;x<=raveW;x+=14){
+          const y = baseY
+            + Math.sin(x*0.006 + t*speed) * amp
+            + Math.sin(x*0.013 - t*speed*0.7) * amp*0.5;   // two waves layered = fluid, not a clean sine
+          rx.lineTo(x, y);
+        }
+        rx.lineTo(raveW, raveH); rx.lineTo(0, raveH); rx.closePath();
+        const g=rx.createLinearGradient(0, baseY-amp, 0, raveH);
+        g.addColorStop(0, hexA(col, 0.22+0.15*lead));
+        g.addColorStop(1, hexA(col, 0.02));
+        rx.fillStyle=g; rx.fill();
+      }
+    }
+
+    // ORBITS — spirograph light-painting: a few bright points whirl on compound circular paths
+    // (a small circle rolling around a big one → rose/petal loops). Low frame-fade leaves trails,
+    // so the points smear into continuous glowing geometric patterns, like a whirled LED orbit.
+    // Sits BEHIND the Chippy family (drawn before them); replaces the default beams/rings bg.
+    if(tk.orbit){
+      const md0=Math.min(raveW,raveH);
+      const maxD=Math.max(raveW,raveH);
+      // 6 spinners, each with its own character: [bigR-frac, rollR-frac, petals, speed, dir, phase]
+      const SP=[
+        [0.42, 0.16, 3,  2.4,  1, 0.0],   // big edge-roamer
+        [0.55, 0.20, 5,  1.9, -1, 1.1],   // big edge-roamer, other way
+        [0.34, 0.13, 4,  3.0,  1, 2.3],   // mid sweep
+        [0.10, 0.09, 5,  4.2, -1, 0.6],   // small center-spinner, fast
+        [0.14, 0.11, 7,  3.4,  1, 3.0],   // small center-spinner, petally
+        [0.06, 0.07, 3,  5.0, -1, 1.7]    // tight center whirl
+      ];
+      for(let s=0;s<SP.length;s++){
+        const cfg=SP[s];
+        const R=maxD*cfg[0]*(1+0.12*bass);
+        const r=md0*cfg[1];
+        const ratio=cfg[2];
+        const speed=(cfg[3]+1.2*kick)*cfg[4];       // dir baked into speed sign
+        const ph=cfg[5];
+        const trailN=26;
+        for(let j=0;j<trailN;j++){
+          const tt=t*speed + ph - j*0.045*cfg[4];
+          const px=cx + Math.cos(tt)*R + Math.cos(tt*ratio)*r;
+          const py=cy + Math.sin(tt)*R + Math.sin(tt*ratio)*r;
+          const sz=2.4 + 2.6*(1 - j/trailN);
+          rx.fillStyle=RAVE_COLORS[(s+Math.floor(bar*3))%RAVE_COLORS.length];
+          rx.globalAlpha=(1 - j/trailN)*(0.5+0.5*lead);
+          rx.beginPath(); rx.arc(px,py,sz,0,Math.PI*2); rx.fill();
+        }
+      }
+      rx.globalAlpha=1;
+    }
+
+    // TRACERS — comets: bright points streak on big sweeping curved paths across the whole canvas,
+    // each dragging a long bleeding trail (after-image). Very low frame-fade holds the smear.
+    if(tk.tracer){
+      const maxD=Math.max(raveW,raveH);
+      // each comet: [pathRadiusX-frac, pathRadiusY-frac, speed, dir, phase, ratio]
+      const COM=[
+        [0.46, 0.40, 0.6,  1, 0.0, 0.7],
+        [0.52, 0.30, 0.85,-1, 1.7, 1.3],
+        [0.38, 0.46, 0.5,  1, 3.1, 0.4],
+        [0.50, 0.44, 0.72,-1, 4.6, 1.1],
+        [0.30, 0.34, 1.0,  1, 2.2, 1.8]
+      ];
+      const trailN=40;                                  // long trail = the bleed
+      for(let c=0;c<COM.length;c++){
+        const m=COM[c];
+        const Rx=maxD*m[0], Ry=maxD*m[1];
+        const sp=(m[2]+0.5*kick)*m[3];
+        for(let j=0;j<trailN;j++){
+          const tt=t*sp + m[4] - j*0.03*m[3];
+          // lissajous-ish sweeping path so trails curve and cross
+          const px=cx + Math.sin(tt)*Rx + Math.sin(tt*m[5])*Rx*0.18;
+          const py=cy + Math.cos(tt*1.03)*Ry + Math.cos(tt*m[5])*Ry*0.18;
+          const head=1 - j/trailN;                      // 1 at the head, 0 at the tail
+          const sz=1.2 + 5.5*head;                      // fat bright head, thin faint tail
+          rx.fillStyle=RAVE_COLORS[(c+Math.floor(bar*3))%RAVE_COLORS.length];
+          rx.globalAlpha=head*head*(0.55+0.45*lead);    // trail bleeds/fades quadratically
+          rx.beginPath(); rx.arc(px,py,sz,0,Math.PI*2); rx.fill();
+        }
+      }
+      rx.globalAlpha=1;
+    }
+
+    // Papa Chippy family — always present, unchanged across all tricks.
     const md=Math.min(raveW,raveH);
     RAVE_KIDS.forEach((k,i)=>{
       const a=k.ph + t*k.sp;
@@ -1473,9 +1817,11 @@
       drawChippyAt(rx, kx, ky, kr, bar, k.col);
     });
 
-    // Big Papa Chippy raving in the center — reuse the face, scaled up, bouncing on the kick
-    const bounce=1+0.10*kick+0.05*bass;
-    drawChippyAt(rx, cx, cy, md*0.16*bounce, bar);
+    // Big Papa Chippy raving in the center.
+    {
+      const bounce=1+0.10*kick+0.05*bass;
+      drawChippyAt(rx, cx, cy, md*0.16*bounce, bar);
+    }
 
     // crash = white flash burst
     if(crash>0.4){
@@ -1543,7 +1889,12 @@
   // ============================================================
   //  VOICE STRIP UI
   // ============================================================
-  const OSC_OPTS=[["pulse12","Pulse 12%"],["pulse25","Pulse 25%"],["pulse50","Pulse 50%"],["triangle","Triangle"],["noise","Noise"]];
+  const OSC_OPTS=[["pulse12","Pulse 12%"],["pulse25","Pulse 25%"],["pulse50","Pulse 50%"],["triangle","Triangle"],["noise","Noise"],["sweep","Sweep FX"]];
+  // FX = noise sweeps: 3 noise colors x 2 directions. Uppers start silent+low and sweep UP (tension
+  // into the drop); downers start bright+high and sweep DOWN (release/fall). All swell in from quiet.
+  // FX = white-noise + LOW-PASS sweep (with resonance). The type sets the frequency BAND (per the
+  // EDM FX spectrum spec): Riser = high/air (tension), Glitch = mid (texture), Impact = sub (weight).
+  const FX_OPTS=[["riserUp","Riser Up"],["riserDn","Riser Down"],["glitchUp","Glitch Up"],["glitchDn","Glitch Down"],["impact","Impact"],["sweep","Sweep"],["horn","Ship Horn"]];
   const KICK_OPTS=[["909","909 Kick"],["808","808 Kick"],["punch","Punch Kick"],["click","Click Kick"],["noise","Noise Kick"]];
   const devStrip=document.getElementById("devStrip");
   function buildStrip(){
@@ -1564,7 +1915,8 @@
       d.title=(DESC[v.id]||v.name)+"  ·  click to mute · scroll/drag the level";
       // drums = kick-flavor selector (stays a kick); every other voice = oscillator selector
       const isKick=(v.id==="drums");
-      const opts=isKick?KICK_OPTS:OSC_OPTS;
+      const isFx=(v.id==="fx");
+      const opts=isKick?KICK_OPTS:(isFx?FX_OPTS:OSC_OPTS);
       const cur=isKick?(v.kick||"909"):v.osc;
       d.innerHTML=
         '<div class="dm-row">'+
@@ -1576,12 +1928,18 @@
             '<g transform="rotate(-18 9 9)" opacity="0.45"><rect x="3.5" y="2.5" width="12" height="12" rx="2.4"/><circle cx="7" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1" fill="currentColor" stroke="none"/></g>'+
             '<g><rect x="11" y="9" width="12" height="12" rx="2.4" fill="#151515"/><rect x="11" y="9" width="12" height="12" rx="2.4"/><circle cx="14.4" cy="12.4" r="1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="12.4" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="14.4" cy="17.6" r="1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="17.6" r="1" fill="currentColor" stroke="none"/></g>'+
           '</svg></button>'+
+          '<button class="dm-btn dm-fx" data-fx="'+v.id+'" title="audio effect \u2014 adds a reverb-like tail/space to this voice"><svg viewBox="0 0 24 24" width="18" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button>'+
           '<button class="dm-btn dm-kill" data-mute="'+v.id+'" title="kill switch \u2014 silence this module">\u23fb</button>'+
         '</div>';
       devStrip.appendChild(d);
       const lvlSpan=d.querySelector("#lvl-"+v.id);
       const killBtn=d.querySelector('[data-mute="'+v.id+'"]');
       const randBtn=d.querySelector('[data-rand="'+v.id+'"]');
+      const fxBtn=d.querySelector('[data-fx="'+v.id+'"]');
+      fxBtn.classList.toggle("fxon", !!v.fxRev);
+      fxBtn.onclick=(e)=>{ e.stopPropagation(); v.fxRev=!v.fxRev;
+        fxBtn.classList.toggle("fxon", !!v.fxRev);
+        setMsg(v.name+" FX "+(v.fxRev?"on":"off"), v.color); };
       const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
         lvlSpan.style.color=v.on?v.color:"#555";
         killBtn.classList.toggle("killed",!v.on);   // solid red when killed
@@ -1623,11 +1981,36 @@
     transpose = [ -5,-3,0,0,2,3,5,7 ][Math.floor(mkRnd(seed)()*8)];
     pattern=buildPattern(seed);
     rebuildEvents();
-    document.getElementById("patName").textContent=GENRE[genre].name+" Loop "+String(genN+1).padStart(2,"0");
+    document.getElementById("patName").textContent=makeTitle();
+    document.getElementById("patGenre").textContent=GENRE[genre].name;
     document.getElementById("patSrc").textContent="generated · "+GENRE[genre].name+" · seed "+seed.toString(16);
     document.getElementById("patKey").textContent=keyTonic+" minor"+(transpose?(" ("+(transpose>0?"+":"")+transpose+" st)"):"");
     setMsg("Generated "+GENRE[genre].name+" roll", MAG);
     draw();
+  }
+
+  // ---- RANDOM TITLE MAKER ----------------------------------------------------
+  // ─── TITLE WORD CLASSES — provenance is explicit. Only add to a class what belongs in it. ───
+  //
+  // CONTRIBUTED BY WES (verbatim — do not pad these with invented words):
+  //   BRANDS   = retired '90s/Y2K rave brands he named.
+  //   MONIKERS = his DJ heroes (used possessively).
+  const BRANDS  =["G.A.T.","MacGear","Caffeine","Stuka","Anarchic Adjustment","Mad","Toasta","Athena","Arena","Morbid","Delia's","Kikwear","JNCO"];
+  const MONIKERS=["Coxy's","Fatboy's","Slim's","Sven's","Paul's"];
+  //
+  // AUTO-GENERATED FLAVOR (Claude-added connective words — NOT Wes's contributions; kept separate
+  // so the classes above stay a clean record of what he actually provided):
+  const FX_DESC =["Phat","Cyber","Neon","UV","Chrome","Vinyl","Holographic","Reflective","Deadstock","Club Kid","Platform","Fishnet","Y2K","Underground"];
+  const FX_END  =["Nights","Sessions","Rituals","Vibes","Anthem","Rollers","Warehouse","Massive","Reboot","Circuit","Fever","Zone","Set"];
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function makeTitle(){
+    const r=Math.random();
+    if(r<0.28) return pick(MONIKERS)+" "+pick(FX_END);                  // Coxy's Warehouse
+    if(r<0.44) return pick(MONIKERS)+" "+pick(FX_DESC)+" "+pick(FX_END);// Fatboy's Cyber Nights
+    if(r<0.62) return pick(FX_DESC)+" "+pick(BRANDS);                   // Phat Caffeine
+    if(r<0.78) return pick(BRANDS)+" "+pick(FX_END);                    // Stuka Rollers
+    if(r<0.9)  return pick(FX_DESC)+" "+pick(FX_END);                   // UV Fever
+    return pick(BRANDS)+" "+pick(FX_END)+" "+String(Math.floor(Math.random()*99)+1).padStart(2,"0");
   }
 
   // switch genre: set its tempo, re-roll in that style
@@ -2055,6 +2438,14 @@
   };
 
   // tabs
+  document.querySelectorAll(".glovbtn").forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll(".glovbtn").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      gloverTrick=b.dataset.trick;
+      setMsg("Glover: "+b.textContent, CY);
+    };
+  });
   document.querySelectorAll(".tab").forEach(t=>{
     t.onclick=()=>{
       document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -2140,7 +2531,8 @@
   pattern=buildPattern(0x1337);
   rebuildEvents();
   buildStrip();
-  document.getElementById("patName").textContent=GENRE.house.name+" Loop 01";
+  document.getElementById("patName").textContent=makeTitle();
+  { const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE.house.name; }
   document.getElementById("patSrc").textContent="generated · "+GENRE.house.name+" · seed 1337";
   resize();
   resizeFace();
