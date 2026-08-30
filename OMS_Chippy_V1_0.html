@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_1_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_2_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_1_0]</title>
+<title>OMS Chippy [Beta V1_2_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -204,6 +204,19 @@
   .devmod .dm-lvl { font-size:9px; color:#666; font-family:'Courier New',monospace; min-width:18px; text-align:right; }
   .devmod .dm-wheel { padding:3px 8px; flex-shrink:0; }
   .devmod .dm-wheel .wv { font-size:11px; min-width:22px; text-align:right; }
+  .devmod .dm-row2 { display:flex; gap:5px; margin-top:5px; }
+  .devmod .dm-btn {
+    flex:1; padding:6px 0; min-height:30px; border-radius:4px; cursor:pointer;
+    font-size:14px; line-height:1; background:#151515; border:1px solid #333; color:#999;
+    transition:all .12s; display:inline-flex; align-items:center; justify-content:center;
+  }
+  .devmod .dm-rand svg { display:block; }
+  .devmod .dm-rand:hover { color:#00d4ff; border-color:#00d4ff; }
+  .devmod .dm-rand.flash { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.15); }
+  .devmod .dm-kill:hover { color:#ff5a7a; border-color:#ff5a7a; }
+  .devmod .dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
+  .btn.dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
+  .devmod .dm-btn:focus { outline:none; box-shadow:0 0 0 2px rgba(0,212,255,.6); }
 
   .sec-hdr { display:flex; align-items:center; gap:8px; margin:11px 0 6px; }
   .sec-hdr .bar { width:3px; height:13px; border-radius:1px; }
@@ -222,7 +235,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_1_0]</span>
+      <span class="ver">[Beta&nbsp;V1_2_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -265,6 +278,7 @@
       <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
       <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
       <button class="btn" id="nextBtn" title="skip to the next loop (N)">⏭</button>
+      <button class="btn dm-kill" id="killBtn" title="kill switch — mute the mix without stopping playback (talk / dictate, then unmute)">⏻</button>
       <span class="tsep"></span>
       <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — the style of loop to generate (House, Techno, Breaks, D&B, Big Room). Up/Down then Enter to pick · Left/Right scrolls live">
           <option value="house" selected>House</option>
@@ -288,7 +302,7 @@
       <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
       <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
       <span class="tsep"></span>
-      <button class="party-btn" id="partyBtn" title="party — nonstop auto-DJ set: seamlessly rolls new loops in your chosen DJ style">party</button>
+      <button class="party-btn" id="partyBtn" title="party — nonstop auto-DJ set: seamlessly rolls new loops in your chosen selecta style">party</button>
       <span class="tctl"><select id="partyDur" class="sel uctl party-dur" title="party length. Up/Down then Enter to pick · Left/Right scrolls live">
         <option value="5">5m</option>
         <option value="10" selected>10m</option>
@@ -296,7 +310,8 @@
         <option value="30">30m</option>
         <option value="60">60m</option>
       </select></span>
-      <span class="tctl"><select id="djSel" class="sel uctl" title="DJ style — how the party evolves. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+      <span class="tctl"><select id="djSel" class="sel uctl" title="selecta style — the record crate: which genres the set draws from and how often it hops. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+      <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level."></select></span>
       <span class="tsep"></span>
       
       <span class="loadhint" id="loadHint"></span>
@@ -319,7 +334,7 @@
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_1_0</div>
+      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_2_0</div>
       <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
       <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
 
@@ -1547,14 +1562,35 @@
         '<div class="dm-row">'+
           '<select data-sel="'+v.id+'">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+'>'+o[1]+'</option>').join("")+'</select>'+
           '<span class="wheel dm-wheel" data-lvl="'+v.id+'" title="level — scroll or drag"><span class="wv" id="lvl-'+v.id+'" style="color:'+v.color+'">'+Math.round(v.lvl*100)+'</span></span>'+
+        '</div>'+
+        '<div class="dm-row2">'+
+          '<button class="dm-btn dm-rand" data-rand="'+v.id+'" title="randomize this module\u2019s voice"><svg viewBox="0 0 26 24" width="17" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+
+            '<g transform="rotate(-18 9 9)" opacity="0.45"><rect x="3.5" y="2.5" width="12" height="12" rx="2.4"/><circle cx="7" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1" fill="currentColor" stroke="none"/></g>'+
+            '<g><rect x="11" y="9" width="12" height="12" rx="2.4" fill="#151515"/><rect x="11" y="9" width="12" height="12" rx="2.4"/><circle cx="14.4" cy="12.4" r="1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="12.4" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="14.4" cy="17.6" r="1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="17.6" r="1" fill="currentColor" stroke="none"/></g>'+
+          '</svg></button>'+
+          '<button class="dm-btn dm-kill" data-mute="'+v.id+'" title="kill switch \u2014 silence this module">\u23fb</button>'+
         '</div>';
       devStrip.appendChild(d);
       const lvlSpan=d.querySelector("#lvl-"+v.id);
+      const killBtn=d.querySelector('[data-mute="'+v.id+'"]');
+      const randBtn=d.querySelector('[data-rand="'+v.id+'"]');
       const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
         lvlSpan.style.color=v.on?v.color:"#555";
-        setMsg(v.name+(v.on?" on":" off"), v.color); draw(); };
-      // click the card toggles mute — but not when using the dropdown or level wheel
-      d.onclick=(e)=>{ if(e.target.closest("select")||e.target.closest(".dm-wheel")) return; toggle(); };
+        killBtn.classList.toggle("killed",!v.on);   // solid red when killed
+        setMsg(v.name+(v.on?" on":" killed"), v.color); draw(); };
+      killBtn.classList.toggle("killed",!v.on);
+      killBtn.onclick=(e)=>{ e.stopPropagation(); toggle(); };
+      // random: switch the module's voice-type value only (not the level)
+      randBtn.onclick=(e)=>{ e.stopPropagation();
+        const sel=d.querySelector('[data-sel="'+v.id+'"]');
+        if(sel && sel.options.length>1){
+          let i; do { i=Math.floor(Math.random()*sel.options.length); } while(i===sel.selectedIndex && sel.options.length>1);
+          sel.selectedIndex=i; sel.dispatchEvent(new Event("change",{bubbles:true}));
+        }
+        randBtn.classList.add("flash"); setTimeout(()=>randBtn.classList.remove("flash"),150);
+      };
+      // click the card body toggles kill too — but not the dropdown, level, or the two buttons
+      d.onclick=(e)=>{ if(e.target.closest("select")||e.target.closest(".dm-wheel")||e.target.closest(".dm-btn")) return; toggle(); };
       const voiceSel=d.querySelector('[data-sel="'+v.id+'"]');
       bindUctl(voiceSel, val=>{
         if(isKick){ v.kick=val; setMsg("Kick → "+val, v.color); }
@@ -1604,18 +1640,35 @@
   let loopStartAudio=0, loopDur=0;    // audio-time anchor + current loop length
   const PARTY_GENRES=["house","breaks","dnb","bigroom"];
 
-  // DJ styles — each tunes how the party evolves:
-  //  genreChance = chance/loop to hop genre; bars = length pool; pool = genres it draws from;
-  //  speed = tempo/turnover multiplier (Rave runs everything 20% faster).
+  // Selecta styles — each = a record crate (which genres + how often it hops) with a clamped BPM range.
+  //  genreChance = chance/loop to hop genre; pool = genres it draws from; bars = length pool;
+  //  bpm = [min,max] the set is held within (each loop clamps into this — no compounding runaway).
   const DJ_MODES=[
-    { id:"house",    name:"House",       genreChance:0.35, bars:[32,32,64,64],    pool:["house"],                     speed:1.0 },
-    { id:"battle",   name:"Battle",      genreChance:0.90, bars:[4,4,8,8],        pool:["house","techno","breaks","dnb","bigroom"], speed:1.0 },
-    { id:"open",     name:"Open Format", genreChance:0.50, bars:[16,32,32,64,64], pool:["house","techno","breaks","dnb","bigroom"], speed:1.0 },
-    { id:"warehouse",name:"Warehouse",   genreChance:0.08, bars:[64,128,128],     pool:["house","techno","bigroom"],  speed:1.0 },  // FOTF only
-    { id:"rave",     name:"Rave",        genreChance:0.08, bars:[64,128,128],     pool:["house","techno","bigroom"],  speed:1.2 }    // Warehouse, +20% everything
+    { id:"house",  name:"House",         genreChance:0.35, bars:[32,32,64,64],    pool:["house"],                                  bpm:[120,126] },
+    { id:"battle", name:"Battle",        genreChance:0.90, bars:[4,4,8,8],        pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
+    { id:"open",   name:"Open Format",   genreChance:0.50, bars:[16,32,32,64,64], pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
+    { id:"warehouse", name:"Warehouse Rave", genreChance:0.08, bars:[64,128,128], pool:["house","techno","bigroom"],               bpm:[140,200] }
   ];
   let djIdx=0;   // default House
   const djMode = () => DJ_MODES[djIdx];
+
+  // VIBE / DJ time-slot — a second axis over the selecta (DJ style = genre engine).
+  // Vibe = the slot in a club night; it scales pace (loop length), density, and master level.
+  //  barBias: multiplies loop length (opener long/patient → headliner short/rapid cuts)
+  //  density: multiplies per-step fire probabilities (sparse → busy)
+  //  level:   master output level for the slot (75/85/100/85 — the night gets louder as it builds)
+  const VIBES=[
+    { id:"opener",    name:"Opener",    barBias:1.6, density:0.72, level:0.75 },
+    { id:"support",   name:"Support",   barBias:1.15,density:0.9,  level:0.85 },
+    { id:"headliner", name:"Headliner", barBias:0.45,density:1.3,  level:1.0  },
+    { id:"closer",    name:"Closer",    barBias:1.15,density:0.9,  level:0.85 }
+  ];
+  let vibeIdx=1;   // default Support (neutral-ish)
+  const vibe = () => VIBES[vibeIdx];
+  // apply the vibe's master level (called on select + party start)
+  function applyVibeLevel(){ if(master && actx && !masterKilledRef()){ master.gain.setTargetAtTime(vibe().level*0.5, actx.currentTime, 0.05); } }
+  // masterKilled lives in wiring; guard so vibe level doesn't un-mute a kill
+  let _masterKilled=false; function masterKilledRef(){ return _masterKilled; }
 
   // Prepare the NEXT party loop as a pending swap, using the current DJ style.
   // The scheduler applies it at the loop boundary (seamless).
@@ -1633,10 +1686,15 @@
     if(!M.pool.includes(nextGenre)){ nextGenre=M.pool[0]; nextBPM=GENRE[nextGenre].bpm; }
     // length from the mode's pool (most loops, so length tracks the style)
     if(Math.random()<0.7){ nextBars=M.bars[Math.floor(Math.random()*M.bars.length)]; }
-    // Rave (speed>1) runs everything faster: tempo ×speed, and loops turn over ~faster
-    const spd=M.speed||1.0;
-    nextBPM=Math.round(nextBPM*spd);
-    if(spd!==1.0 && nextBars>=8){ nextBars=Math.max(4, Math.round(nextBars/spd/4)*4); }
+    // VIBE pace: bias loop length by the slot (opener long/patient, headliner short/rapid cuts)
+    nextBars=Math.max(4, Math.round(nextBars*vibe().barBias/4)*4);
+    // Clamp tempo into the selecta's BPM range. No compounding — each loop lands INSIDE [min,max],
+    // so the set can't creep upward song-to-song (that was the runaway-to-200 bug).
+    if(M.bpm){
+      const [lo,hi]=M.bpm;
+      if(nextBPM<lo || nextBPM>hi){ nextBPM = lo + Math.floor(Math.random()*(hi-lo+1)); }
+      nextBPM = Math.max(lo, Math.min(hi, nextBPM));
+    }
 
     // build the next pattern under the chosen genre/bars, then restore live state
     const saveGenre=genre, saveBars=BARS, saveBPM=BPM;
@@ -1661,7 +1719,8 @@
     // start from whatever's already set (genre + bars) — anchor the loop clock now
     loopStartAudio=(loopStartCtx||actx.currentTime);
     loopDur=loopLen();
-    setMsg("Party on — "+djMode().name+" · "+mins+" min 🎉", MAG);
+    applyVibeLevel();   // set the slot's master level for the set
+    setMsg("Party on — "+djMode().name+" · "+vibe().name+" · "+mins+" min 🎉", MAG);
   }
   function stopParty(){
     partyOn=false;
@@ -1712,6 +1771,14 @@
   }
   const nextBtn=document.getElementById("nextBtn");
   nextBtn.onclick=skipNext;
+  // master kill switch — mute the mix without stopping the transport (talk / dictate, then unmute)
+  const killBtn=document.getElementById("killBtn");
+  killBtn.onclick=()=>{
+    _masterKilled=!_masterKilled;
+    if(master && actx){ master.gain.setTargetAtTime(_masterKilled?0:(vibe().level*0.5), actx.currentTime, 0.01); }
+    killBtn.classList.toggle("killed",_masterKilled);
+    setMsg(_masterKilled?"Muted (still playing)":"Unmuted", CY);
+  };
 
   // ---- RAVE: aspect toggle (16:9 / 9:16) + canvas video recorder ----
   const aspectBtn=document.getElementById("aspectBtn");
@@ -1901,15 +1968,26 @@
   (function(){ let h=""; for(let s=0;s<=60;s++){ h+='<option value="'+s+'"'+(s===Math.round(SWING*100)?" selected":"")+'>Swing '+s+'%</option>'; } swingSel.innerHTML=h; })();
   bindUctl(swingSel, v=>applySwing(parseInt(v,10)));   // SHAPE — apply live
 
-  // DJ style select
+  // Selecta style select
   const djSel=document.getElementById("djSel");
   (function(){ let h=""; DJ_MODES.forEach((m,i)=>{ h+='<option value="'+i+'"'+(i===djIdx?" selected":"")+'>'+m.name+'</option>'; }); djSel.innerHTML=h; })();
   function applyDj(i){
     djIdx=((i%DJ_MODES.length)+DJ_MODES.length)%DJ_MODES.length;
     if(djSel.selectedIndex!==djIdx) djSel.selectedIndex=djIdx;
-    setMsg("DJ style: "+DJ_MODES[djIdx].name, CY);
+    setMsg("Selecta: "+DJ_MODES[djIdx].name, CY);
   }
   bindUctl(djSel, v=>quantizeKey("dj", ()=>applyDj(parseInt(v,10))));   // NEW SONG — quantize to the beat, clean restart
+
+  // VIBE / time-slot dropdown
+  const vibeSel=document.getElementById("vibeSel");
+  (function(){ let h=""; VIBES.forEach((m,i)=>{ h+='<option value="'+i+'"'+(i===vibeIdx?" selected":"")+'>'+m.name+'</option>'; }); vibeSel.innerHTML=h; })();
+  function applyVibe(i){
+    vibeIdx=((i%VIBES.length)+VIBES.length)%VIBES.length;
+    if(vibeSel.selectedIndex!==vibeIdx) vibeSel.selectedIndex=vibeIdx;
+    applyVibeLevel();   // master level ramps to the slot (unless killed)
+    setMsg("Time slot: "+VIBES[vibeIdx].name, CY);
+  }
+  bindUctl(vibeSel, v=>applyVibe(parseInt(v,10)));   // SHAPE — level applies live; pace affects the next party reroll
 
   // genre, length, party duration already have change handlers — add left/right live-scroll
   // that simply moves the selection and fires the native change event (no double-wiring).
@@ -1964,11 +2042,13 @@
   // the focused control's value (see bindUctl/bindWheel).
   function navRows(){
     // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["genBtn","playBtn","nextBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel"]
+    const controls=["genBtn","playBtn","nextBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel","vibeSel"]
       .map(id=>document.getElementById(id)).filter(Boolean);
     // Voices row: the 7 voice-type selects, in DOM order.
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
-    return [controls, voices];
+    const mutes=Array.from(document.querySelectorAll('.devstrip [data-mute]'));
+    const rands=Array.from(document.querySelectorAll('.devstrip [data-rand]'));
+    return [controls, voices, rands, mutes];
   }
   function wasdMove(key){
     const [controls, voices]=navRows();

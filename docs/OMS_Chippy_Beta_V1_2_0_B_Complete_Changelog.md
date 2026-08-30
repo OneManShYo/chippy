@@ -1,6 +1,6 @@
 # OMS Chippy — Changelog
 
-## V1_1_0 — Performance & Recording Release (2026-08-29)
+## V1_2_0 — Performance & Recording Release (2026-08-29)
 
 Minor-version roll: closes out the V1.0 iteration line (V1.0.1 → V1.0.31) as a substantial feature release. Keyboard control, recording, and the transport readout were all overhauled.
 
