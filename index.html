@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_4_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_5_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_4_0]</title>
+<title>OMS Chippy [Beta V1_5_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -128,8 +128,6 @@
     font-family:'Courier New',monospace; transition:all .15s; line-height:1.2;
   }
   .btn:hover { background:#252525; color:#fff; border-color:#444; }
-  #nextBtn { display:inline-flex; align-items:center; justify-content:center; }
-  #nextBtn:hover { color:#00d4ff; border-color:#00d4ff; }
   .btn.primary { border-color:#00d4ff; color:#00d4ff; }
   .btn.primary:hover { background:rgba(0,212,255,.1); }
   .btn.mag { border-color:#ff006e; color:#ff006e; }
@@ -232,6 +230,14 @@
   .devmod .dm-btn:focus { outline:none; box-shadow:0 0 0 2px rgba(0,212,255,.6); }
 
   .sec-hdr { display:flex; align-items:center; gap:8px; margin:11px 0 6px; min-height:22px; }
+  /* MASTER FX in the voices header */
+  #voicesHdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
+  #voicesHdr .vh-mfx { min-height:0; height:20px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center;
+    background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; }
+  #voicesHdr .vh-mfx svg { display:block; }
+  #voicesHdr .vh-mfx:hover { color:#00e08a; border-color:#00e08a; }
+  #voicesHdr .vh-mfx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
+  #voicesHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; }
   /* the MATRIX header holds the taller counter box; trim its vertical margin so the row spacing
      matches the other section headers (the box height was expanding the gaps above/below). */
   /* MATRIX header uses the standard section-header margin (same as CONTROLS/VOICES) so all three
@@ -252,7 +258,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_4_0]</span>
+      <span class="ver">[Beta&nbsp;V1_5_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -296,7 +302,6 @@
       <div class="ctrlmod" title="Transport">
         <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
         <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
-        <button class="btn" id="nextBtn" title="skip to the next loop (N)"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none" style="display:block"><path d="M5 5l9 7-9 7z"/><rect x="16" y="5" width="2.6" height="14" rx="0.6"/></svg></button>
         <button class="btn dm-kill" id="killBtn" title="kill switch — mute the mix without stopping playback (talk / dictate, then unmute)">⏻</button>
       </div>
       <div class="ctrlmod" title="Generate">
@@ -338,7 +343,7 @@
       <span class="loadhint" id="loadHint"></span>
     </div>
 
-    <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span><span class="vh-mlabel">MASTER FX</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="master effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1" title="master FX strength — scroll or drag"><span class="wv" id="mfx-amt-v" style="color:#00d4ff">50</span></span></div>
     <div class="devstrip" id="devStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">MATRIX</span><span class="rule"></span><span class="time mono" id="timeDisp">bar 1 · beat 1</span></div>
@@ -362,39 +367,46 @@
 
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
-      <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_4_0</div>
-      <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
-      <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
+      <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">Chippy is a techno rave chiptune love song generator.</div>
+      <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#aaa;">OMS Dojo</span> and <span style="color:#aaa;">Sozo</span>.</div>
 
-      <div class="ab-h">WHAT THIS IS</div>
-      <div class="ab-p">Chippy generates fun chiptune loops in the browser — no DAW, no files, no dependencies. V0 plays one embedded hardcoded loop across seven lanes: <span style="color:#fff;">drums, percussion, bass, lead, synth, accents, fills</span>. Press <span style="color:#00d4ff;">generate</span> to re-roll the pattern with playback transforms — transpose, swing, and per-voice re-seeding — over the same groove.</div>
-      <div class="ab-p">The synthesis is pure Web Audio: variable-duty pulse waves (via PeriodicWave), a triangle bass, and a real LFSR-style noise channel from a buffer source. Each lane is an independent voice with its own oscillator type and short snappy envelope — the timbre is what makes it chiptune, not the voice count.</div>
+      <div class="ab-h">WTF</div>
+      <div class="ab-p">Chippy generates fun chiptune loops in the browser — no DAW, no files, no dependencies. V0 plays one embedded hardcoded loop across seven lanes: drums, percussion, bass, lead, synth, accents, fills. Press generate to re-roll the pattern with playback transforms — transpose, swing, and per-voice re-seeding — over the same groove. The synthesis is pure Web Audio: variable-duty pulse waves (via PeriodicWave), a triangle bass, and a real LFSR-style noise channel from a buffer source. Each lane is an independent voice with its own oscillator type and short snappy envelope — the timbre is what makes it chiptune, not the voice count.</div>
 
       <div class="ab-h">INSPIRATION</div>
       <div style="color:#888;font-size:12px;line-height:1.9;">
-        <div><span style="color:#00d4ff;">Apple Music</span> <span style="color:#666;margin-left:8px;">— and the Apple Music Understanding (AMU) framework</span></div>
-        <div><span style="color:#00d4ff;">Fatboy Slim</span> <span style="color:#666;margin-left:8px;">— big-beat energy, playful sample-driven dance music</span></div>
-        <div><span style="color:#00d4ff;">Smile</span> <span style="color:#666;margin-left:8px;">— Ableton Live device</span></div>
+        <div><span style="color:#c77dff;">Apple Music</span> <span style="color:#666;margin-left:8px;">— and the Apple Music Understanding (AMU) framework</span></div>
+        <div><span style="color:#c77dff;">Fatboy Slim</span> <span style="color:#666;margin-left:8px;">— big-beat energy, playful sample-driven dance music</span></div>
+        <div><span style="color:#c77dff;">Smile</span> <span style="color:#666;margin-left:8px;">— Ableton Live device</span></div>
       </div>
 
-      <div style="color:#888;font-size:13px;line-height:1.6;margin-top:12px;">Created by <span style="color:#fff;">Wes Smith / ONEMANSHYO</span><br>San Diego, California</div>
-      <div style="margin-top:14px;padding:12px;background:rgba(0,0,0,0.35);border:1px solid #2a2a2a;border-radius:5px;">
-        <div style="color:#999;font-size:12px;line-height:1.6;"><span style="color:#00d4ff;font-weight:600;">Software:</span> Copyright © 2024–2026 Wes Smith / ONEMANSHYO. Licensed under <span style="color:#00d4ff;">GPL-3.0</span> — Free &amp; Open Source. No paywalls, no dependencies, single-file HTML.</div>
-      </div>
-
-      <div class="ab-h ab-y">TECHNICAL</div>
+      <div class="ab-h">CREATED BY</div>
       <div style="color:#888;font-size:12px;line-height:1.9;">
-        <div><span style="color:#00d4ff;">Audio Engine:</span> <span style="color:#aaa;margin-left:8px;">Web Audio API — OscillatorNode + PeriodicWave + noise buffer</span></div>
-        <div><span style="color:#00d4ff;">Rendering:</span> <span style="color:#aaa;margin-left:8px;">HTML5 Canvas (single-file, Chrome-targeted)</span></div>
-        <div><span style="color:#00d4ff;">Clock:</span> <span style="color:#aaa;margin-left:8px;">requestAnimationFrame + AudioContext.currentTime lookahead</span></div>
+        <div><span style="color:#c77dff;">Wes Smith</span></div>
+        <div><a href="https://itswessmithyo.com" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">ItsWesSmithYo</a> <span style="color:#666;margin-left:8px;">itswessmithyo.com</span></div>
+        <div><a href="https://onemanshyo.com" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">OneManShYo</a> <span style="color:#666;margin-left:8px;">onemanshyo.com</span></div>
       </div>
 
-      <div class="ab-h ab-m">TOOLS</div>
+      <div class="ab-h">SOFTWARE</div>
       <div style="color:#888;font-size:12px;line-height:1.9;">
-        <div><span style="color:#ff00ff;">Claude AI</span> <span style="color:#666;margin-left:8px;">(Anthropic) — development partner</span></div>
-        <div><span style="color:#00d4ff;">Web Audio API</span> <span style="color:#666;margin-left:8px;">— synthesis + playback</span></div>
+        <div><span style="color:#c77dff;">Copyright</span> <span style="color:#666;margin-left:8px;">© 2024–2026 Wes Smith / ONEMANSHYO</span></div>
+        <div><span style="color:#c77dff;">License</span> <span style="color:#666;margin-left:8px;">GPL-3.0 — Free &amp; Open Source</span></div>
+        <div><span style="color:#c77dff;">Build</span> <span style="color:#666;margin-left:8px;">Single-file HTML — no paywalls, no dependencies</span></div>
       </div>
+
+      <div class="ab-h">TECHNICAL</div>
+      <div style="color:#888;font-size:12px;line-height:1.9;">
+        <div><span style="color:#c77dff;">Audio Engine</span> <span style="color:#666;margin-left:8px;">Web Audio API — OscillatorNode + PeriodicWave + noise buffer</span></div>
+        <div><span style="color:#c77dff;">Rendering</span> <span style="color:#666;margin-left:8px;">HTML5 Canvas (single-file, Chrome-targeted)</span></div>
+        <div><span style="color:#c77dff;">Clock</span> <span style="color:#666;margin-left:8px;">requestAnimationFrame + AudioContext.currentTime lookahead</span></div>
+      </div>
+
+      <div class="ab-h">TOOLS</div>
+      <div style="color:#888;font-size:12px;line-height:1.9;">
+        <div><span style="color:#c77dff;">Claude AI</span> <span style="color:#666;margin-left:8px;">(Anthropic) — development partner</span></div>
+        <div><span style="color:#c77dff;">Web Audio API</span> <span style="color:#666;margin-left:8px;">— synthesis + playback</span></div>
+      </div>
+      <div style="color:#c77dff;font-size:16px;font-weight:700;letter-spacing:6px;text-align:center;margin-top:34px;font-family:'Courier New',monospace;">PLUR</div>
     </div>
    </div><!-- /panelAbout -->
   </div>
@@ -450,7 +462,7 @@
     {id:"synth",  name:"Synth",   color:"#4aa3df", osc:"pulse50", on:true, lvl:0.42, decay:0.30 },
     {id:"accent", name:"Accents", color:YEL, osc:"pulse25",  on:true, lvl:0.4, decay:0.10 },
     {id:"fills",  name:"Fills",   color:PUR, osc:"noise",    on:true, lvl:0.45, decay:0.08, noiseLo:400, noiseHi:4000 },
-    {id:"fx",     name:"FX",      color:ORG, osc:"riserUp",  on:true, lvl:0.5, decay:0.5, noiseLo:200, noiseHi:9000 }
+    {id:"fx",     name:"FX",      color:ORG, osc:"riserUp",  on:true, lvl:0.3, decay:0.5, fxRev:true, noiseLo:200, noiseHi:9000 }
   ];
   const V={}; VOICES.forEach(v=>V[v.id]=v);
 
@@ -726,6 +738,7 @@
   // ============================================================
   let actx=null, master=null, noiseBuf=null, pinkBuf=null, brownBuf=null, reverbBus=null, reverbWet=null;
   let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
+  let masterFxOn=true, masterFxAmt=0.10;   // master effects bus ON by default at 10% (dialed-in house)
   const pulseWaves={};   // duty -> PeriodicWave cache
 
   function makePulseWave(duty){
@@ -946,12 +959,14 @@
   function fireVoice(ev, when){
     const v=V[ev.voice]; if(!v.on) return;
     const dur=Math.max(v.decay, ev.dur*0.9);
-    // per-voice AUDIO FX routing: if this voice's reverb is on, send its dry signal to master AND a
-    // wet copy to the reverb bus (tail/space). Else straight to master. curDest is read by playX().
-    if(v.fxRev && reverbBus){
+    // AUDIO FX routing. Two sources of reverb send: the per-voice button (v.fxRev), and the MASTER
+    // effects bus (masterFxOn) which sends EVERY voice EXCEPT drums through the reverb at masterFxAmt.
+    const masterHits = masterFxOn && reverbBus && ev.voice!=="drums";
+    if((v.fxRev || masterHits) && reverbBus){
       const tap=actx.createGain(); tap.gain.value=1;
       tap.connect(master);            // dry
-      const send=actx.createGain(); send.gain.value=0.6;
+      const send=actx.createGain();
+      send.gain.value = Math.max(v.fxRev?0.6:0, masterHits?masterFxAmt:0);   // strongest of the two
       tap.connect(send); send.connect(reverbBus);   // wet send
       curDest=tap;
     } else { curDest=master; }
@@ -1147,17 +1162,22 @@
           continue;
         }
       }
-      // SKIP: if armed and a pending loop is ready, cut to it at the next bar boundary
+      // SKIP: cut to the pending loop at the next bar boundary. Keyed off the SCHEDULING FRONT
+      // (the event we're about to schedule), consistent with the rest of this loop — so it fires
+      // reliably on any loop length including 128-bar party loops.
       if(skipArmed && pendingParty){
-        const posInLoop = (schedIdx<events.length) ? events[schedIdx].t : L;  // where we're scheduling
-        const nextBar = Math.min(Math.ceil((posInLoop+1e-4)/barSec)*barSec, L);
-        if(loopStartCtx+nextBar <= horizon){
-          loopStartCtx += nextBar; schedIdx=0; skipArmed=false;
+        const frontT = (schedIdx<events.length) ? events[schedIdx].t : L;   // seconds-into-loop at the front
+        const nextBarT = Math.ceil((frontT+1e-6)/barSec)*barSec;            // next bar line ahead of the front
+        const nextBarCtx = loopStartCtx + nextBarT;
+        if(nextBarCtx <= horizon){
+          loopStartCtx = nextBarCtx; schedIdx = 0; skipArmed=false;
           applyPendingSwap();
           L=loopLen();
           if(loopStartCtx>horizon) break;
           continue;
         }
+        // if the next bar is still beyond the horizon, fall through and keep scheduling the current
+        // loop; the skip will apply on a later scheduler tick once that bar enters the horizon.
       }
       if(schedIdx>=events.length){
         // reached a loop boundary
@@ -1337,7 +1357,7 @@
     ctx.restore();
     // lane labels — drawn last, outside clip, on a dark backing chip
     // uniform box width = widest label + padding, so all label modules align (not text-sized).
-    ctx.font="9px 'Courier New',monospace";
+    ctx.font="bold 9px 'Courier New',monospace";
     let maxTw=0; VOICES.forEach(v=>{ maxTw=Math.max(maxTw, ctx.measureText(v.name.toUpperCase()).width); });
     const bw=Math.ceil(maxTw)+12, bh=20;   // taller chips fill the lane → tighter gaps, matches note density
     // labels stay PINNED to their lane rows (so they correlate with the notes). The whole lane block
@@ -1970,6 +1990,21 @@
     });
   }
 
+  // MASTER FX (in the VOICES header) — reverb on the whole mix EXCEPT drums, with a strength value.
+  (function(){
+    const mBtn=document.querySelector('#voicesHdr [data-mfx]');
+    const mAmt=document.querySelector('#voicesHdr [data-mfxamt]');
+    if(!mBtn) return;
+    mBtn.classList.toggle("fxon", masterFxOn);
+    document.getElementById("mfx-amt-v").textContent=Math.round(masterFxAmt*100);
+    mBtn.onclick=(e)=>{ e.stopPropagation(); masterFxOn=!masterFxOn; mBtn.classList.toggle("fxon",masterFxOn);
+      setMsg("Master FX "+(masterFxOn?"on":"off"), CY); };
+    bindWheel(mAmt,
+      ()=>Math.round(masterFxAmt*100),
+      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); masterFxAmt=p/100; document.getElementById("mfx-amt-v").textContent=p; },
+      1);
+  })();
+
   // ============================================================
   //  GENERATE  (re-roll: new seed + random transpose + swing tweak)
   // ============================================================
@@ -1997,6 +2032,8 @@
   //   MONIKERS = his DJ heroes (used possessively).
   const BRANDS  =["G.A.T.","MacGear","Caffeine","Stuka","Anarchic Adjustment","Mad","Toasta","Athena","Arena","Morbid","Delia's","Kikwear","JNCO"];
   const MONIKERS=["Coxy's","Fatboy's","Slim's","Sven's","Paul's"];
+  //   VENUES = venues he named.
+  const VENUES=["Simon's"];
   //
   // AUTO-GENERATED FLAVOR (Claude-added connective words — NOT Wes's contributions; kept separate
   // so the classes above stay a clean record of what he actually provided):
@@ -2005,11 +2042,13 @@
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
   function makeTitle(){
     const r=Math.random();
-    if(r<0.28) return pick(MONIKERS)+" "+pick(FX_END);                  // Coxy's Warehouse
-    if(r<0.44) return pick(MONIKERS)+" "+pick(FX_DESC)+" "+pick(FX_END);// Fatboy's Cyber Nights
-    if(r<0.62) return pick(FX_DESC)+" "+pick(BRANDS);                   // Phat Caffeine
-    if(r<0.78) return pick(BRANDS)+" "+pick(FX_END);                    // Stuka Rollers
-    if(r<0.9)  return pick(FX_DESC)+" "+pick(FX_END);                   // UV Fever
+    if(r<0.14) return "Live at "+pick(VENUES);                          // Live at Simon's
+    if(r<0.24) return pick(MONIKERS)+" at "+pick(VENUES);               // Coxy's at Simon's
+    if(r<0.40) return pick(MONIKERS)+" "+pick(FX_END);                  // Coxy's Warehouse
+    if(r<0.54) return pick(MONIKERS)+" "+pick(FX_DESC)+" "+pick(FX_END);// Fatboy's Cyber Nights
+    if(r<0.68) return pick(FX_DESC)+" "+pick(BRANDS);                   // Phat Caffeine
+    if(r<0.82) return pick(BRANDS)+" "+pick(FX_END);                    // Stuka Rollers
+    if(r<0.92) return pick(FX_DESC)+" "+pick(FX_END);                   // UV Fever
     return pick(BRANDS)+" "+pick(FX_END)+" "+String(Math.floor(Math.random()*99)+1).padStart(2,"0");
   }
 
@@ -2050,11 +2089,23 @@
   //  barsChange  = chance/loop to re-pick a new length from barsAllowed (else keep current).
   //  bpm = [min,max] the style biases within — but the GENRE's tempo range is the hard outer clamp
   //        (never D&B at 75), so effective tempo = genre range ∩ this, pick inside.
+  //
+  //  SELECTA PROFILE (the "DNA" schema) — optional `profile:{}` derived from AMU analysis of real
+  //  reference tracks. A repeatable way to define a selecta's character so styles stay consistent:
+  //    mode        : "minor" | "major" | null   — forced tonality
+  //    swing       : [min,max]                   — allowed swing fraction (0=straight)
+  //    structure   : [phrase,segment,section]    — nested bar grid for where variation happens
+  //    dynamics    : "punchy" | "smooth"         — accent emphasis
+  //  Giorgio Levan's profile came from AMU'ing 12 of Wes's own 124–128 commercial house tracks:
+  //  100% minor, dead-straight groove, nested 2/4/8-bar structure, loud/punchy (~-9.5 LUFS).
   const DJ_MODES=[
     { id:"house",  name:"House",         genreChance:0.35, barsAllowed:[64,128],    barsChange:0.25, pool:["house"],                                  bpm:[120,126] },
     { id:"battle", name:"Battle",        genreChance:0.90, barsAllowed:[4],         barsChange:0.0,  pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
     { id:"open",   name:"Open Format",   genreChance:0.50, barsAllowed:[4,8,16,32], barsChange:0.5,  pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
-    { id:"warehouse", name:"Warehouse Rave", genreChance:0.08, barsAllowed:[64,128], barsChange:0.15, pool:["house","techno","bigroom"],           bpm:[140,200] }
+    { id:"warehouse", name:"Warehouse Rave", genreChance:0.08, barsAllowed:[64,128], barsChange:0.15, pool:["house","techno","bigroom"],           bpm:[140,200] },
+    { id:"jungle", name:"Jungle", genreChance:0.0, barsAllowed:[32,64], barsChange:0.5, pool:["dnb"], bpm:[150,190] },   // pegged on D&B — jungle / UK hardcore
+    { id:"giorgio", name:"Giorgio Levan", genreChance:0.0, barsAllowed:[32,64], barsChange:0.35, pool:["house"], bpm:[124,128],
+      profile:{ mode:"minor", swing:[0,0.05], structure:[2,4,8], dynamics:"punchy" } }   // Moroder × Levan × Wes's own catalog (AMU-derived)
   ];
   let djIdx=0;   // default House
   const djMode = () => DJ_MODES[djIdx];
@@ -2113,6 +2164,10 @@
     // build the next pattern under the chosen genre/bars, then restore live state
     const saveGenre=genre, saveBars=BARS, saveBPM=BPM;
     genre=nextGenre; setBars(nextBars); BPM=nextBPM;
+    // SELECTA PROFILE: if the active selecta has a profile, apply its DNA (swing within its allowed
+    // range). Mode is already minor app-wide; structure/dynamics live in the pattern builder.
+    { const pf=M.profile; if(pf && pf.swing){ SWING = pf.swing[0] + Math.random()*(pf.swing[1]-pf.swing[0]);
+        const ss=document.getElementById("swingSel"); if(ss) ss.value=String(Math.round(SWING*100)); } }
     const seed=(Date.now() ^ (Math.floor(Math.random()*0xffffffff)))>>>0;
     const nextTranspose=[-5,-3,0,0,2,3,5,7][Math.floor(mkRnd(seed)()*8)];
     const savedTranspose=transpose; transpose=nextTranspose;
@@ -2131,15 +2186,22 @@
     partyBtn.classList.add("live"); partyBtn.textContent="stop";
     if(!playing) startTransport();
     applyVibeLevel();   // set the slot's master level for the set
+    // Snap the genre into the SELECTA's pool before building the first loop — otherwise party opens
+    // on whatever was manually set (e.g. house) instead of the selecta's genre (e.g. jungle → dnb).
+    { const M=djMode(); if(M.pool && !M.pool.includes(genre)){ genre=M.pool[Math.floor(Math.random()*M.pool.length)]; BPM=GENRE[genre].bpm; } }
     // Party DEFAULT on press: open the set at the max 128 bars (a full long phrase), regardless of
     // the plain-play loop length. Build a fresh 128-bar loop under the current genre and play it
     // NOW, and sync the UI to it. The normal reroll evolution then takes over at the next boundary.
-    setBars(128);
+    // Open at a bar length the SELECTA actually allows (prefer the longest for a full opening
+    // phrase). House → 64/128, Jungle → 32/64, etc. Never violate the selecta's bars constraint.
+    { const M=djMode(); const allow=(M.barsAllowed&&M.barsAllowed.length)?M.barsAllowed:[128];
+      setBars(Math.max(...allow)); }
     { const seed=(Date.now()^(Math.floor(Math.random()*0xffffffff)))>>>0;
       transpose=[-5,-3,0,0,2,3,5,7][Math.floor(mkRnd(seed)()*8)];
       pattern=buildPattern(seed); rebuildEvents(); }
-    { const ls=document.getElementById("lenSel"); if(ls) ls.value="128";
+    { const ls=document.getElementById("lenSel"); if(ls) ls.value=String(BARS);
       const gs=document.getElementById("genreSel"); if(gs) gs.value=genre;
+      const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM);
       const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar"; }
     loopStartAudio=(loopStartCtx||actx.currentTime);
     loopDur=loopLen();
@@ -2175,25 +2237,6 @@
   playBtn.onclick=toggleTransport;
   genBtn.onclick=generate;
   // NEXT / skip — jump to the next loop at the next bar (party: next DJ pick; else: fresh roll)
-  function skipNext(){
-    if(partyOn){
-      if(!pendingParty) partyReroll();   // stage the next party loop if not already staged
-      skipArmed=true;                    // scheduler cuts to it at the next bar
-      setMsg("Skipping ahead ⏭", MAG);
-    } else if(playing){
-      // not partying but playing: generate a fresh loop and swap at the next bar
-      const seed=(Date.now() ^ (Math.floor(Math.random()*0xffffffff)))>>>0;
-      transpose=[-5,-3,0,0,2,3,5,7][Math.floor(mkRnd(seed)()*8)];
-      const pat=buildPattern(seed);
-      pendingParty={ events:buildEventsFrom(pat), pattern:pat, genre, bars:BARS, bpm:BPM, transpose, seed };
-      skipArmed=true;
-      setMsg("Next roll ⏭", MAG);
-    } else {
-      generate();   // stopped: just make a new one
-    }
-  }
-  const nextBtn=document.getElementById("nextBtn");
-  nextBtn.onclick=skipNext;
   // master kill switch — mute the mix without stopping the transport (talk / dictate, then unmute)
   const killBtn=document.getElementById("killBtn");
   killBtn.onclick=()=>{
@@ -2463,7 +2506,7 @@
     if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT") return;
     if(e.code==="Space"){ e.preventDefault(); toggleTransport(); }
     else if(e.key==="g"||e.key==="G"){ e.preventDefault(); generate(); }
-    else if(e.key==="n"||e.key==="N"){ e.preventDefault(); skipNext(); }
+    else if(e.key==="n"||e.key==="N"){ e.preventDefault(); generate(); }
   });
 
   // ---- WASD grid navigation across the two control rows (Controls ⇄ Voices) ----
@@ -2473,13 +2516,14 @@
   // the focused control's value (see bindUctl/bindWheel).
   function navRows(){
     // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["playBtn","genBtn","nextBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel","vibeSel"]
+    const controls=["playBtn","genBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel","vibeSel"]
       .map(id=>document.getElementById(id)).filter(Boolean);
     // Voices row: the 7 voice-type selects, in DOM order.
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
     const mutes=Array.from(document.querySelectorAll('.devstrip [data-mute]'));
     const rands=Array.from(document.querySelectorAll('.devstrip [data-rand]'));
-    return [controls, voices, rands, mutes];
+    const master=Array.from(document.querySelectorAll('#voicesHdr [data-mfx], #voicesHdr [data-mfxamt]'));
+    return [controls, voices, rands, mutes, master];
   }
   function wasdMove(key){
     const [controls, voices]=navRows();
