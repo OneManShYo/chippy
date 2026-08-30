@@ -1,5 +1,26 @@
 # OMS Chippy — Changelog
 
+## V1_1_0 — Performance & Recording Release (2026-08-29)
+
+Minor-version roll: closes out the V1.0 iteration line (V1.0.1 → V1.0.31) as a substantial feature release. Keyboard control, recording, and the transport readout were all overhauled.
+
+### Added
+- **WASD grid navigation** across the Controls and Voices rows: A/D move within a row (wrapping continuously across both rows), W/S jump between rows landing at the left. Works from wherever focus is; a cold press lands on the top-left control. Tab is left untouched.
+- **Arrow-key control** on the voice-type dropdowns (and Controls dropdowns): left/right/up/down cycle options live via the shared bindUctl binding.
+- **Ableton-style session counter** in the MATRIX header: continuous bars.beats.sixteenths since play (1-based, never wraps), alongside the loop-relative bar/beat. Rests at 1.1.1 when stopped.
+- **Persistent record cluster**: persistence, orientation, record, and readout are always visible (not gated to the RAVE tab); recording no longer force-switches you to that tab.
+
+### Fixed
+- **Long recordings now play back correctly.** Root causes: the recorder buffered the whole clip as one blob (fixed with a 1s timeslice), and a bare `video/mp4` request made Chrome emit VP9/Opus inside a fragmented MP4 that QuickTime rejected. Now only genuine H.264/AAC is accepted as MP4 (iOS Safari), otherwise clean WebM; on capable desktop Chrome this yields a real, QuickTime-playable MP4.
+- Record readout keeps a fixed `00:00` format and reserved slot so hitting record never shifts the layout.
+
+### Changed
+- **Control-behavior model formalized into three categories** (documented in-code): RESTART (genre, DJ — quantize to the next beat, clean loop restart), CONTINUE (tempo, swing, voices — apply live, no restart), and WAIT-FOR-LOOP (length — finish the current loop, then switch at the boundary). Tempo and swing were moved off beat-quantize to live application; length now defers to the loop end.
+- Record readout border is dim at rest and brightens when recording, matching the other controls.
+- **Removed the WAV export button** — the record button covers capture now.
+
+---
+
 ## V1_0_14 — Beat-Quantize Clean Cut (2026-08-29)
 
 ### Fixed

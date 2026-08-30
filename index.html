@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_0_14  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_1_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_0_14]</title>
+<title>OMS Chippy [Beta V1_1_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -75,8 +75,7 @@
   }
   .bgtoggle:hover { border-color:#555; color:#ccc; }
   .bgtoggle.on { border-color:#00e08a; color:#00e08a; background:rgba(0,224,138,.10); box-shadow:0 0 8px rgba(0,224,138,.25); }
-  .rave-ctl { display:none; }                    /* rave controls only show on the RAVE tab */
-  .rave-ctl.show { display:inline-flex; }
+  /* rave controls (persistence, orientation, record, readout) are always visible — recording/persistence run regardless of tab */
   #aspectBtn .ori-h, #aspectBtn .ori-v { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:1.5px solid currentColor; border-radius:1.5px; transition:opacity .15s; }
   #aspectBtn .ori-h { width:15px; height:10px; opacity:1; }      /* landscape mark */
   #aspectBtn .ori-v { width:10px; height:15px; opacity:.35; }    /* portrait mark, overlapped */
@@ -89,8 +88,8 @@
   #recBtn.recording { color:#ff2d6f; border-color:#ff006e; background:rgba(255,0,110,.12); animation:recpulse .9s infinite; }
   @keyframes recpulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
   #bgBtn { color:#00e08a; }
-  .rectime { font-family:'Courier New',monospace; font-size:12px; color:#ff2d6f; text-align:center; align-self:center; padding:0; }
-  .rectime:empty { display:none; }
+  .rectime { font-family:'Courier New',monospace; font-size:12px; color:#8a4a5e; text-align:center; align-self:center; min-width:44px; height:30px; box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; border:1px solid #5a1730; border-radius:5px; background:transparent; transition:all .15s; }
+  .rectime.recording { color:#ff2d6f; border-color:#ff006e; background:rgba(255,0,110,.10); box-shadow:0 0 8px rgba(255,0,110,.22); }
 
   /* RAVE ON */
   #raveWrap { position:relative; width:100%; aspect-ratio:16/9; max-height:78vh; background:#000; border:1px solid #2a2a2a; border-radius:6px; overflow:hidden; }
@@ -162,6 +161,11 @@
   .wheel.active { border-color:#00d4ff; background:#0d1a1e; }
   .wheel:focus { outline:none; border-color:#00d4ff; box-shadow:0 0 0 2px rgba(0,212,255,.35); }
   .wheel:focus-visible { outline:none; border-color:#00d4ff; box-shadow:0 0 0 2px rgba(0,212,255,.5); }
+  /* WASD/tab focus ring — makes the current control cell clearly visible on the dark theme */
+  .transport .btn:focus, .transport .party-btn:focus, .transport .sel:focus,
+  .devstrip [data-sel]:focus {
+    outline:none; box-shadow:0 0 0 2px rgba(0,212,255,.6); border-radius:5px;
+  }
 
   /* compact PARTY button — lives at the end of the controls row */
   .party-btn {
@@ -218,7 +222,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_0_14]</span>
+      <span class="ver">[Beta&nbsp;V1_1_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -231,10 +235,10 @@
     <div class="tab" id="raveTab" data-panel="rave" title="Full-screen light show — Chippy raves to whatever's playing">RAVE ON</div>
     <div class="tab" id="aboutTab" data-panel="about" title="What Chippy is, who made it, and the license">ABOUT</div>
     <div class="bar-right">
-      <span id="recTime" class="rectime rave-ctl"></span>
-      <button class="bgtoggle rave-ctl" id="aspectBtn" title="orientation — 16:9 (YouTube) / 9:16 (Shorts, TikTok, Reels)"><span class="ori-h"></span><span class="ori-v"></span></button>
-      <button class="bgtoggle rave-ctl" id="recBtn" title="record the RAVE ON visuals — click again to stop &amp; download">⏺</button>
       <button class="bgtoggle on" id="bgBtn" title="persistence — keeps playing when you switch to another tab">∞</button>
+      <button class="bgtoggle" id="aspectBtn" title="orientation — 16:9 (YouTube) / 9:16 (Shorts, TikTok, Reels)"><span class="ori-h"></span><span class="ori-v"></span></button>
+      <button class="bgtoggle" id="recBtn" title="record the RAVE ON visuals — click again to stop &amp; download">⏺</button>
+      <span id="recTime" class="rectime">00:00</span>
     </div>
   </div>
 
@@ -294,7 +298,7 @@
       </select></span>
       <span class="tctl"><select id="djSel" class="sel uctl" title="DJ style — how the party evolves. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
       <span class="tsep"></span>
-      <button class="btn" id="exportBtn" title="export WAV">WAV</button>
+      
       <span class="loadhint" id="loadHint"></span>
     </div>
 
@@ -315,7 +319,7 @@
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_0_14</div>
+      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_1_0</div>
       <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
       <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
 
@@ -870,6 +874,7 @@
   //  TRANSPORT  (lookahead scheduler + rAF playhead)
   // ============================================================
   let playing=false;
+  let sessionStart=0;      // performance.now() when play was last hit; 0 = not playing
   let playOriginCtx=0;     // fixed wall-clock anchor for the beat-quantize grid (set once at start)
   let quantTargetCtx=0;    // absolute ctx time of the armed beat swap (0 = none armed)
   let loopStartCtx=0;      // actx.currentTime when current loop iteration started
@@ -918,6 +923,7 @@
     ensureAudio();
     if(actx.state==="suspended"){ actx.resume(); }
     playing=true;
+    sessionStart=performance.now();          // session timer: elapsed since play (resets on stop)
     loopStartCtx=actx.currentTime + 0.06;   // small offset so first hits aren't in the past
     playOriginCtx=loopStartCtx;             // stable anchor for the beat-quantize grid
     quantTargetCtx=0; pendingQuant.length=0;
@@ -927,12 +933,14 @@
   }
   function stopTransport(){
     playing=false;
+    sessionStart=0;                          // reset session timer
     playBtn.textContent="▶";
     setMsg("Ready", CY);
   }
   function toggleTransport(){ playing?stopTransport():startTransport(); }
 
   let pendingParty=null;   // {events, loopStartAdvance} applied by scheduler at the next boundary
+  let pendingLen=null;     // length change deferred to the next loop boundary (finish current loop first)
 
   let skipArmed=false;   // when true, apply the pending swap at the NEXT BAR (not next loop)
   function scheduler(){
@@ -982,6 +990,7 @@
         loopStartCtx+=L; schedIdx=0;
         if(partyOn) loopStartAudio=loopStartCtx;   // party clock tracks current loop
         if(pendingParty){ applyPendingSwap(); L=loopLen(); }
+        if(pendingLen){ pendingLen(); pendingLen=null; L=loopLen(); }   // length change applies at loop end
         if(loopStartCtx>horizon) break;      // next loop still beyond horizon
       }
       const ev=events[schedIdx];
@@ -1182,12 +1191,15 @@
       posSec=p;
       updateTime();
       if(partyOn) partyTick();
+    } else {
+      updateTime();   // keep the readout live when stopped (session rests at 1 . 1 . 1)
     }
   }
   function frame(){
     requestAnimationFrame(frame);
     tick();
-    if(raveActive){ drawRave(); }
+    // draw the rave canvas whenever it's visible OR being recorded (recording no longer forces the tab)
+    if(raveActive || (mediaRec && mediaRec.state==="recording")){ drawRave(); if(!raveActive){ draw(); drawFace(); } }
     else { draw(); drawFace(); }
   }
 
@@ -1486,12 +1498,22 @@
     const step=Math.floor(posSec/secPerStep());
     const bar=Math.floor(step/STEPS_PER_BAR)+1;
     const beat=Math.floor((step%STEPS_PER_BAR)/4)+1;
+    // session position: Ableton-style continuous bars.beats.sixteenths since play (1-based).
+    // Always visible — rests at 1 . 1 . 1 when stopped, climbs while playing, resets on stop.
+    let es=0;
+    if(playing && actx && playOriginCtx){
+      es=Math.max(0, Math.floor((actx.currentTime - playOriginCtx)/secPerStep()));  // total 16th-steps since play
+    }
+    const sBar=Math.floor(es/STEPS_PER_BAR)+1;               // 16 steps/bar
+    const sBeat=Math.floor((es%STEPS_PER_BAR)/4)+1;          // 4 sixteenths per beat
+    const sSix=(es%4)+1;                                     // sixteenth within the beat
+    const sess="  |  "+sBar+" . "+sBeat+" . "+sSix;
     if(partyOn){
       const left=Math.max(0, partyEndsAt-performance.now());
       const m=Math.floor(left/60000), s=Math.floor((left%60000)/1000);
-      timeDisp.textContent="party "+m+":"+String(s).padStart(2,"0")+" · bar "+bar+"/64";
+      timeDisp.textContent="party "+m+":"+String(s).padStart(2,"0")+" · bar "+bar+"/64"+sess;
     } else {
-      timeDisp.textContent="bar "+bar+" · beat "+beat;
+      timeDisp.textContent="bar "+bar+" · beat "+beat+sess;
     }
   }
 
@@ -1533,10 +1555,11 @@
         setMsg(v.name+(v.on?" on":" off"), v.color); draw(); };
       // click the card toggles mute — but not when using the dropdown or level wheel
       d.onclick=(e)=>{ if(e.target.closest("select")||e.target.closest(".dm-wheel")) return; toggle(); };
-      d.querySelector('[data-sel="'+v.id+'"]').onchange=e=>{
-        if(isKick){ v.kick=e.target.value; setMsg("Kick → "+e.target.value, v.color); }
-        else { v.osc=e.target.value; setMsg(v.name+" → "+e.target.value, v.color); }
-      };
+      const voiceSel=d.querySelector('[data-sel="'+v.id+'"]');
+      bindUctl(voiceSel, val=>{
+        if(isKick){ v.kick=val; setMsg("Kick → "+val, v.color); }
+        else { v.osc=val; setMsg(v.name+" → "+val, v.color); }
+      });
       const lvlEl=d.querySelector('[data-lvl="'+v.id+'"]');
       bindWheel(lvlEl,
         ()=>Math.round(v.lvl*100),
@@ -1705,8 +1728,9 @@
   let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recExt="webm", recAudioDest=null;
   function startRec(){
     if(!raveCv.captureStream){ setMsg("Recording not supported in this browser", MAG); return; }
-    // make sure the rave is actually drawing (canvas only renders on the RAVE tab)
-    if(!raveActive){ document.getElementById("raveTab").click(); }
+    // ensure the rave canvas is sized so it draws (the frame loop now draws it while recording,
+    // no tab switch needed — you stay on TRACKS to keep tweaking the sound)
+    resizeRave();
     ensureAudio();
     const stream=raveCv.captureStream(60);   // 60fps canvas video
     // Mix the live Chippy audio into the recording so the file has sound (not silent video).
@@ -1715,14 +1739,15 @@
       if(!recAudioDest){ recAudioDest=actx.createMediaStreamDestination(); master.connect(recAudioDest); }
       recAudioDest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr));
     } catch(e){ /* if audio tap fails, still record video-only */ }
-    // Prefer the most SHAREABLE format the browser can natively record:
-    // iOS Safari records straight to MP4/H.264 (drops right into the camera roll & socials).
-    // Desktop Chrome can't do MP4, so fall back to the best WebM codec.
+    // Pick a format the browser can GENUINELY record. Subtle trap: desktop Chrome reports
+    // isTypeSupported("video/mp4") = true, but actually encodes VP9/Opus into a fragmented MP4 —
+    // a Frankenstein file QuickTime won't open and VLC plays glitchy. So we only accept MP4 when
+    // it's explicitly H.264/AAC (real, QuickTime-friendly — iOS Safari does this). Otherwise record
+    // proper WebM (VP9/Opus's real home), which Chrome writes cleanly at any length.
     const candidates=[
-      "video/mp4;codecs=h264,aac",
-      "video/mp4;codecs=avc1,mp4a",
-      "video/mp4",
-      "video/webm;codecs=vp9,opus",
+      "video/mp4;codecs=h264,aac",      // real MP4 — iOS Safari
+      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+      "video/webm;codecs=vp9,opus",     // desktop Chrome — clean WebM
       "video/webm;codecs=vp8,opus",
       "video/webm"
     ];
@@ -1744,19 +1769,21 @@
       downloadBlob(blob, "ChippyRave_"+dim+"_"+stamp+"."+recExt);
       setMsg(recExt==="mp4" ? "Rave video saved (MP4) 🎬" : "Rave video saved (WebM) 🎬", GRN);
     };
-    mediaRec.start();
+    // Flush a chunk every second (timeslice). Without this the recorder buffers the whole
+    // clip as one blob and long recordings (~1 min+) produce a corrupt, unplayable file.
+    mediaRec.start(1000);
     recStart=performance.now();
-    recBtn.classList.add("recording"); recBtn.textContent="⏹";
+    recBtn.classList.add("recording"); recBtn.textContent="⏹"; recTimeEl.classList.add("recording");
     recTimer=setInterval(()=>{
       const s=Math.floor((performance.now()-recStart)/1000);
-      recTimeEl.textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+      recTimeEl.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
     }, 250);
     setMsg("Recording the rave… hit STOP when done", MAG);
   }
   function stopRec(){
     if(mediaRec && mediaRec.state!=="inactive") mediaRec.stop();
-    clearInterval(recTimer); recTimeEl.textContent="";
-    recBtn.classList.remove("recording"); recBtn.textContent="⏺";
+    clearInterval(recTimer); recTimeEl.textContent="00:00";
+    recBtn.classList.remove("recording"); recBtn.textContent="⏺"; recTimeEl.classList.remove("recording");
   }
   recBtn.onclick=()=>{ (mediaRec && mediaRec.state==="recording") ? stopRec() : startRec(); };
   const partyBtn=document.getElementById("partyBtn");
@@ -1765,19 +1792,18 @@
     if(partyOn){ stopParty(); }
     else { partyDur.disabled=true; startParty(+partyDur.value); }
   };
-  document.getElementById("exportBtn").onclick=()=>{
-    setMsg("Rendering WAV…", CY);
-    exportWav().catch(e=>setMsg("Export failed: "+e.message, MAG));
-  };
   document.getElementById("genreSel").onchange=e=>{ const g=e.target.value; quantize(()=>setGenre(g)); };
   document.getElementById("lenSel").onchange=e=>{
     const nb=+e.target.value;
-    quantize(()=>{
+    const apply=()=>{
       setBars(nb);
       generate();
       document.getElementById("patLen").textContent=BARS+" bars · 16 steps/bar";
       setMsg(BARS+"-bar loop · "+GENRE[genre].name, CY);
-    });
+    };
+    // LENGTH: not a beat-quantized restart — let the current loop play out, switch at its end.
+    if(!playing || !actx){ apply(); }
+    else { pendingLen=apply; setMsg("Length → "+nb+" bars at loop end", CY); }
   };
 
   // ---- control apply functions ----
@@ -1830,9 +1856,9 @@
   // applies it live, immediately, without waiting for Enter.
   function bindUctl(sel, apply){
     sel.addEventListener("keydown", e=>{
-      if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+      if(e.key==="ArrowLeft"||e.key==="ArrowRight"||e.key==="ArrowUp"||e.key==="ArrowDown"){
         e.preventDefault();
-        const d = e.key==="ArrowRight" ? 1 : -1;
+        const d = (e.key==="ArrowRight"||e.key==="ArrowUp") ? 1 : -1;
         let i = sel.selectedIndex + d;
         i = Math.max(0, Math.min(sel.options.length-1, i));
         if(i!==sel.selectedIndex){ sel.selectedIndex=i; apply(sel.value); }
@@ -1842,15 +1868,38 @@
     sel.addEventListener("change", ()=>apply(sel.value));
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // CONTROL BEHAVIOR PRINCIPLE — three categories of how a control takes effect mid-play:
+  //
+  //   1. RESTART (new song, on the next beat) → route through quantizeKey().
+  //      The change rebuilds the pattern; the scheduler waits for the next beat (Q) and
+  //      cleanly restarts the loop from its top, so playback never skips mid-bar.
+  //      These are: genre, DJ style.
+  //
+  //   2. CONTINUE (shape the current song, immediately) → apply LIVE, no quantize/restart.
+  //      Continuous parameters of the song already playing — like turning a knob. The loop
+  //      keeps rolling; the change just takes effect.
+  //      These are: tempo, swing, and the per-voice selectors + levels.
+  //
+  //   3. WAIT FOR LOOP (finish the phrase, then change) → defer via pendingLen, applied at
+  //      the loop boundary in the scheduler. Not a beat-restart: the current loop plays all
+  //      the way out, then the new value takes effect on the next pass.
+  //      This is: length (bars).
+  //
+  //   When adding a new control, decide which of the three it is: does it load a new song
+  //   (restart), shape the one playing (continue), or change the phrase structure that should
+  //   finish first (wait for loop)? That decides quantizeKey() vs live vs pendingLen-style defer.
+  // ─────────────────────────────────────────────────────────────────────────────
+
   // populate tempo select (BPM range) and wire it
   const bpmSel=document.getElementById("bpmSel");
   (function(){ let h=""; for(let b=90;b<=175;b++){ h+='<option value="'+b+'"'+(b===BPM?" selected":"")+'>Tempo '+b+'</option>'; } bpmSel.innerHTML=h; })();
-  bindUctl(bpmSel, v=>quantizeKey("bpm", ()=>applyBpm(parseInt(v,10))));
+  bindUctl(bpmSel, v=>applyBpm(parseInt(v,10)));   // SHAPE — apply live, no beat-quantize/restart
 
   // populate swing select (0–60%) and wire it
   const swingSel=document.getElementById("swingSel");
   (function(){ let h=""; for(let s=0;s<=60;s++){ h+='<option value="'+s+'"'+(s===Math.round(SWING*100)?" selected":"")+'>Swing '+s+'%</option>'; } swingSel.innerHTML=h; })();
-  bindUctl(swingSel, v=>quantizeKey("swing", ()=>applySwing(parseInt(v,10))));
+  bindUctl(swingSel, v=>applySwing(parseInt(v,10)));   // SHAPE — apply live
 
   // DJ style select
   const djSel=document.getElementById("djSel");
@@ -1860,7 +1909,7 @@
     if(djSel.selectedIndex!==djIdx) djSel.selectedIndex=djIdx;
     setMsg("DJ style: "+DJ_MODES[djIdx].name, CY);
   }
-  bindUctl(djSel, v=>quantizeKey("dj", ()=>applyDj(parseInt(v,10))));
+  bindUctl(djSel, v=>quantizeKey("dj", ()=>applyDj(parseInt(v,10))));   // NEW SONG — quantize to the beat, clean restart
 
   // genre, length, party duration already have change handlers — add left/right live-scroll
   // that simply moves the selection and fires the native change event (no double-wiring).
@@ -1895,7 +1944,6 @@
       t.classList.add("active");
       document.getElementById("panel"+t.dataset.panel.charAt(0).toUpperCase()+t.dataset.panel.slice(1)).classList.add("active");
       raveActive = (t.dataset.panel==="rave");
-      document.querySelectorAll(".rave-ctl").forEach(el=>el.classList.toggle("show", raveActive));
       if(t.dataset.panel==="gen"){ resize(); resizeFace(); }
       if(raveActive) resizeRave();
     };
@@ -1907,6 +1955,55 @@
     if(e.code==="Space"){ e.preventDefault(); toggleTransport(); }
     else if(e.key==="g"||e.key==="G"){ e.preventDefault(); generate(); }
     else if(e.key==="n"||e.key==="N"){ e.preventDefault(); skipNext(); }
+  });
+
+  // ---- WASD grid navigation across the two control rows (Controls ⇄ Voices) ----
+  // A/D move within a row, W/S move between rows (keeping column position). Tab is untouched.
+  // Works no matter how you got in (tab, click, or cold): first WASD press with nothing in the
+  // grid focused lands on the top-left of Controls (the generate button). Arrow keys still adjust
+  // the focused control's value (see bindUctl/bindWheel).
+  function navRows(){
+    // Controls row, left→right, real focus targets only (the quantize readout is display-only).
+    const controls=["genBtn","playBtn","nextBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel"]
+      .map(id=>document.getElementById(id)).filter(Boolean);
+    // Voices row: the 7 voice-type selects, in DOM order.
+    const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
+    return [controls, voices];
+  }
+  function wasdMove(key){
+    const [controls, voices]=navRows();
+    const rows=[controls, voices];
+    const active=document.activeElement;
+    // locate active element in the grid
+    let r=-1, c=-1;
+    for(let ri=0; ri<rows.length; ri++){ const ci=rows[ri].indexOf(active); if(ci>=0){ r=ri; c=ci; break; } }
+    if(r<0){ // nothing in the grid focused → land on top-left of Controls
+      if(controls[0]) controls[0].focus();
+      return;
+    }
+    if(key==="w"||key==="s"){
+      // up/down: jump to the other row, starting at its left
+      r = (key==="s") ? (r+1)%rows.length : (r-1+rows.length)%rows.length;
+      c = 0;
+    } else {
+      // left/right: one continuous ring across BOTH rows.
+      // flatten to a single index, step with wraparound, map back to row+col.
+      const flat=[]; rows.forEach((row,ri)=>row.forEach((el,ci)=>flat.push([ri,ci])));
+      let fi=flat.findIndex(([ri,ci])=>ri===r&&ci===c);
+      fi = (key==="d") ? (fi+1)%flat.length : (fi-1+flat.length)%flat.length;
+      [r,c]=flat[fi];
+    }
+    const target=rows[r][c];
+    if(target) target.focus();
+  }
+  window.addEventListener("keydown",e=>{
+    // WASD runs even when a SELECT is focused (that's the point). Bail only on real text inputs.
+    if(e.target.tagName==="INPUT" || e.target.isContentEditable) return;
+    const k=e.key.toLowerCase();
+    if(k==="w"||k==="a"||k==="s"||k==="d"){
+      e.preventDefault();
+      wasdMove(k);
+    }
   });
 
   let _resizeT=null;
