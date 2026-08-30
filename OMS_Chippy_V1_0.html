@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_2_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_3_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_2_0]</title>
+<title>OMS Chippy [Beta V1_3_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -124,6 +124,8 @@
     font-family:'Courier New',monospace; transition:all .15s; line-height:1.2;
   }
   .btn:hover { background:#252525; color:#fff; border-color:#444; }
+  #nextBtn { display:inline-flex; align-items:center; justify-content:center; }
+  #nextBtn:hover { color:#00d4ff; border-color:#00d4ff; }
   .btn.primary { border-color:#00d4ff; color:#00d4ff; }
   .btn.primary:hover { background:rgba(0,212,255,.1); }
   .btn.mag { border-color:#ff006e; color:#ff006e; }
@@ -195,6 +197,9 @@
   /* voice strip (device strip from sozo) */
   .devstrip { display:flex; gap:6px; flex-wrap:wrap; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:6px; padding:8px; margin-bottom:10px; }
   .devmod { background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:5px 7px; flex:1; min-width:96px; cursor:pointer; }
+  /* control-section modules — same Eurorack box treatment as the voice modules, so controls and
+     voices read as one rack. Each groups a related cluster (Transport / Generate / Feel / Party). */
+  .ctrlmod { display:flex; align-items:center; gap:6px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:5px 8px; }
   .devmod.off { opacity:.4; }
   .devmod .dm-led { width:9px; height:9px; border-radius:50%; background:#333; flex-shrink:0; cursor:pointer; }
   .devmod.on .dm-led { box-shadow:0 0 6px currentColor; }
@@ -235,7 +240,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_2_0]</span>
+      <span class="ver">[Beta&nbsp;V1_3_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -275,45 +280,48 @@
 
     <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Controls</span><span class="rule"></span></div>
     <div class="transport">
-      <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
-      <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
-      <button class="btn" id="nextBtn" title="skip to the next loop (N)">⏭</button>
-      <button class="btn dm-kill" id="killBtn" title="kill switch — mute the mix without stopping playback (talk / dictate, then unmute)">⏻</button>
-      <span class="tsep"></span>
-      <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — the style of loop to generate (House, Techno, Breaks, D&B, Big Room). Up/Down then Enter to pick · Left/Right scrolls live">
-          <option value="house" selected>House</option>
-          <option value="techno">Techno</option>
-          <option value="breaks">Breaks</option>
-          <option value="dnb">Drum &amp; Bass</option>
-          <option value="bigroom">Big Room</option>
-        </select>
-      </span>
-      <span class="tctl"><select id="lenSel" class="sel uctl" title="loop length in bars — longer loops build through more phrasing. Up/Down then Enter to pick · Left/Right scrolls live">
-          <option value="4" selected>4 bars</option>
-          <option value="8">8 bars</option>
-          <option value="16">16 bars</option>
-          <option value="32">32 bars</option>
-          <option value="64">64 bars</option>
-          <option value="128">128 bars</option>
-        </select>
-      </span>
-      <span class="tctl"><span id="quantReadout" class="sel qread" title="quantize — control changes apply on the next beat (quarter note), so playback never skips mid-bar">Q <span class="qnote">♩</span></span></span>
-      <span class="tsep"></span>
-      <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-      <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-      <span class="tsep"></span>
-      <button class="party-btn" id="partyBtn" title="party — nonstop auto-DJ set: seamlessly rolls new loops in your chosen selecta style">party</button>
-      <span class="tctl"><select id="partyDur" class="sel uctl party-dur" title="party length. Up/Down then Enter to pick · Left/Right scrolls live">
-        <option value="5">5m</option>
-        <option value="10" selected>10m</option>
-        <option value="20">20m</option>
-        <option value="30">30m</option>
-        <option value="60">60m</option>
-      </select></span>
-      <span class="tctl"><select id="djSel" class="sel uctl" title="selecta style — the record crate: which genres the set draws from and how often it hops. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-      <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level."></select></span>
-      <span class="tsep"></span>
-      
+      <div class="ctrlmod" title="Transport">
+        <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
+        <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
+        <button class="btn" id="nextBtn" title="skip to the next loop (N)"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none" style="display:block"><path d="M5 5l9 7-9 7z"/><rect x="16" y="5" width="2.6" height="14" rx="0.6"/></svg></button>
+        <button class="btn dm-kill" id="killBtn" title="kill switch — mute the mix without stopping playback (talk / dictate, then unmute)">⏻</button>
+      </div>
+      <div class="ctrlmod" title="Generate">
+        <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — the style of loop to generate (House, Techno, Breaks, D&amp;B, Big Room). Up/Down then Enter to pick · Left/Right scrolls live">
+            <option value="house" selected>House</option>
+            <option value="techno">Techno</option>
+            <option value="breaks">Breaks</option>
+            <option value="dnb">Drum &amp; Bass</option>
+            <option value="bigroom">Big Room</option>
+          </select>
+        </span>
+        <span class="tctl"><select id="lenSel" class="sel uctl" title="loop length in bars — longer loops build through more phrasing. Up/Down then Enter to pick · Left/Right scrolls live">
+            <option value="4" selected>4 bars</option>
+            <option value="8">8 bars</option>
+            <option value="16">16 bars</option>
+            <option value="32">32 bars</option>
+            <option value="64">64 bars</option>
+            <option value="128">128 bars</option>
+          </select>
+        </span>
+        <span class="tctl"><span id="quantReadout" class="sel qread" title="quantize — control changes apply on the next beat (quarter note), so playback never skips mid-bar">Q <span class="qnote">♩</span></span></span>
+      </div>
+      <div class="ctrlmod" title="Feel">
+        <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+        <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+      </div>
+      <div class="ctrlmod" title="Party">
+        <button class="party-btn" id="partyBtn" title="party — nonstop auto-DJ set: seamlessly rolls new loops in your chosen selecta style">party</button>
+        <span class="tctl"><select id="partyDur" class="sel uctl party-dur" title="party length. Up/Down then Enter to pick · Left/Right scrolls live">
+          <option value="5">5m</option>
+          <option value="10" selected>10m</option>
+          <option value="20">20m</option>
+          <option value="30">30m</option>
+          <option value="60">60m</option>
+        </select></span>
+        <span class="tctl"><select id="djSel" class="sel uctl" title="select the style — the record crate: which genres the set draws from and how often it hops. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+        <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level."></select></span>
+      </div>
       <span class="loadhint" id="loadHint"></span>
     </div>
 
@@ -334,7 +342,7 @@
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_2_0</div>
+      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_3_0</div>
       <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
       <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
 
@@ -450,11 +458,11 @@
   // Voice roles are consistent: drums=kick, perc=hats/snare(noise), bass=triangle,
   // lead=melody, synth=chords, accent=extra stabs, fills=noise turnaround.
   const GENRE={
-    bigroom:{ name:"Big Room", bpm:128, build:bigroom },
-    house:  { name:"House",    bpm:124, build:house },
-    techno: { name:"Techno",   bpm:135, build:techno },
-    breaks: { name:"Breaks",   bpm:130, build:breaks },
-    dnb:    { name:"Drum & Bass", bpm:174, build:dnb }
+    bigroom:{ name:"Big Room", bpm:128, tempo:[128,132], build:bigroom },
+    house:  { name:"House",    bpm:124, tempo:[120,126], build:house },
+    techno: { name:"Techno",   bpm:135, tempo:[128,140], build:techno },
+    breaks: { name:"Breaks",   bpm:130, tempo:[120,134], build:breaks },
+    dnb:    { name:"Drum & Bass", bpm:174, tempo:[150,190], build:dnb }
   };
 
   // ---- BIG ROOM — 4-on-floor, hard anchored 1, clap 2&4, offbeat hats, minimal bass, big chords
@@ -1640,14 +1648,30 @@
   let loopStartAudio=0, loopDur=0;    // audio-time anchor + current loop length
   const PARTY_GENRES=["house","breaks","dnb","bigroom"];
 
-  // Selecta styles — each = a record crate (which genres + how often it hops) with a clamped BPM range.
-  //  genreChance = chance/loop to hop genre; pool = genres it draws from; bars = length pool;
-  //  bpm = [min,max] the set is held within (each loop clamps into this — no compounding runaway).
+  // ═══════════════════════════════════════════════════════════════════════════════
+  //  THE PARTY GRID — the constraint matrix that governs AUTOMATION (party mode only).
+  //  Nothing here applies to plain play; it's all the rules that fire while a party set runs.
+  //  Three owners, cleanly separated:
+  //    • SELECTA (DJ_MODES) owns BARS — an allowed-set per style + change frequency + which
+  //      genres it draws from (pool) and how often it hops (genreChance).
+  //    • GENRE (GENRE[].tempo) owns TEMPO — a valid BPM range per genre (the hard outer clamp;
+  //      the selecta's bpm range only biases WITHIN it). See the tempo block in partyReroll().
+  //    • TIME SLOT (VIBES) owns LEVEL / DENSITY / PACE — multipliers for the club-night arc.
+  //  To tune any automation behavior, change the value in its owner here. (House is precisely
+  //  dialed; the other selectas/genres are reasonable-but-rough — refine per BLOG party-grid item.)
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  // Selecta styles — each = a record crate. CONSTRAINTS:
+  //  genreChance = chance/loop to hop genre; pool = genres it draws from.
+  //  barsAllowed = the ONLY bar lengths this style uses (fixed dropdown values, not multiplied).
+  //  barsChange  = chance/loop to re-pick a new length from barsAllowed (else keep current).
+  //  bpm = [min,max] the style biases within — but the GENRE's tempo range is the hard outer clamp
+  //        (never D&B at 75), so effective tempo = genre range ∩ this, pick inside.
   const DJ_MODES=[
-    { id:"house",  name:"House",         genreChance:0.35, bars:[32,32,64,64],    pool:["house"],                                  bpm:[120,126] },
-    { id:"battle", name:"Battle",        genreChance:0.90, bars:[4,4,8,8],        pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
-    { id:"open",   name:"Open Format",   genreChance:0.50, bars:[16,32,32,64,64], pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
-    { id:"warehouse", name:"Warehouse Rave", genreChance:0.08, bars:[64,128,128], pool:["house","techno","bigroom"],               bpm:[140,200] }
+    { id:"house",  name:"House",         genreChance:0.35, barsAllowed:[64,128],    barsChange:0.25, pool:["house"],                                  bpm:[120,126] },
+    { id:"battle", name:"Battle",        genreChance:0.90, barsAllowed:[4],         barsChange:0.0,  pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
+    { id:"open",   name:"Open Format",   genreChance:0.50, barsAllowed:[4,8,16,32], barsChange:0.5,  pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
+    { id:"warehouse", name:"Warehouse Rave", genreChance:0.08, barsAllowed:[64,128], barsChange:0.15, pool:["house","techno","bigroom"],           bpm:[140,200] }
   ];
   let djIdx=0;   // default House
   const djMode = () => DJ_MODES[djIdx];
@@ -1684,16 +1708,23 @@
     // if the current genre isn't in this mode's pool (e.g. just switched to House/Warehouse),
     // pull it into the pool so the mode's identity holds
     if(!M.pool.includes(nextGenre)){ nextGenre=M.pool[0]; nextBPM=GENRE[nextGenre].bpm; }
-    // length from the mode's pool (most loops, so length tracks the style)
-    if(Math.random()<0.7){ nextBars=M.bars[Math.floor(Math.random()*M.bars.length)]; }
-    // VIBE pace: bias loop length by the slot (opener long/patient, headliner short/rapid cuts)
-    nextBars=Math.max(4, Math.round(nextBars*vibe().barBias/4)*4);
-    // Clamp tempo into the selecta's BPM range. No compounding — each loop lands INSIDE [min,max],
-    // so the set can't creep upward song-to-song (that was the runaway-to-200 bug).
-    if(M.bpm){
-      const [lo,hi]=M.bpm;
-      if(nextBPM<lo || nextBPM>hi){ nextBPM = lo + Math.floor(Math.random()*(hi-lo+1)); }
-      nextBPM = Math.max(lo, Math.min(hi, nextBPM));
+    // BARS — constrained by the SELECTA's allowed-set. Value is always a real dropdown option
+    // (never multiplied off-grid). With barsChange probability, re-pick from the allowed set; else
+    // keep current if it's still allowed, otherwise snap into the set. Time slot no longer touches
+    // bars — the selecta owns length; the slot owns level/density/pace.
+    const allow=M.barsAllowed||[64,128];
+    if(!allow.includes(nextBars) || Math.random()<(M.barsChange||0)){
+      nextBars = allow[Math.floor(Math.random()*allow.length)];
+    }
+    // TEMPO — the GENRE range is the hard outer clamp (never D&B at 75); the selecta range biases
+    // WITHIN it. effective = genre ∩ selecta; pick inside. Guarantees musically valid tempo.
+    {
+      const gT = GENRE[nextGenre].tempo || [GENRE[nextGenre].bpm, GENRE[nextGenre].bpm];
+      const sT = M.bpm || gT;
+      const lo = Math.max(gT[0], sT[0]);
+      const hi = Math.min(gT[1], sT[1]);
+      if(lo<=hi){ nextBPM = lo + Math.floor(Math.random()*(hi-lo+1)); }
+      else { nextBPM = GENRE[nextGenre].bpm; }   // ranges don't overlap → fall back to genre default
     }
 
     // build the next pattern under the chosen genre/bars, then restore live state
@@ -1716,10 +1747,19 @@
     partyEndsAt=performance.now()+mins*60000;
     partyBtn.classList.add("live"); partyBtn.textContent="stop";
     if(!playing) startTransport();
-    // start from whatever's already set (genre + bars) — anchor the loop clock now
+    applyVibeLevel();   // set the slot's master level for the set
+    // Party DEFAULT on press: open the set at the max 128 bars (a full long phrase), regardless of
+    // the plain-play loop length. Build a fresh 128-bar loop under the current genre and play it
+    // NOW, and sync the UI to it. The normal reroll evolution then takes over at the next boundary.
+    setBars(128);
+    { const seed=(Date.now()^(Math.floor(Math.random()*0xffffffff)))>>>0;
+      transpose=[-5,-3,0,0,2,3,5,7][Math.floor(mkRnd(seed)()*8)];
+      pattern=buildPattern(seed); rebuildEvents(); }
+    { const ls=document.getElementById("lenSel"); if(ls) ls.value="128";
+      const gs=document.getElementById("genreSel"); if(gs) gs.value=genre;
+      const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar"; }
     loopStartAudio=(loopStartCtx||actx.currentTime);
     loopDur=loopLen();
-    applyVibeLevel();   // set the slot's master level for the set
     setMsg("Party on — "+djMode().name+" · "+vibe().name+" · "+mins+" min 🎉", MAG);
   }
   function stopParty(){
@@ -2042,7 +2082,7 @@
   // the focused control's value (see bindUctl/bindWheel).
   function navRows(){
     // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["genBtn","playBtn","nextBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel","vibeSel"]
+    const controls=["playBtn","genBtn","nextBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel","vibeSel"]
       .map(id=>document.getElementById(id)).filter(Boolean);
     // Voices row: the 7 voice-type selects, in DOM order.
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));

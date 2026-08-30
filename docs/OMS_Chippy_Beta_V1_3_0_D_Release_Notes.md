@@ -1,6 +1,6 @@
 # OMS Chippy — Release Notes
 
-## V1_2_0 (2026-08-29)
+## V1_3_0 (2026-08-29)
 
 **Performance & Recording release.** This is a minor-version roll that closes out the long V1.0 iteration line as one substantial feature release. Highlights:
 

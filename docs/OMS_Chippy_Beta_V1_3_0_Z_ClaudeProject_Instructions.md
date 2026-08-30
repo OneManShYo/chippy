@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_2_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_3_0] — CLAUDE PROJECT INSTRUCTIONS
 
 **License:** GPL-3.0 · Development protocols & principles
 
@@ -10,7 +10,7 @@ A browser-native chiptune EDM generator. Independent sibling app to OMS Dojo and
 
 ## CORE PRINCIPLES
 
-- **Single-file, no dependencies, no build.** Never split, never add a framework, package, or bundled library. (An MP3 export using inlined lamejs was tried in V0_3_1 and reverted in V1_2_0 to keep this principle; export is native WAV.)
+- **Single-file, no dependencies, no build.** Never split, never add a framework, package, or bundled library. (An MP3 export using inlined lamejs was tried in V0_3_1 and reverted in V1_3_0 to keep this principle; export is native WAV.)
 - **Dance-only.** Chippy generates EDM. Every genre anchors beat 1 (accented kick + phrase-top crash, clap/snare on 2 & 4, last-bar fill). No "random notes in key" — patterns must read as their genre.
 - **In-key by construction.** All pitches come from the scale via `deg()`. No accidental notes possible.
 - **One event shape.** Generators emit `{step,dur,note,accent?,snare?,crash?}`. Scheduler, synth, and roll stay agnostic to the source — this is the MIDI swap-in seam.
@@ -19,8 +19,8 @@ A browser-native chiptune EDM generator. Independent sibling app to OMS Dojo and
 ## VERSIONING
 
 - Format `V#_#_#` (Major_Minor_Patch), underscores.
-- Iterations at the current minor (e.g. V0_1_0 → V1_2_0); bug fixes edit in place, features bump the patch letter/number.
-- Deliverables packages wrap an iteration series into the next version. (V1_2_0 is the debut package — build and package number aligned; the wrap-into-next cadence starts after.)
+- Iterations at the current minor (e.g. V0_1_0 → V1_3_0); bug fixes edit in place, features bump the patch letter/number.
+- Deliverables packages wrap an iteration series into the next version. (V1_3_0 is the debut package — build and package number aligned; the wrap-into-next cadence starts after.)
 - HTML carries current version only (title, header, about, status). No changelog in the HTML.
 
 ## BUILD PROTOCOL

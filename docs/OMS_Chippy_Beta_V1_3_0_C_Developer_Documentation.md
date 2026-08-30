@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_2_0] — DEVELOPER DOCUMENTATION
+# OMS Chippy [Beta V1_3_0] — DEVELOPER DOCUMENTATION
 
 **License:** GPL-3.0 · Single-file HTML · Chrome-targeted · no dependencies · no build
 
