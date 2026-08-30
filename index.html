@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_0_1  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_0_14  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,22 +10,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_0_1]</title>
+<title>OMS Chippy [Beta V1_0_14]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
     font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif;
     background:#000; color:#e0e0e0; min-height:100vh;
-    display:flex; justify-content:center; padding:20px;
+    display:flex; justify-content:center; padding:0;
     scrollbar-width:none; -ms-overflow-style:none;
   }
   body::-webkit-scrollbar { display:none; }
   .app {
-    width:100%; max-width:1080px;
+    position:relative;
+    width:100%; min-width:680px; max-width:100%;
+    min-height:100vh;
     background:linear-gradient(135deg,#0c0c0c,#1a1a1a);
-    border-left:10px solid #666; border-right:10px solid #666;
-    border-radius:3px; overflow:hidden;
+    /* Moog/Buchla-style wood end-cheeks: warm walnut panels capping the instrument,
+       framing the dark technical face. Dimensional via layered gradients + inner bevel. */
+    border-left:22px solid transparent; border-right:22px solid transparent;
+    border-image:linear-gradient(180deg,#3d2817 0%,#5a3a22 8%,#4a2f1b 22%,#6b4428 45%,#4a2f1b 68%,#5a3a22 85%,#3a2515 100%) 1;
+    overflow:hidden;
   }
+  /* thin folded-metal rail between wood cheek and the dark face —
+     the aluminium faceplate edge on a real modular. Crisp, brushed, catches light. */
+  .app::before, .app::after {
+    content:""; position:absolute; top:0; bottom:0; width:2px; z-index:50; pointer-events:none;
+    background:linear-gradient(90deg,#2a2a2a 0%,#8a8d90 25%,#c8ccce 50%,#6f7276 75%,#242424 100%);
+    box-shadow:0 0 1px rgba(0,0,0,.6);
+  }
+  .app::before { left:0;  }
+  .app::after  { right:0; }
   .mono { font-family:'Courier New',monospace; }
 
   /* header */
@@ -128,6 +142,10 @@
     font-size:12px; padding:5px 7px; font-family:'Courier New',monospace; line-height:1.2; cursor:pointer;
   }
   .sel:hover { border-color:#444; }
+  /* quantize readout — display-only, styled like a control but inactive */
+  .qread { color:#6a6a6a; cursor:default; opacity:.85; user-select:none; display:inline-flex; align-items:center; gap:3px; }
+  .qread:hover { border-color:#333; }
+  .qread .qnote { font-size:16px; line-height:1; position:relative; top:1px; }
   .tsep { width:1px; align-self:stretch; background:#2a2a2a; margin:0 2px; }
 
   /* compact wheel picker (replaces tempo/swing sliders) */
@@ -200,7 +218,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_0_1]</span>
+      <span class="ver">[Beta&nbsp;V1_0_14]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -240,7 +258,11 @@
 
     <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Controls</span><span class="rule"></span></div>
     <div class="transport">
-      <span class="tctl"><select id="genreSel" class="sel" title="genre — the style of loop to generate (House, Techno, Breaks, D&B, Big Room)">
+      <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
+      <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
+      <button class="btn" id="nextBtn" title="skip to the next loop (N)">⏭</button>
+      <span class="tsep"></span>
+      <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — the style of loop to generate (House, Techno, Breaks, D&B, Big Room). Up/Down then Enter to pick · Left/Right scrolls live">
           <option value="house" selected>House</option>
           <option value="techno">Techno</option>
           <option value="breaks">Breaks</option>
@@ -248,7 +270,7 @@
           <option value="bigroom">Big Room</option>
         </select>
       </span>
-      <span class="tctl"><select id="lenSel" class="sel" title="loop length in bars — longer loops build through more phrasing (up to ~1 min)">
+      <span class="tctl"><select id="lenSel" class="sel uctl" title="loop length in bars — longer loops build through more phrasing. Up/Down then Enter to pick · Left/Right scrolls live">
           <option value="4" selected>4 bars</option>
           <option value="8">8 bars</option>
           <option value="16">16 bars</option>
@@ -257,24 +279,22 @@
           <option value="128">128 bars</option>
         </select>
       </span>
+      <span class="tctl"><span id="quantReadout" class="sel qread" title="quantize — control changes apply on the next beat (quarter note), so playback never skips mid-bar">Q <span class="qnote">♩</span></span></span>
       <span class="tsep"></span>
-      <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
-      <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
-      <button class="btn" id="nextBtn" title="skip to the next loop (N)">⏭</button>
-      <button class="btn" id="exportBtn" title="export WAV">WAV</button>
-      <span class="tsep"></span>
-      <span class="wheel" id="bpmWheel" title="tempo — scroll or drag"><span class="wl">tempo</span><span class="wv" id="bpmVal">128</span></span>
-      <span class="wheel" id="swingWheel" title="swing — scroll or drag"><span class="wl">swing</span><span class="wv" id="swingVal">0%</span></span>
+      <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+      <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
       <span class="tsep"></span>
       <button class="party-btn" id="partyBtn" title="party — nonstop auto-DJ set: seamlessly rolls new loops in your chosen DJ style">party</button>
-      <select id="partyDur" class="sel party-dur" title="party length">
+      <span class="tctl"><select id="partyDur" class="sel uctl party-dur" title="party length. Up/Down then Enter to pick · Left/Right scrolls live">
         <option value="5">5m</option>
         <option value="10" selected>10m</option>
         <option value="20">20m</option>
         <option value="30">30m</option>
         <option value="60">60m</option>
-      </select>
-      <span class="wheel" id="djWheel" title="DJ style — scroll to change how the party evolves"><span class="wv" id="djVal">House</span></span>
+      </select></span>
+      <span class="tctl"><select id="djSel" class="sel uctl" title="DJ style — how the party evolves. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+      <span class="tsep"></span>
+      <button class="btn" id="exportBtn" title="export WAV">WAV</button>
       <span class="loadhint" id="loadHint"></span>
     </div>
 
@@ -295,7 +315,7 @@
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="font-size:26px;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff006e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ONEMANSHYO <span style="font-size:14px;color:#ffa500;-webkit-text-fill-color:#ffa500;">chippy app</span></div>
-      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_0_1</div>
+      <div style="color:#00d4ff;font-size:15px;font-weight:600;margin-top:10px;">Beta V1_0_14</div>
       <div style="color:#aaa;font-size:14px;margin-top:4px;">Chiptune Dance Music Generator</div>
       <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#fff;">OMS Dojo</span> and <span style="color:#fff;">Sozo</span>.</div>
 
@@ -850,17 +870,57 @@
   //  TRANSPORT  (lookahead scheduler + rAF playhead)
   // ============================================================
   let playing=false;
+  let playOriginCtx=0;     // fixed wall-clock anchor for the beat-quantize grid (set once at start)
+  let quantTargetCtx=0;    // absolute ctx time of the armed beat swap (0 = none armed)
   let loopStartCtx=0;      // actx.currentTime when current loop iteration started
   let posSec=0;            // playhead position within loop (for draw)
   let schedIdx=0;          // next event index to schedule
   let schedUntil=0;        // audio time scheduled up to
   const LOOKAHEAD=0.25;    // seconds of lookahead (generous buffer so bg pump stutters don't drop notes)
 
+  // ---- Beat quantize ----
+  // Control changes made while playing wait for the next beat (quarter note) so playback
+  // never skips mid-bar. The scheduler applies queued changes exactly on the beat, ahead of
+  // time within its look-ahead window (clean cut). Reusable: pass any change to quantize().
+  const pendingQuant=[];   // queued change functions, applied by scheduler at the next beat
+  function quantize(fn){
+    if(!playing || !actx){ fn(); return; }        // stopped: apply immediately
+    pendingQuant.push(fn);
+    if(!quantTargetCtx) quantTargetCtx=nextBeatCtx();
+    setMsg("Queued — applies on the beat", CY);
+  }
+  // absolute ctx time of the first beat strictly after now (+ a guard so we never
+  // target a beat so close it has already been dispatched to fireVoice).
+  function nextBeatCtx(){
+    const beatSec=secPerBeat();
+    const now=actx.currentTime;
+    const guard=0.02;                              // 20ms: don't pick a beat we're already on
+    const k=Math.floor((now - playOriginCtx)/beatSec + 1e-9);
+    let t=playOriginCtx + (k+1)*beatSec;
+    while(t < now + guard) t += beatSec;
+    return t;
+  }
+  // coalescing variant: repeated changes under the same key keep only the latest,
+  // so holding left/right on tempo doesn't stack a burst of changes on the beat.
+  const quantKeys={};
+  function quantizeKey(key, fn){
+    if(!playing || !actx){ fn(); return; }
+    if(quantKeys[key]){ quantKeys[key].fn=fn; }     // replace pending with latest
+    else {
+      const holder={fn};
+      quantKeys[key]=holder;
+      pendingQuant.push(()=>{ holder.fn(); delete quantKeys[key]; });
+    }
+    if(!quantTargetCtx) quantTargetCtx=nextBeatCtx();
+  }
+
   function startTransport(){
     ensureAudio();
     if(actx.state==="suspended"){ actx.resume(); }
     playing=true;
     loopStartCtx=actx.currentTime + 0.06;   // small offset so first hits aren't in the past
+    playOriginCtx=loopStartCtx;             // stable anchor for the beat-quantize grid
+    quantTargetCtx=0; pendingQuant.length=0;
     schedIdx=0; schedUntil=0;
     playBtn.textContent="❚❚";
     setMsg("Playing", CY);
@@ -883,6 +943,28 @@
     const barSec=STEPS_PER_BAR*secPerStep();
     // schedule events whose absolute time is within the horizon; wrap across loop boundary
     while(true){
+      // BEAT QUANTIZE: apply queued control changes at an ABSOLUTE beat target computed from a
+      // fixed origin (playOriginCtx) — never from the moving schedule front, so it can't recede.
+      // When the horizon reaches the target, stop scheduling the old pattern past it, apply the
+      // change, and restart the loop cleanly at that instant. Notes already dispatched before the
+      // target keep playing; nothing new from the old pattern is scheduled past it -> clean cut.
+      if(pendingQuant.length && quantTargetCtx){
+        if(quantTargetCtx <= horizon){
+          // don't schedule any old-pattern event at or after the cut
+          const ev0=events[schedIdx];
+          if(ev0){
+            const when=loopStartCtx+ev0.t;
+            if(when < quantTargetCtx - 1e-6){ if(when>=now-0.001) fireVoice(ev0, when); schedIdx++; continue; }
+          }
+          const q=pendingQuant.slice(); pendingQuant.length=0;
+          q.forEach(fn=>{ try{ fn(); }catch(e){} });
+          loopStartCtx = quantTargetCtx; schedIdx = 0;   // new loop starts at its top, on the beat
+          quantTargetCtx = 0;
+          L=loopLen();
+          if(loopStartCtx>horizon) break;
+          continue;
+        }
+      }
       // SKIP: if armed and a pending loop is ready, cut to it at the next bar boundary
       if(skipArmed && pendingParty){
         const posInLoop = (schedIdx<events.length) ? events[schedIdx].t : L;  // where we're scheduling
@@ -917,7 +999,7 @@
     genre=pp.genre; BPM=pp.bpm; transpose=pp.transpose;
     setBars(pp.bars);
     loopStartAudio=loopStartCtx; loopDur=loopLen();
-    bpmVal.textContent=BPM;
+    { const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM); }
     const gs=document.getElementById("genreSel"); if(gs) gs.value=genre;
     const ls=document.getElementById("lenSel"); if(ls) ls.value=String(BARS);
     const pn=document.getElementById("patName"); if(pn) pn.textContent="Party · "+GENRE[genre].name;
@@ -1486,9 +1568,8 @@
     if(!GENRE[g]) return;
     genre=g;
     BPM=GENRE[g].bpm;
-    bpmVal.textContent=BPM;
+    { const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM); }
     generate();
-    if(playing && actx){ loopStartCtx=actx.currentTime + 0.06; schedIdx=0; posSec=0; }
     setMsg(GENRE[g].name+" · "+BPM+" BPM", CY);
   }
 
@@ -1582,9 +1663,7 @@
   const playBtn=document.getElementById("playBtn");
   const genBtn=document.getElementById("genBtn");
   const timeDisp=document.getElementById("timeDisp");
-  const bpmVal=document.getElementById("bpmVal");
-  const swingVal=document.getElementById("swingVal");
-  const bpmWheel=document.getElementById("bpmWheel"), swingWheel=document.getElementById("swingWheel");
+  // (tempo/swing now render inside their <select> options; no separate value spans)
   const statusMsg=document.getElementById("statusMsg");
   function setMsg(t,c){ if(!statusMsg) return; statusMsg.textContent=t; statusMsg.style.color=c||CY; }
 
@@ -1690,22 +1769,29 @@
     setMsg("Rendering WAV…", CY);
     exportWav().catch(e=>setMsg("Export failed: "+e.message, MAG));
   };
-  document.getElementById("genreSel").onchange=e=>setGenre(e.target.value);
+  document.getElementById("genreSel").onchange=e=>{ const g=e.target.value; quantize(()=>setGenre(g)); };
   document.getElementById("lenSel").onchange=e=>{
-    setBars(+e.target.value);
-    generate();
-    document.getElementById("patLen").textContent=BARS+" bars · 16 steps/bar";
-    if(playing && actx){ loopStartCtx=actx.currentTime + 0.06; schedIdx=0; posSec=0; }
-    setMsg(BARS+"-bar loop · "+GENRE[genre].name, CY);
+    const nb=+e.target.value;
+    quantize(()=>{
+      setBars(nb);
+      generate();
+      document.getElementById("patLen").textContent=BARS+" bars · 16 steps/bar";
+      setMsg(BARS+"-bar loop · "+GENRE[genre].name, CY);
+    });
   };
 
-  // ---- wheel pickers (scroll or vertical drag) ----
+  // ---- control apply functions ----
+  // Changes are gated to the beat by quantize(); the scheduler restarts the new loop cleanly
+  // from its top at that beat boundary. Apply functions just swap content + rebuild events.
   function applyBpm(v){
-    BPM=Math.max(70,Math.min(180, Math.round(v))); bpmVal.textContent=BPM; rebuildEvents();
-    if(playing && actx){ loopStartCtx=actx.currentTime - (posSec % loopLen()); schedIdx=0; }
+    BPM=Math.max(70,Math.min(180, Math.round(v)));
+    const bs=document.getElementById("bpmSel"); if(bs && String(BPM)!==bs.value) bs.value=String(BPM);
+    rebuildEvents();
   }
   function applySwing(v){
-    const p=Math.max(0,Math.min(60, Math.round(v))); SWING=p/100; swingVal.textContent=p+"%"; rebuildEvents();
+    const p=Math.max(0,Math.min(60, Math.round(v))); SWING=p/100;
+    const ss=document.getElementById("swingSel"); if(ss && String(p)!==ss.value) ss.value=String(p);
+    rebuildEvents();
   }
   // generic wheel binder: el, getter, setter, step
   function bindWheel(el, get, set, step){
@@ -1738,17 +1824,59 @@
     el.addEventListener("pointerup", end);
     el.addEventListener("pointercancel", end);
   }
-  bindWheel(bpmWheel,   ()=>BPM,          applyBpm,   1);
-  bindWheel(swingWheel, ()=>SWING*100,    applySwing, 1);
-  // DJ style wheel — cycles Battle / Open Format / Warehouse
-  const djWheel=document.getElementById("djWheel"), djVal=document.getElementById("djVal");
+  // ---- Unified control behavior ----
+  // Every converted control is a native <select>: Up/Down browses + Enter commits
+  // (native behavior). Left/Right = smooth scroll — moves to the adjacent option AND
+  // applies it live, immediately, without waiting for Enter.
+  function bindUctl(sel, apply){
+    sel.addEventListener("keydown", e=>{
+      if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+        e.preventDefault();
+        const d = e.key==="ArrowRight" ? 1 : -1;
+        let i = sel.selectedIndex + d;
+        i = Math.max(0, Math.min(sel.options.length-1, i));
+        if(i!==sel.selectedIndex){ sel.selectedIndex=i; apply(sel.value); }
+      }
+    });
+    // mouse/touch pick commits live too
+    sel.addEventListener("change", ()=>apply(sel.value));
+  }
+
+  // populate tempo select (BPM range) and wire it
+  const bpmSel=document.getElementById("bpmSel");
+  (function(){ let h=""; for(let b=90;b<=175;b++){ h+='<option value="'+b+'"'+(b===BPM?" selected":"")+'>Tempo '+b+'</option>'; } bpmSel.innerHTML=h; })();
+  bindUctl(bpmSel, v=>quantizeKey("bpm", ()=>applyBpm(parseInt(v,10))));
+
+  // populate swing select (0–60%) and wire it
+  const swingSel=document.getElementById("swingSel");
+  (function(){ let h=""; for(let s=0;s<=60;s++){ h+='<option value="'+s+'"'+(s===Math.round(SWING*100)?" selected":"")+'>Swing '+s+'%</option>'; } swingSel.innerHTML=h; })();
+  bindUctl(swingSel, v=>quantizeKey("swing", ()=>applySwing(parseInt(v,10))));
+
+  // DJ style select
+  const djSel=document.getElementById("djSel");
+  (function(){ let h=""; DJ_MODES.forEach((m,i)=>{ h+='<option value="'+i+'"'+(i===djIdx?" selected":"")+'>'+m.name+'</option>'; }); djSel.innerHTML=h; })();
   function applyDj(i){
-    djIdx=((i%DJ_MODES.length)+DJ_MODES.length)%DJ_MODES.length;   // wrap
-    djVal.textContent=DJ_MODES[djIdx].name;
+    djIdx=((i%DJ_MODES.length)+DJ_MODES.length)%DJ_MODES.length;
+    if(djSel.selectedIndex!==djIdx) djSel.selectedIndex=djIdx;
     setMsg("DJ style: "+DJ_MODES[djIdx].name, CY);
   }
-  bindWheel(djWheel, ()=>djIdx, applyDj, 1);
-  djVal.textContent=DJ_MODES[djIdx].name;
+  bindUctl(djSel, v=>quantizeKey("dj", ()=>applyDj(parseInt(v,10))));
+
+  // genre, length, party duration already have change handlers — add left/right live-scroll
+  // that simply moves the selection and fires the native change event (no double-wiring).
+  function bindUctlNative(sel){
+    sel.addEventListener("keydown", e=>{
+      if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+        e.preventDefault();
+        const d = e.key==="ArrowRight" ? 1 : -1;
+        let i = Math.max(0, Math.min(sel.options.length-1, sel.selectedIndex + d));
+        if(i!==sel.selectedIndex){ sel.selectedIndex=i; sel.dispatchEvent(new Event("change",{bubbles:true})); }
+      }
+    });
+  }
+  bindUctlNative(document.getElementById("genreSel"));
+  bindUctlNative(document.getElementById("lenSel"));
+  bindUctlNative(document.getElementById("partyDur"));
   // background-play toggle
   const bgBtn=document.getElementById("bgBtn");
   bgBtn.onclick=()=>{
@@ -1781,14 +1909,17 @@
     else if(e.key==="n"||e.key==="N"){ e.preventDefault(); skipNext(); }
   });
 
-  window.addEventListener("resize",()=>{ resize(); resizeFace(); if(raveActive) resizeRave(); });
+  let _resizeT=null;
+  function handleResize(){ resize(); resizeFace(); if(raveActive) resizeRave(); }
+  window.addEventListener("resize",()=>{ clearTimeout(_resizeT); _resizeT=setTimeout(handleResize,80); });
+  window.addEventListener("orientationchange",()=>{ setTimeout(handleResize,120); });
 
   // ============================================================
   //  BOOT
   // ============================================================
   genre="house";
   BPM=GENRE.house.bpm;
-  bpmVal.textContent=BPM;
+  { const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM); }
   pattern=buildPattern(0x1337);
   rebuildEvents();
   buildStrip();

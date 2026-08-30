@@ -1,18 +1,39 @@
-## V1_0_0 — Tight Button Cluster (2026-08-29)
+# OMS Chippy — Changelog
+
+## V1_0_14 — Beat-Quantize Clean Cut (2026-08-29)
+
+### Fixed
+- **Control changes while playing now land cleanly on the next beat with no audible skip.** The beat-quantize swap is computed against a fixed playback-origin grid and an absolute audio-clock target, so the boundary can no longer recede past the scheduler's look-ahead window (the bug that made changes fail to apply in the V1_0_11/12 attempts). Any already-scheduled notes from the outgoing pattern finish; nothing new from it is scheduled past the cut, so the loop restarts glitch-free on the beat.
+
+### Changed
+- Beat-quantize now shares the same clean-cut principle as the skip/party swap, aligned to the next beat instead of the next bar.
+
+---
+
+## V1_0_1 — Persistence Button Relabel (2026-08-29)
+
+### Changed
+- **Renamed the ∞ button's function from "continuous play" to "persistence."** It keeps playback alive when you switch to another browser tab — not a loop/continuous-play control. Corrected the tooltip and on/off status messages (mechanism unchanged).
+
+*First iteration on the V1.0 release series (V1.0.0 → V1.0.1). The V0_0_x entries below are the pre-release development history.*
+
+---
+
+## V0_0_54 — Tight Button Cluster (2026-08-29)
 
 ### Fixed
 - **The rave controls now sit together as a tight cluster.** The empty record timer was reserving a fixed width between REC and ∞, forcing a gap; it now collapses to zero when empty and only appears (to the left of the buttons) while actually recording. Orientation, REC, and ∞ now group cleanly at the far right.
 
 ---
 
-## V1_0_0 — Overlapped Orientation Icon (2026-08-29)
+## V0_0_54 — Overlapped Orientation Icon (2026-08-29)
 
 ### Changed
 - **The orientation icon's landscape and portrait marks now overlap concentrically** (Adobe-style) inside the same square button instead of sitting side by side — the button keeps its normal size, and the active orientation is highlighted over the dimmed other.
 
 ---
 
-## V1_0_0 — Coloured Control Icons (2026-08-29)
+## V0_0_54 — Coloured Control Icons (2026-08-29)
 
 ### Changed
 - **REC is now always red** (its identity as a record button) and **blinks only while actually recording**. The timer is red too.
@@ -20,14 +41,14 @@
 
 ---
 
-## V1_0_0 — Orientation Icon Shows Both States (2026-08-29)
+## V0_0_54 — Orientation Icon Shows Both States (2026-08-29)
 
 ### Changed
 - **The orientation toggle now shows both a landscape and a portrait mark in the same button**, with the active one bright and the other dimmed — so it clearly reads as "switch orientation" and indicates which you're on.
 
 ---
 
-## V1_0_0 — Recordings Now Have Audio (2026-08-29)
+## V0_0_54 — Recordings Now Have Audio (2026-08-29)
 
 ### Fixed
 - **The rave recording now includes sound.** It was capturing the canvas only, so the exported video played silent. It now taps the live Chippy master audio bus and mixes it into the recording as an audio track, so the file has picture *and* sound.
@@ -35,7 +56,7 @@
 
 ---
 
-## V1_0_0 — Modular Icon Buttons (2026-08-29)
+## V0_0_54 — Modular Icon Buttons (2026-08-29)
 
 ### Changed
 - **The three top-bar controls are now identical modular icon buttons** — same fixed 30×30 size, border, radius, and style. Icons only: orientation (▬ landscape / ▮ portrait), record (⏺ / ⏹ stop), and continuous play (∞).
@@ -43,7 +64,7 @@
 
 ---
 
-## V1_0_0 — Contextual Rave Controls in the Global Bar (2026-08-29)
+## V0_0_54 — Contextual Rave Controls in the Global Bar (2026-08-29)
 
 ### Changed
 - **Reorganised the top-right controls.** The ∞ (continuous play) toggle is now first and always visible. The **16:9/9:16 toggle and REC button live in the same global bar but only appear when you're on the RAVE ON tab** — contextual, clean, and off the canvas.
@@ -51,7 +72,7 @@
 
 ---
 
-## V1_0_0 — Shareable Recording Format (2026-08-29)
+## V0_0_54 — Shareable Recording Format (2026-08-29)
 
 ### Changed
 - **The recorder now grabs the most shareable format the browser natively supports.** It tries MP4/H.264 first and falls back to WebM only if MP4 isn't available. In practice: **on iPhone (iOS Safari) you get a real .mp4** that drops straight into the camera roll and posts to socials with no conversion; on desktop Chrome it's still WebM (Chrome can't natively record MP4). The file is named with the correct extension for whatever actually recorded, and the confirmation says which format you got.
@@ -59,7 +80,7 @@
 
 ---
 
-## V1_0_0 — Rave Controls Relocated (2026-08-29)
+## V0_0_54 — Rave Controls Relocated (2026-08-29)
 
 ### Changed
 - **Fixed the RAVE ON layout** — the control row above the canvas was pushing everything down (and wasting a whole row in 9:16). Removed it.
@@ -68,7 +89,7 @@
 
 ---
 
-## V1_0_0 — Rave Video Export + Orientation Toggle (2026-08-29)
+## V0_0_54 — Rave Video Export + Orientation Toggle (2026-08-29)
 
 ### Added
 - **Record button on RAVE ON** — captures the rave canvas to a downloadable **.webm video** (VP9, 60fps, 12 Mbps) with a live timer. Hit REC, let it rave, hit STOP → `ChippyRave_1920x1080_HHMMSS.webm`. Single-file, no dependencies; drops straight into an FFmpeg/ProRes → YouTube pipeline.
@@ -79,7 +100,7 @@
 
 ---
 
-## V1_0_0 — Rave Canvas 16:9 (2026-08-29)
+## V0_0_54 — Rave Canvas 16:9 (2026-08-29)
 
 ### Changed
 - **RAVE ON canvas is now a standard 16:9 (YouTube) ratio** instead of a variable 70vh box — taller and consistent, capped at 78vh so it never overflows.
@@ -87,42 +108,42 @@
 
 ---
 
-## V1_0_0 — Logo Link Hardening (2026-08-29)
+## V0_0_54 — Logo Link Hardening (2026-08-29)
 
 ### Changed
 - **Made the YoBot logo link fully explicit** — `https://onemanshyo.com/` (trailing slash) with `rel="noopener noreferrer"`. This rules out the app as the cause of the itswessmithyo.com redirect some users saw; that behaviour is browser-cached (HSTS / cached 301) or host-level domain forwarding, not anything in the file. (Test in Incognito, and clear the cached policy at chrome://net-internals/#hsts for onemanshyo.com.)
 
 ---
 
-## V1_0_0 — Consistent Section Frames (2026-08-29)
+## V0_0_54 — Consistent Section Frames (2026-08-29)
 
 ### Changed
 - **All four main section frames (Info, Controls, Voices, MATRIX) now share the same outer module border** — 1px #2a2a2a, 6px radius, #0a0a0a fill. Voices and MATRIX previously had no outer frame; now every section reads as the same big framed module for a consistent look.
 
 ---
 
-## V1_0_0 — Full Tooltip Coverage (2026-08-29)
+## V0_0_54 — Full Tooltip Coverage (2026-08-29)
 
 ### Added
 - **Hover tooltips across the whole UI.** Filled the gaps so everything explains itself: the genre and length selectors, the party button, and the MATRIX roll now have tooltips, joining the tabs, transport buttons, tempo/swing/DJ wheels, party duration, and the per-voice cards. Hover anything to see what it does.
 
 ---
 
-## V1_0_0 — Clickable Logo (2026-08-29)
+## V0_0_54 — Clickable Logo (2026-08-29)
 
 ### Added
 - **Clicking the YoBot logo mark opens onemanshyo.com** in a new tab, with a pointer cursor and a subtle hover lift.
 
 ---
 
-## V1_0_0 — Smaller Logo Mark (2026-08-29)
+## V0_0_54 — Smaller Logo Mark (2026-08-29)
 
 ### Changed
 - **YoBot logo mark in the header shrunk ~30%** (34px → 24px) for a subtler top-right mark.
 
 ---
 
-## V1_0_0 — Papa Chippy & The Kids (2026-08-29)
+## V0_0_54 — Papa Chippy & The Kids (2026-08-29)
 
 ### Added
 - **RAVE ON now has Papa Chippy's kids** — six colored, ~half-size Chippys orbiting Papa in the center, each on its own radius, speed, and direction, bouncing on the kick and drawn in the rave palette. Slightly squashed orbits give a little depth so they dance around him. Papa stays the big yellow centerpiece.
@@ -132,7 +153,7 @@
 
 ---
 
-## V1_0_0 — Chippy Back on the Card, YoBot as Logo Mark (2026-08-29)
+## V0_0_54 — Chippy Back on the Card, YoBot as Logo Mark (2026-08-29)
 
 ### Changed
 - **Reverted the Info card to the single dynamic Chippy** — the fun, animated face (drifting eyes, X-out on the beat, morphing mouth) is back as the centerpiece.
@@ -140,7 +161,7 @@
 
 ---
 
-## V1_0_0 — YoBot Un-Squashed + Smileys Restored (2026-08-29)
+## V0_0_54 — YoBot Un-Squashed + Smileys Restored (2026-08-29)
 
 ### Fixed
 - **YoBot no longer looks squashed.** The Info-card canvas had a fixed 480×300 backing store stretched to a wide, short display box, distorting everything drawn on it. The canvas now sizes its backing store to its actual displayed pixels (× DPR) on load, resize, and tab-switch, so the logo renders at its true aspect ratio.
@@ -149,7 +170,7 @@
 
 ---
 
-## V1_0_0 — Next / Skip Button (2026-08-29)
+## V0_0_54 — Next / Skip Button (2026-08-29)
 
 ### Added
 - **Next button (⏭)** next to play, plus the **N** key. If the current loop isn't your mood, skip ahead:
@@ -160,7 +181,7 @@
 
 ---
 
-## V1_0_0 — YoBot Logo on the Info Card (2026-08-29)
+## V0_0_54 — YoBot Logo on the Info Card (2026-08-29)
 
 ### Added
 - **The Info-card smiley is now the YoBot logo** (SMPTE-bars headphones mascot), embedded as base64 so the build stays single-file (adds ~32 KB; total ~112 KB). It pulses on the kick with a gentle bob.
@@ -171,7 +192,7 @@
 
 ---
 
-## V1_0_0 — Blue Labels + MATRIX Alignment (2026-08-29)
+## V0_0_54 — Blue Labels + MATRIX Alignment (2026-08-29)
 
 ### Changed
 - **Section labels (Info, Controls, Voices, MATRIX) recoloured to the tab blue** so they match the tab labels.
@@ -179,14 +200,14 @@
 
 ---
 
-## V1_0_0 — MATRIX (2026-08-29)
+## V0_0_54 — MATRIX (2026-08-29)
 
 ### Changed
 - **Renamed the "GRID" section to "MATRIX".**
 
 ---
 
-## V1_0_0 — Label Tidy (2026-08-29)
+## V0_0_54 — Label Tidy (2026-08-29)
 
 ### Changed
 - **All section labels (Info, Controls, Voices, GRID) recoloured to the Chippy orange** for a consistent look.
@@ -194,7 +215,7 @@
 
 ---
 
-## V1_0_0 — Kick Flavors (2026-08-29)
+## V0_0_54 — Kick Flavors (2026-08-29)
 
 ### Changed
 - **The Drums voice is now a kick-flavor selector instead of an oscillator selector.** Switching it always keeps it a kick (it's the anchor of the whole groove) — you now pick between drum-machine-style kicks live: **909** (snappy analog), **808** (deep booming sub, long tail), **Punch** (hard, mid-forward), **Click** (tight techno click), and **Noise** (raw noise-forward). Defaults to 909.
@@ -205,14 +226,14 @@
 
 ---
 
-## V1_0_0 — Techno 135 (2026-08-29)
+## V0_0_54 — Techno 135 (2026-08-29)
 
 ### Changed
 - **Techno tempo bumped to 135 BPM** (from 132).
 
 ---
 
-## V1_0_0 — Techno + House/Rave DJs (2026-08-29)
+## V0_0_54 — Techno + House/Rave DJs (2026-08-29)
 
 ### Added
 - **Techno genre** — a new four-on-the-floor style at 132 BPM: driving offbeat hats, a hypnotic rolling 16th sub-bass, a repetitive minor stab riff, sparse high blips. Minimal and relentless. Added to the genre dropdown (after House).
@@ -226,7 +247,7 @@
 
 ---
 
-## V1_0_0 — Continuous-Play Icon in Tab Bar (2026-08-29)
+## V0_0_54 — Continuous-Play Icon in Tab Bar (2026-08-29)
 
 ### Changed
 - **Moved the continuous-play toggle back up to the tab header row** so it's always visible, as an **infinity (∞) icon** instead of text. Green glow = on (default). Tooltip explains it.
@@ -234,14 +255,14 @@
 
 ---
 
-## V1_0_0 — Cleaner Voice Cards (2026-08-29)
+## V0_0_54 — Cleaner Voice Cards (2026-08-29)
 
 ### Changed
 - **Removed the coloured dots from the voice cards.** The colour cue now lives on the **level value** itself (each voice's number is tinted its colour), so it still reads as a legend without the extra dot. Tooltips still explain each voice. **Clicking anywhere on a card mutes/unmutes** it (the dropdown and level wheel still work normally); a muted card dims and its value greys out.
 
 ---
 
-## V1_0_0 — RAVE ON tab + Background Default (2026-08-29)
+## V0_0_54 — RAVE ON tab + Background Default (2026-08-29)
 
 ### Added
 - **RAVE ON** — a new second tab (TRACKS · RAVE ON · ABOUT). A full-screen, beat-reactive light show: colour-strobing background that flashes on the kick, rotating radial light beams, concentric rings pulsing out on the beat, a scatter of golden-angle dancing dots reacting to snare/lead, and **Big Chippy raving in the centre** (bouncing on the kick, eyes X-ing out on the downbeat, mouth morphing) — with a white burst on the crash. Reacts to whatever's playing, party or manual.
@@ -255,21 +276,21 @@
 
 ---
 
-## V1_0_0 — Warehouse = Four-on-the-Floor (2026-08-29)
+## V0_0_54 — Warehouse = Four-on-the-Floor (2026-08-29)
 
 ### Changed
 - **Warehouse mode now only moves between four-on-the-floor styles** (House and Big Room / EDM) — it never breaks into Breaks or D&B, so the steady kick-on-every-beat pulse holds all night. Each DJ mode now has an explicit genre pool (Battle and Open Format keep the full spread; Warehouse is FOTF-only).
 
 ---
 
-## V1_0_0 — Compact Controls (2026-08-29)
+## V0_0_54 — Compact Controls (2026-08-29)
 
 ### Changed
 - **Generate and Play/Pause are now icon-only** (⚄ and ▶/❚❚) with hover tooltips, freeing space so the controls row stays on one line instead of wrapping the DJ selector down.
 
 ---
 
-## V1_0_0 — Background Play: Moved & Hardened (2026-08-29)
+## V0_0_54 — Background Play: Moved & Hardened (2026-08-29)
 
 ### Changed
 - **Moved the "bg" toggle to the top-right of the tab bar** (by TRACKS / ABOUT), out of the controls row so it no longer causes the row to wrap. It's a more general/global control anyway.
@@ -280,7 +301,7 @@
 
 ---
 
-## V1_0_0 — Background Play (2026-08-29)
+## V0_0_54 — Background Play (2026-08-29)
 
 ### Added
 - **"bg" toggle** (next to the DJ selector) — keeps the music playing when you switch to another Chrome tab. Off by default; click to enable (turns solid/cyan).
@@ -292,7 +313,7 @@
 
 ---
 
-## V1_0_0 — DJ Styles (2026-08-29)
+## V0_0_54 — DJ Styles (2026-08-29)
 
 ### Added
 - **DJ style selector** — a wheel next to party + duration (scroll/drag/arrows) that sets how the party evolves:
@@ -306,7 +327,7 @@
 
 ---
 
-## V1_0_0 — Longer Loops + Phrase Accents/Fills (2026-08-29)
+## V0_0_54 — Longer Loops + Phrase Accents/Fills (2026-08-29)
 
 ### Added
 - **Length dropdown goes up to 128 bars** (4 / 8 / 16 / 32 / 64 / 128). At ~120 BPM a 128-bar loop is ~1 minute; faster genres (D&B ~174) compress toward ~35 s. This centres loops around the open-format / short-attention ~1-minute phrase length — hear one structure and the hook, then move on.
@@ -317,14 +338,14 @@
 
 ---
 
-## V1_0_0 — Mouth Fix (2026-08-29)
+## V0_0_54 — Mouth Fix (2026-08-29)
 
 ### Changed
 - **Toned down Big Chippy's mouth** — it was too wide and curved up far enough to crowd the eyes (looked a bit unhinged). Now smaller (narrower), thicker stroke, sitting lower on the face with a gentler curve, so it reads as a friendly grin that clears the eyes.
 
 ---
 
-## V1_0_0 — Party: Seamless & Actually Switches Genre (2026-08-29)
+## V0_0_54 — Party: Seamless & Actually Switches Genre (2026-08-29)
 
 ### Fixed
 - **No more skip/gap between party loops.** The old reroll reset the audio clock to `now + 0.06` at each boundary, which broke continuity. Now the next loop is *prepared ahead of time* (pattern, genre, bars, tempo all built into a pending buffer) and the scheduler swaps it in **exactly at the loop boundary** — `loopStartCtx += L`, no clock reset. Verified: 0.000000 s gap between loops. Fully continuous.
@@ -335,28 +356,28 @@
 
 ---
 
-## V1_0_0 — Big Chippy Gets a Mouth (2026-08-29)
+## V0_0_54 — Big Chippy Gets a Mouth (2026-08-29)
 
 ### Added
 - **Big Chippy (Info-card face) now has a mouth** that slowly drifts through emoji-style expressions — smile, flat, smirk (either side), open :D, small :o. It picks a new mood every ~5–9 s (much less often than the eyes) and gently morphs into it, so it reads as slow mood shifts rather than twitching. **Never frowns** — the curve only ever goes up or flat. Eyes keep their existing drift + downbeat X.
 
 ---
 
-## V1_0_0 — Grid-Aligned Notes (2026-08-29)
+## V0_0_54 — Grid-Aligned Notes (2026-08-29)
 
 ### Fixed
 - **Note blocks now land cleanly on the grid.** Previously, pitched voices (bass/lead/synth/accents) offset each block vertically by its pitch, so blocks floated at different heights within a lane and looked loose/misaligned. Every block is now a uniform height, centered on one consistent line per lane, pixel-rounded — reads like a proper step grid.
 
 ---
 
-## V1_0_0 — About: Apple Music / AMU (2026-08-29)
+## V0_0_54 — About: Apple Music / AMU (2026-08-29)
 
 ### Changed
 - Added **Apple Music** at the top of the Inspiration list, with a nod to the **Apple Music Understanding (AMU)** framework.
 
 ---
 
-## V1_0_0 — About: Inspiration (2026-08-29)
+## V0_0_54 — About: Inspiration (2026-08-29)
 
 ### Changed
 - **Removed the ROADMAP block** from the About tab (roadmap lives in git, not needed in-app).
@@ -364,7 +385,7 @@
 
 ---
 
-## V1_0_0 — Party Evolves (2026-08-29)
+## V0_0_54 — Party Evolves (2026-08-29)
 
 ### Changed
 - **Party now evolves as it rocks.** It still starts seamlessly from whatever genre/bars are playing, but then keeps things interesting: every loop re-rolls a fresh pattern, ~1 in 3 loops hops to a new genre (and its tempo), ~1 in 4 loops varies the bar length. Mostly fresh patterns, occasional bigger changes — drifts and stays lively without flailing every bar.
@@ -372,7 +393,7 @@
 
 ---
 
-## V1_0_0 — Party Rides Current Settings (2026-08-29)
+## V0_0_54 — Party Rides Current Settings (2026-08-29)
 
 ### Changed
 - **Party now keeps the current vibe going instead of overriding it.** It picks up whatever genre and bar length are already selected/playing and continues from there — no jarring switch to a random genre or a forced 64-bar song. Hit party while a House 16-bar loop is going and it stays House 16-bar, just re-rolling fresh pattern variations at each loop boundary until the timer's up.
@@ -384,7 +405,7 @@
 
 ---
 
-## V1_0_0 — Roll Framing & All Voices On (2026-08-29)
+## V0_0_54 — Roll Framing & All Voices On (2026-08-29)
 
 ### Changed
 - **All voices default ON** — Accents and Fills were starting muted, which left their lanes looking empty/incomplete on load. They're part of the song, so they're on now.
@@ -396,14 +417,14 @@
 
 ---
 
-## V1_0_0 — Legend Removed (2026-08-29)
+## V0_0_54 — Legend Removed (2026-08-29)
 
 ### Changed
 - **Removed the color legend row beneath the piano roll** (DRUMS/PERC/BASS/…). It duplicated the Voices section, where each voice already shows its colored dot. Removed the element, its builder, and its CSS.
 
 ---
 
-## V1_0_0 — Bottom & Helper Cleanup (2026-08-29)
+## V0_0_54 — Bottom & Helper Cleanup (2026-08-29)
 
 ### Changed
 - **Removed the leftover footer CSS** (the status bar DOM was already gone; its styles are now gone too).
@@ -412,28 +433,28 @@
 
 ---
 
-## V1_0_0 — Footer Removed (2026-08-29)
+## V0_0_54 — Footer Removed (2026-08-29)
 
 ### Changed
 - **Removed the bottom status/footer bar** — it was redundant: the color legend sits directly above it and the play state is already clear from the transport and counter. `setMsg()` is retained (guarded) so nothing breaks; it just no longer paints a footer. Cleaner bottom edge.
 
 ---
 
-## V1_0_0 — Keyboard-Focusable Wheels (2026-08-29)
+## V0_0_54 — Keyboard-Focusable Wheels (2026-08-29)
 
 ### Changed
 - **All wheel pickers (tempo, swing, voice levels) are now keyboard-focusable.** Tab moves focus from one to the next; a cyan focus ring shows which is active. Adjust with **Up/Right (+) and Down/Left (−)**, hold **Shift for ×10** steps. Scroll and drag still work. You can now set everything without leaving the keyboard.
 
 ---
 
-## V1_0_0 — Voice Level Wheels (2026-08-29)
+## V0_0_54 — Voice Level Wheels (2026-08-29)
 
 ### Changed
 - **Voice volume sliders replaced with wheel pickers** — the same scroll/drag control used for tempo and swing. Hover a voice's level and scroll, or drag up/down. No more fiddly slider thumb or awkward keyboard/arrow behavior. 0–100, clamped.
 
 ---
 
-## V1_0_0 — Slimmer Voice Cards (2026-08-29)
+## V0_0_54 — Slimmer Voice Cards (2026-08-29)
 
 ### Changed
 - **Voice cards are now a single tight row** — dropped the name-label row above each card to reclaim vertical space. Each card is just: colored LED (click to mute) · oscillator select · volume · value.
@@ -441,20 +462,20 @@
 
 ---
 
-## V1_0_0 — Counter Moved (2026-08-29)
+## V0_0_54 — Counter Moved (2026-08-29)
 
 ### Changed
 - Moved the **bar/beat counter** out of the middle of the Controls row (where it was forcing the row to wrap) into the **Piano Roll** header line, right-aligned. Controls row stays on one line; cleaner.
 
 ---
 
-# OMS Chippy [Beta V1_0_0] — COMPLETE CHANGELOG
+# OMS Chippy [Beta V0_0_54] — COMPLETE CHANGELOG
 
 **License:** GPL-3.0
 
 ---
 
-## V1_0_0 — Party Song-Clock Fix (2026-08-29)
+## V0_0_54 — Party Song-Clock Fix (2026-08-29)
 
 ### Fixed
 - **Party mode was spawning a new song every frame** — the "next song" trigger watched the playhead position wrap (`p < prevPos`), but right after each song reset (with `loopStartCtx` set slightly in the future and the scheduler mutating it), that comparison fired instantly and repeatedly, so party got stuck thrashing a tiny fragment.
@@ -465,7 +486,7 @@
 
 ---
 
-## V1_0_0 — Party Mode 🎉 (2026-08-29)
+## V0_0_54 — Party Mode 🎉 (2026-08-29)
 
 **The 1.0 milestone: Chippy becomes a toy you leave running.**
 
