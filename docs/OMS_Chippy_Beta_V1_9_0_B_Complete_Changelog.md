@@ -1,7 +1,43 @@
 # OMS Chippy — Changelog
 
-## V1_8_0 — Voices/Mixer split, module cleanup, Design System documented (2026-08-31)
-Rolled up from iterations V1_8_01…V1_8_05 (the UI line following the V1.7.0 YoConditioner ship).
+## V1_9_0 — Selecta-driven playback + Master-Clock/visual fixes (2026-08-31)
+Rolled up from iterations V1_9_01…V1_9_012 (the transport/clock line following the V1.8.0 Mixer ship).
+### Added
+- **None selecta** — a first-class `none` entry (index 0) meaning raw looping play: no conditioning,
+  no auto-swap, honors the manual controls. Juice Night Out is now index 1.
+- **`sessionClock()`** — one continuous session clock (`{es, esF, cycles}` from
+  `actx.currentTime − playOriginCtx`) shared by the MATRIX readout AND the roll's continuous-wrap gate.
+  Single source of truth; not a second clock (BLOG0006/0011).
+- **Bar-boundary selecta swap** — a fourth control-timing category: changing selecta while playing lets
+  the current bar finish, then drops the new selecta in on the bar line (the DJ "let the record run out"
+  model), reusing the previously-unwired `skipArmed` scaffolding (BLOG0003).
+### Changed
+- **Party button retired → selecta IS the mode switch** — removed the separate party button; selecting a
+  selecta engages the conditioned set (`yoOn`), None stops it. One less control in the controls row.
+  Internal `party*` symbols renamed `yo*` (`yoOn`/`yoStart`/`yoTick`/`yoReroll`/`pendingYo`); on-screen
+  "party m:ss" → "yo m:ss" (BLOG0002).
+- **Piano roll is continuous once playing** — the roll now wraps so the loop's own head scrolls in at the
+  tail; never blanks after first play. Real start point preserved: forward wrap always, backward wrap only
+  after one completed cycle (BLOG0013).
+- **Both MATRIX clocks read 1 . 1 . 1 at start** and share `bar . beat . sixteenth` format; dropped the
+  hardcoded "bar N/64".
+- **Fixed play/pause button width** — `#playBtn` is a fixed 42px so the ▶ → ❚❚ glyph swap no longer
+  resizes the button and shifts the controls row.
+### Fixed
+- **Master-Clock/visual coherence cluster (BLOG0006)** — all rooted in the visual playhead/roll deriving
+  from the scheduler clock anchors:
+  - Pause/stop now truly resets to bar 1 · beat 1 (was freezing the readout mid-loop as a phantom
+    resume-position); `stopTransport` zeroes `posSec`/`prevPos`/`playOriginCtx`/`loopStartCtx` + pending queue.
+  - Playhead no longer pre-rolls through the loop tail before audio (pre-origin position clamped to 0
+    during the deliberate ~60ms start lead).
+  - First-ever play no longer has ~a beat of silence — the MediaStream `<audio>` bridge is warmed at
+    audio-create time + a 180ms cold-start origin lead (the gap was pre-existing, exposed once the
+    pre-roll was fixed; the audio start path itself was unchanged from V1.8.0).
+  - No more visual JUMP at each loop boundary — the scroll frame + playhead run off the continuous session
+    step (`esF`), not the per-loop-wrapped `posSec`.
+
+## V1_9_0 — Voices/Mixer split, module cleanup, Design System documented (2026-08-31)
+Rolled up from iterations V1_9_01…V1_9_05 (the UI line following the V1.7.0 YoConditioner ship).
 ### Added
 - **Mixer section** — split the per-voice **level + reverb + kill** out of Voices into a new **Mixer**
   row (the console/④ in the seven-section model). Voices now holds only the instrument controls

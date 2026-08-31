@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_8_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_9_0] — DEVELOPER DOCUMENTATION
 
 **Run date:** 2026-08-31
-**Unix Epoch:** 1788134400
-**App Version:** Chippy Beta V1_8_0 (live at chippy.onemanshyo.com)
+**Unix Epoch:** 1788214413
+**App Version:** Chippy Beta V1_9_0 (live at chippy.onemanshyo.com)
 **License:** GPL-3.0
 **Purpose:** The technical spec for OMS Chippy — architecture, systems, and internals. Modeled on
 the OMS Dojo Developer Documentation and using shared OMS vocabulary (Cortex / Node / Leaf), sized
@@ -95,17 +95,50 @@ system in the app (browsers were not built for sample-accurate audio).
 - **Persistence pump** (`bgPump`) — a silent node keeping the context alive when the tab is
   backgrounded (Chrome throttles rAF/timers otherwise). Toggled by the ∞ button.
 
+**Start offset + cold-start warm-up (V1.9.0).** At play, `loopStartCtx = actx.currentTime + 0.06`
+— the loop origin is set ~60ms in the FUTURE so the first scheduled hits aren't already in the past.
+Audio routes through a MediaStream `<audio>` bridge (routable to AirPlay/system output), which takes
+roughly a beat to spin its playback pipeline up on the first play — so the bridge is now WARMED at
+audio-graph creation (`airEl.play()`+`actx.resume()` inside the first gesture) and the FIRST start
+after creation uses a longer 180ms origin lead (`audioColdStart`). Both audio and the visual playhead
+anchor to `loopStartCtx`, so they stay locked; every subsequent start uses the normal 60ms.
+
+**The visual playhead/roll inherit the clock (Cortex coupling).** The MATRIX playhead and piano roll
+derive their position from `loopStartCtx`/`playOriginCtx`, so any clock offset silently affects the
+VISUAL. Consequences that must be handled here, not in the renderer: (a) during the pre-origin lead
+`actx.currentTime - loopStartCtx` is NEGATIVE and the loop-wrap would map it near `L` (playhead
+pre-rolls through the loop TAIL) — so the position is clamped to 0 until the origin is reached; (b) the
+scroll frame + playhead are driven off a CONTINUOUS session step (see `sessionClock`), never the
+per-loop-wrapped `posSec`, or the frame snaps back one loop at each boundary (a visible jump).
+
+**`sessionClock()` — the single continuous clock (V1.9.0).** One accessor returns `{es, esF, cycles}`
+from `actx.currentTime - playOriginCtx`: `es` = whole 16th-steps since play (never wraps), `esF` = the
+same as a continuous fraction (for smooth scrolling), `cycles = floor(es/TOTAL_STEPS)` = completed
+loops. This is the ONE source of truth shared by the MATRIX readout (the Ableton-style
+bars.beats.sixteenths clock) AND the roll's continuous-wrap gate — it is NOT a second clock, just the
+existing origin math lifted into one place. The per-bar readout and the session readout both read
+`1 . 1 . 1` at start.
+
+**True stop resets the anchors (V1.9.0).** `stopTransport()` zeroes `posSec`/`prevPos`/`playOriginCtx`/
+`loopStartCtx` and clears the pending-quantize queue — a stop is a full reset to bar 1 · beat 1, not a
+paused resume-position (there is no resume feature). Leaving the anchors set froze the readout mid-loop.
+
 ### 2.3 Control-Behavior Model (three categories)
 Every control that can change mid-play falls into exactly one category. This is a core rule —
 documented in-code above the control wiring — and dictates whether a control is quantized, live, or
 deferred:
-- **RESTART** (genre, DJ/selecta) → routed through `quantizeKey()`: waits for the next beat (Q),
-  cleanly restarts the loop. These are "new song" changes.
+- **RESTART** (genre) → routed through `quantizeKey()`: waits for the next beat (Q), cleanly restarts
+  the loop. A "new song" change.
 - **CONTINUE** (tempo, swing, per-voice selectors + levels) → applied LIVE, immediately, no restart
   (like turning a knob). Continuous parameters of the song already playing.
 - **WAIT FOR LOOP** (length / bars) → deferred via `pendingLen`, applied at the loop boundary so the
   current phrase finishes before the new length takes effect.
-When adding a new control, classify it into one of these three; that determines its wiring.
+- **BAR-BOUNDARY SWAP** (selecta — V1.9.0) → a selecta change WHILE PLAYING is NOT a next-beat restart.
+  It stages the incoming selecta's loop (`yoReroll` → `pendingYo`) and arms `skipArmed`; the scheduler
+  swaps it in at the next BAR line via `applyPendingSwap`, so the current bar finishes first (the DJ
+  "let the record run out" model — Chippy does not overlap/blend). A selecta chosen while STOPPED opens
+  immediately (nothing to respect). This uses the previously-unwired `skipArmed` scaffolding.
+When adding a new control, classify it into one of these four; that determines its wiring.
 
 ### 2.4 Theme Constants & the Design System
 `CY #00d4ff` (cyan), `MAG #ff006e` (magenta), `YEL #ffcc00`, `GRN #00e08a`, `PUR #c77dff`,
@@ -188,9 +221,10 @@ minor, ~-9.8 LUFS, bpm 124–128). See §9 for the AMU → profile pipeline that
 
 ## 3. NODE: THE PARTY GRID (automation constraint matrix)
 
-The **Party Grid** is the internal constraint matrix governing ALL automation. It applies ONLY under
-party mode (party = the automation button); plain play uses whatever's manually set. Three owners,
-cleanly separated so they never fight:
+The **Party Grid** is the internal constraint matrix governing ALL automation. It applies ONLY when a
+selecta is active (any selecta other than **None** — the party button was retired in V1.9.0; selecting
+a selecta is now the mode switch, `yoOn`). Plain play (**None**) uses whatever's manually set. Three
+owners, cleanly separated so they never fight:
 
 - **SELECTA (`DJ_MODES`)** owns **BARS + crate**: `barsAllowed` (allowed loop lengths, always real
   dropdown values — never multiplied off-grid), `barsChange` (chance/loop to re-pick a length),

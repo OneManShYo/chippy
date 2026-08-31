@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_8_0] — SYSTEM REFERENCE
+# OMS Chippy [Beta V1_9_0] — SYSTEM REFERENCE
 
 Machine-readable reference for an AI/dev picking up the single-file codebase. Names below are the
 actual identifiers in the HTML's inline script.
@@ -102,7 +102,9 @@ YEL #ffcc00  yellow   ORG #ffa500  orange
 - `GENRE{}` — per-genre `{name, bpm, tempo:[min,max], build:fn}`. **House-only as of V1.8.0** (techno/
   breaks/dnb/bigroom builders REMOVED while the YoConditioner is dialed in on JNO; return rebuilt later).
 - `SELECTAS[]` — selectas: `{id,name,genreChance,barsAllowed[],barsChange,pool[],bpm:[min,max], corpus[]?, profile?}`.
-  Ships one: `jno` (Juice Night Out). `selecta()` = active; `selectaIdx`.
+  Ships two: `none` (index 0 — raw play, `profile:null`, no conditioning/auto-swap) + `jno`
+  (Juice Night Out, index 1). `selecta()` = active; `selectaIdx` (0 = None). The party button was
+  retired V1.9.0 — selecting a non-None selecta is the mode switch (`yoOn`); None stops the set.
 - `VIBES[]` — time slots: `{id,name,barBias,density,level}`: opener, support, headliner, closer.
 - Selecta `profile:{}` — the Yo DNA (see YOCONDITIONER below).
 - `OSC_OPTS`, `KICK_OPTS`, `FX_OPTS` — module dropdown option lists.
@@ -115,7 +117,8 @@ The system that decides WHAT gets generated, ABOVE the (swappable) sound set. Tw
 - **Yo Conditioning** (verb) — biasing the generator with that DNA. Not training, not retrieval; it
   tilts a stochastic process, never storing output.
 
-Applies ONLY under party mode (`partyOn`). No party ⇒ raw stock house (neutral gate, no moves).
+Applies ONLY when a selecta is active (`yoOn`, i.e. selecta ≠ None). None ⇒ raw stock house
+(neutral gate, no moves). (`partyOn`→`yoOn` rename, V1.9.0.)
 
 Profile schema (JNO):
 ```
@@ -132,7 +135,7 @@ profile:{
 }
 ```
 **Wired to audio (V1.8.0):** `mode`, `swing`; per-band DENSITY (`setDensityFromProfile`→`dGate`→`gk`,
-applied at the house builder's band probability points); `maxBpmJump` (clamp in `partyReroll`);
+applied at the house builder's band probability points); `maxBpmJump` (clamp in `yoReroll`);
 performance MOVES (`buildMoves`→`_moveWindows`→`moveAt`, honored in `fireVoice`).
 **Captured, not yet wired:** `bassEntry`, `breakdowns`, `vocalRatio`, `structure`, `dynamics`,
 `approach`/`approachBars`.
@@ -150,13 +153,16 @@ performance MOVES (`buildMoves`→`_moveWindows`→`moveAt`, honored in `fireVoi
 - Generation: `buildPattern(seed)` → sets density + moves (party) → `GENRE[genre].build(P,R)`; `makeTitle()`.
 - Genre builders: `house` (only). `mkRnd(seed)` seeded RNG.
 - Clock: `scheduler()`, `nextBeatCtx()`, `quantize()/quantizeKey()`, `applyPendingSwap()`.
-- Party: `startParty(mins)`, `partyReroll()` (incl. maxBpmJump clamp), `stopParty()`, `selecta()`, `vibe()`.
+- Set (ex-"party", V1.9.0): `startSet()`, `yoReroll()` (incl. maxBpmJump clamp), `stopSet()`, `applyDj()`
+  (selecta pick → bar-boundary swap via `skipArmed` when playing), `selecta()`, `vibe()`.
+- Clock: `sessionClock()` → `{es, esF, cycles}` (single continuous session clock; shared by the MATRIX
+  readout and the roll's continuous-wrap gate).
 - Render: `draw()` (matrix), `drawFace()`, `drawRave()` (Glover), `buildStrip()` (voice modules).
 
 ## FLOW
 generate() → buildPattern(seed) → rebuildEvents() → draw() ; scheduler() fires events on the audio
-clock. Party: startParty → build first loop (conditioned by the selecta profile) → partyReroll stages
-next → scheduler applies at boundary via applyPendingSwap.
+clock. Set: pick selecta → startSet (or, while playing, stage via yoReroll + skipArmed) → build/condition
+loop → yoReroll stages next → scheduler applies at the BAR boundary via applyPendingSwap.
 
 ## PARTY GRID OWNERSHIP
 - SELECTA owns bars (barsAllowed+barsChange) + crate (pool+genreChance).
@@ -165,7 +171,8 @@ next → scheduler applies at boundary via applyPendingSwap.
 - PROFILE (Yo DNA) conditions composition (mode/swing/density…) + mixing (maxBpmJump/moves…) in party.
 
 ## CONTROL-BEHAVIOR CATEGORIES
-RESTART (genre, selecta → quantizeKey, next beat) · CONTINUE (tempo, swing, voices → live) ·
+RESTART (genre → quantizeKey, next beat) · CONTINUE (tempo, swing, voices → live) ·
+BAR-BOUNDARY SWAP (selecta while playing → yoReroll+skipArmed, next bar line; selecta while stopped → immediate) ·
 WAIT-FOR-LOOP (length → pendingLen, loop boundary).
 
 ## AMU SEAM (Sozo / omsanalyze)

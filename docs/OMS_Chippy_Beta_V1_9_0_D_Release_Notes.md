@@ -1,6 +1,24 @@
-# OMS Chippy [Beta V1_8_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_9_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.9.0 — One play button, one continuous roll
+
+This release finishes what removing "party mode" started. There's now a single **play** button and the
+**selecta** dropdown is the mode switch: leave it on **None** and Chippy just plays — a raw loop, no
+conditioning; pick **Juice Night Out** (or any selecta) and it runs a conditioned nonstop set in that
+style. One fewer control, and no more guessing what "play" versus "party" did.
+
+Switching a selecta now behaves like a real DJ handing off: it **lets the current bar finish**, then the
+new selecta drops in on the bar line — no mid-bar cut. That's true whether you're starting from None or
+moving between selectas.
+
+The piano roll is now **continuous** once you press play. It starts cleanly at bar one with the loop laid
+out ahead, and from then on it scrolls without ever blanking — the loop's own beginning comes back around
+at the tail. Under the hood, the visual and the audio now run off one shared clock, which also fixed a
+handful of rough edges: the play/pause button no longer resizes and nudges the row, stopping truly resets
+to the top instead of freezing mid-loop, the playhead no longer races ahead of the sound on the first
+play, first-play starts on time with no dead beat, and the roll no longer jumps at each loop boundary.
 
 ## V1.8.0 — The Mixer (and a documented Design System)
 

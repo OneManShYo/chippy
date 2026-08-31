@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_8_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_9_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_8_0]</title>
+<title>OMS Chippy [Beta V1_9_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -128,6 +128,8 @@
     font-family:'Courier New',monospace; transition:all .15s; line-height:1.2;
   }
   .btn:hover { background:#252525; color:#fff; border-color:#444; }
+  /* fixed-width play/pause so the ▶ → ❚❚ glyph swap doesn't resize the button and shift the row */
+  #playBtn { width:42px; padding-left:0; padding-right:0; text-align:center; box-sizing:border-box; }
   .btn.primary { border-color:#00d4ff; color:#00d4ff; }
   .btn.primary:hover { background:rgba(0,212,255,.1); }
   .btn.mag { border-color:#ff006e; color:#ff006e; }
@@ -260,7 +262,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_8_0]</span>
+      <span class="ver">[Beta&nbsp;V1_9_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -326,10 +328,9 @@
         <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
         <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
       </div>
-      <div class="ctrlmod" title="Party">
-        <button class="party-btn" id="partyBtn" title="party — nonstop selecta set: seamlessly rolls new loops in your chosen selecta style">party</button>
-        <span class="tctl"><select id="djSel" class="sel uctl" title="pick the selecta that matches your vibe.&#10;&#10;Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-        <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level."></select></span>
+      <div class="ctrlmod" title="Selecta">
+        <span class="tctl"><select id="djSel" class="sel uctl" title="selecta — None = raw play (looping, no conditioning). Pick a selecta to run a nonstop conditioned set that rolls fresh loops in that style.&#10;&#10;Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+        <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level. Applies only with a selecta active."></select></span>
       </div>
       <span class="loadhint" id="loadHint"></span>
     </div>
@@ -601,7 +602,7 @@
     const P={}; VOICES.forEach(v=>P[v.id]=[]);
     // YOCONDITIONER — applies ONLY under party mode. No party ⇒ raw house generation, no conditioning
     // (neutral density gate, no moves). Party ⇒ the active selecta's profile biases density + plans moves.
-    if(partyOn){
+    if(yoOn){
       const pf=(typeof selecta==="function" && selecta() && selecta().profile) ? selecta().profile : null;
       setDensityFromProfile(pf);   // per-band density DNA biases this pattern
       (GENRE[genre]||GENRE.house).build(P,R);
@@ -612,7 +613,7 @@
       _moveWindows=[];
     }
     phraseAccents(P,R);                    // reliably place accents+fills by phrase position
-    if(BARS>=16 && !partyOn) arrange(P);   // long-song arc for manual mode; party keeps the full vibe
+    if(BARS>=16 && !yoOn) arrange(P);   // long-song arc for manual mode; party keeps the full vibe
     return P;
   }
 
@@ -717,6 +718,7 @@
   let bgPumpEnabled=true, bgNode=null;
   function ensureAudio(){
     if(actx) return;
+    audioColdStart=true;   // first transport start after creation gets extra warm-up lead (bridge spin-up)
     actx=new (window.AudioContext||window.webkitAudioContext)();
     master=actx.createGain(); master.gain.value=0.5;
     // AUDIO OUTPUT — route through an <audio> element (via MediaStream), NOT straight to
@@ -732,6 +734,12 @@
       airEl.setAttribute("playsinline","");
       airEl.autoplay=true;
       document.body.appendChild(airEl);
+      // Warm the bridge immediately: a MediaStream <audio> element takes a beat to spin its
+      // playback pipeline up. Starting it here (at first audio-graph creation, already inside a
+      // user gesture) means samples are flowing by the time transport starts — otherwise the
+      // first ~beat after play is silent while the element warms. resume() covers a suspended ctx.
+      try{ actx.resume(); }catch(e){}
+      try{ const pr=airEl.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){}
       airBridge=true;
     }catch(e){ airBridge=false; }
     if(!airBridge){ master.connect(actx.destination); }   // fallback only
@@ -1061,7 +1069,22 @@
   let playOriginCtx=0;     // fixed wall-clock anchor for the beat-quantize grid (set once at start)
   let quantTargetCtx=0;    // absolute ctx time of the armed beat swap (0 = none armed)
   let loopStartCtx=0;      // actx.currentTime when current loop iteration started
+  let audioColdStart=false;// true only for the first transport start after audio creation (bridge warm-up)
   let posSec=0;            // playhead position within loop (for draw)
+  // ---- Session clock (single source of truth) ----
+  // The MATRIX readout's Ableton-style clock AND the roll's continuous-wrap gate both derive from
+  // this. es = total 16th-steps since play (never wraps); cycles = completed loops. Rests at 0 when
+  // stopped. Using ONE accessor keeps the readout and the visual in lockstep (per Wes: use the two
+  // clocks already on screen instead of hand-rolling a separate cycle counter).
+  function sessionClock(){
+    let esF=0;   // continuous fractional 16th-steps since play (never wraps) — for smooth scrolling
+    if(playing && actx && playOriginCtx){
+      esF=Math.max(0, (actx.currentTime - playOriginCtx)/secPerStep());
+    }
+    const es=Math.floor(esF);
+    const cycles = TOTAL_STEPS>0 ? Math.floor(es/TOTAL_STEPS) : 0;
+    return { es, esF, cycles };
+  }
   let schedIdx=0;          // next event index to schedule
   let schedUntil=0;        // audio time scheduled up to
   const LOOKAHEAD=0.25;    // seconds of lookahead (generous buffer so bg pump stutters don't drop notes)
@@ -1108,7 +1131,11 @@
     if(airEl && airEl.paused){ airEl.play().catch(()=>{}); }   // start the routable output element (user gesture)
     playing=true;
     sessionStart=performance.now();          // session timer: elapsed since play (resets on stop)
-    loopStartCtx=actx.currentTime + 0.06;   // small offset so first hits aren't in the past
+    // Origin offset: audio + playhead both anchor to loopStartCtx, so they stay locked together.
+    // Cold start (first play after audio creation) needs a longer lead for the MediaStream <audio>
+    // bridge to be passing samples; after that the bridge is warm, so the small offset is enough.
+    loopStartCtx=actx.currentTime + (audioColdStart?0.18:0.06);
+    audioColdStart=false;
     playOriginCtx=loopStartCtx;             // stable anchor for the beat-quantize grid
     quantTargetCtx=0; pendingQuant.length=0;
     schedIdx=0; schedUntil=0;
@@ -1119,13 +1146,17 @@
   function stopTransport(){
     playing=false;
     sessionStart=0;                          // reset session timer
+    // True stop: clear the transport/clock anchors so the readout + playhead return to
+    // bar 1 · beat 1 (there is no resume-from-here feature — a stop is a full reset).
+    posSec=0; prevPos=0; playOriginCtx=0; loopStartCtx=0;
+    quantTargetCtx=0; pendingQuant.length=0;
     playBtn.textContent="▶";
     setMsg("Ready", CY);
     if("mediaSession" in navigator){ try{ navigator.mediaSession.playbackState="paused"; }catch(e){} }
   }
   function toggleTransport(){ playing?stopTransport():startTransport(); }
 
-  let pendingParty=null;   // {events, loopStartAdvance} applied by scheduler at the next boundary
+  let pendingYo=null;   // {events, loopStartAdvance} applied by scheduler at the next boundary
   let pendingLen=null;     // length change deferred to the next loop boundary (finish current loop first)
 
   let skipArmed=false;   // when true, apply the pending swap at the NEXT BAR (not next loop)
@@ -1162,7 +1193,7 @@
       // SKIP: cut to the pending loop at the next bar boundary. Keyed off the SCHEDULING FRONT
       // (the event we're about to schedule), consistent with the rest of this loop — so it fires
       // reliably on any loop length including 128-bar party loops.
-      if(skipArmed && pendingParty){
+      if(skipArmed && pendingYo){
         const frontT = (schedIdx<events.length) ? events[schedIdx].t : L;   // seconds-into-loop at the front
         const nextBarT = Math.ceil((frontT+1e-6)/barSec)*barSec;            // next bar line ahead of the front
         const nextBarCtx = loopStartCtx + nextBarT;
@@ -1179,8 +1210,8 @@
       if(schedIdx>=events.length){
         // reached a loop boundary
         loopStartCtx+=L; schedIdx=0;
-        if(partyOn) loopStartAudio=loopStartCtx;   // party clock tracks current loop
-        if(pendingParty){ applyPendingSwap(); L=loopLen(); }
+        if(yoOn) loopStartAudio=loopStartCtx;   // party clock tracks current loop
+        if(pendingYo){ applyPendingSwap(); L=loopLen(); }
         if(pendingLen){ pendingLen(); pendingLen=null; L=loopLen(); }   // length change applies at loop end
         if(loopStartCtx>horizon) break;      // next loop still beyond horizon
       }
@@ -1193,8 +1224,8 @@
   }
   // commit the staged party loop (audio + display + controls) — shared by loop-end and skip
   function applyPendingSwap(){
-    if(!pendingParty) return;
-    const pp=pendingParty; pendingParty=null;
+    if(!pendingYo) return;
+    const pp=pendingYo; pendingYo=null;
     events=pp.events; pattern=pp.pattern;
     genre=pp.genre; BPM=pp.bpm; transpose=pp.transpose;
     setBars(pp.bars);
@@ -1232,7 +1263,11 @@
   // One behavior — the roll is simply positioned so the current step sits at window center.
   function scrollSteps(){
     const winSteps = VISIBLE_BARS*STEPS_PER_BAR;
-    const cur = posSec/secPerStep();            // current step (fractional)
+    // Continuous session step (never wraps) so the scroll frame flows smoothly THROUGH loop
+    // boundaries — using wrapped posSec here made the window snap back one loop at each boundary
+    // (the "jump"). Before play / at rest, fall back to 0 so the roll sits at the real start.
+    const sc=sessionClock();
+    const cur = (playing && actx && playOriginCtx) ? sc.esF : 0;
     return cur - winSteps*0.5;                  // dead-center, always
   }
   // step -> x in the scrolling main roll
@@ -1294,6 +1329,18 @@
       if(b<BARS && b%4===0){ ctx.fillStyle="#555"; ctx.fillText((b+1), x+3, oy+10); }
     }
     const off=scrollSteps();
+    // Continuous-wrap gate, from the shared session clock (same clock as the MATRIX readout).
+    // On the FIRST pass (cycles===0) the region BEHIND the playhead near the start hasn't played, so
+    // no backward wrap — that gives a real start point at 0. After one completed cycle, backward wrap
+    // turns on and the roll is fully continuous. `off` is now continuous (grows every loop), so the
+    // wrap must tile to the WINDOW's current loop index, not a fixed +/-1 loop.
+    const cycledOnce = sessionClock().cycles >= 1;
+    const baseLoop = TOTAL_STEPS>0 ? Math.floor(off/TOTAL_STEPS) : 0;   // loop index at the window
+    const wrapShifts = [];
+    // forward copies (this loop + next) always; backward copy (previous loop) only after first cycle
+    for(const li of (cycledOnce ? [baseLoop-1, baseLoop, baseLoop+1] : [baseLoop, baseLoop+1])){
+      if(li>=0) wrapShifts.push(li*TOTAL_STEPS);
+    }
     // Chippy the conductor rides the loop position (shown at rest too)
     {
       const s=posSec/secPerStep();
@@ -1320,31 +1367,41 @@
     // vertical grid (only the visible window range)
     const firstStep=Math.floor(off), lastStep=Math.ceil(off+VISIBLE_BARS*STEPS_PER_BAR);
     for(let s=firstStep;s<=lastStep;s++){
-      if(s<0||s>TOTAL_STEPS) continue;
+      if(!cycledOnce && s<0) continue;                       // first pass: nothing before the real start
+      const sm=((s%TOTAL_STEPS)+TOTAL_STEPS)%TOTAL_STEPS;   // wrapped step for grid weighting (continuous roll)
       const x=Xr(s,off);
-      if(s%STEPS_PER_BAR===0){ ctx.strokeStyle="#333"; ctx.lineWidth=1.4; }
-      else if(s%4===0){ ctx.strokeStyle="#222"; ctx.lineWidth=1; }
+      if(sm%STEPS_PER_BAR===0){ ctx.strokeStyle="#333"; ctx.lineWidth=1.4; }
+      else if(sm%4===0){ ctx.strokeStyle="#222"; ctx.lineWidth=1; }
       else { ctx.strokeStyle="#161616"; ctx.lineWidth=1; }
       ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,top+inner); ctx.stroke();
     }
-    // notes
+    // notes — drawn wrapped: the roll window is 4 bars wide (2 ahead of the centered playhead), so
+    // near the loop tail the forward half sits past TOTAL_STEPS. Draw each note at its position AND
+    // shifted +/- one loop length, so the loop's own head scrolls in to fill that window and the roll
+    // is continuous (no blank tail). For a repeating loop the incoming notes ARE this same pattern.
     VOICES.forEach((v,i)=>{
       const y=top+i*lh;
       const band=lh-4;
       const nh=Math.max(5, Math.round(band*0.40));   // uniform block height
       const ny=Math.round(y + (lh-nh)/2);             // centered in-lane, same line for every block
       (pattern[v.id]||[]).forEach(ev=>{
-        const x=Xr(ev.step,off), w=Math.max(3, Xr(ev.step+ev.dur,off)-x-1.5);
-        if(x>W || x+w<PAD) return;      // cull off-screen
-        ctx.fillStyle = v.on? v.color : "#3a3a3a";
-        ctx.globalAlpha = v.on? 0.92 : 0.5;
-        rr(x+0.5, ny, w, nh, 2); ctx.fill();
-        ctx.globalAlpha=1;
+        for(const shift of wrapShifts){   // wrap the loop into the visible window (gated: no backward wrap on first pass)
+          const step=ev.step+shift;
+          const x=Xr(step,off), w=Math.max(3, Xr(step+ev.dur,off)-x-1.5);
+          if(x>W || x+w<PAD) continue;      // cull off-screen
+          ctx.fillStyle = v.on? v.color : "#3a3a3a";
+          ctx.globalAlpha = v.on? 0.92 : 0.5;
+          rr(x+0.5, ny, w, nh, 2); ctx.fill();
+          ctx.globalAlpha=1;
+        }
       });
     });
-    // playhead (in scrolled coords) — always drawn, dead-center; visible at rest too
+    // playhead (in scrolled coords) — always drawn, dead-center; visible at rest too.
+    // Uses the CONTINUOUS session step (same source as the scroll frame) so it stays dead-center
+    // across loop boundaries — matching wrapped posSec against a continuous off would drift it.
     {
-      const s=posSec/secPerStep();
+      const sc=sessionClock();
+      const s=(playing && actx && playOriginCtx) ? sc.esF : 0;
       const x=Xr(s,off);
       ctx.strokeStyle=MAG; ctx.lineWidth=2;
       ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,top+inner); ctx.stroke();
@@ -1391,12 +1448,16 @@
       scheduler();
       const L=loopLen();
       let p=(actx.currentTime-loopStartCtx);
-      p = ((p % L)+L)%L;
+      // loopStartCtx is set ~60ms in the future at play (so first hits aren't in the past).
+      // Until we actually reach the origin, p is negative — without this clamp the wrap below
+      // maps it near L, so the playhead + Chippy pre-roll through the loop's TAIL before any
+      // audio. Hold at 0 (bar 1 · beat 1) until the audio origin is reached, then track.
+      if(p<0) p=0; else p = ((p % L)+L)%L;
       detectHits(prevPos, p, L);
       prevPos=p;
       posSec=p;
       updateTime();
-      if(partyOn) partyTick();
+      if(yoOn) yoTick();
     } else {
       updateTime();   // keep the readout live when stopped (session rests at 1 . 1 . 1)
     }
@@ -1884,22 +1945,20 @@
     const step=Math.floor(posSec/secPerStep());
     const bar=Math.floor(step/STEPS_PER_BAR)+1;
     const beat=Math.floor((step%STEPS_PER_BAR)/4)+1;
-    // session position: Ableton-style continuous bars.beats.sixteenths since play (1-based).
-    // Always visible — rests at 1 . 1 . 1 when stopped, climbs while playing, resets on stop.
-    let es=0;
-    if(playing && actx && playOriginCtx){
-      es=Math.max(0, Math.floor((actx.currentTime - playOriginCtx)/secPerStep()));  // total 16th-steps since play
-    }
-    const sBar=Math.floor(es/STEPS_PER_BAR)+1;               // 16 steps/bar
-    const sBeat=Math.floor((es%STEPS_PER_BAR)/4)+1;          // 4 sixteenths per beat
-    const sSix=(es%4)+1;                                     // sixteenth within the beat
+    const six=(step%4)+1;                                    // sixteenth within the current-loop beat
+    // Session clock (shared accessor) — Ableton-style continuous bars.beats.sixteenths since play,
+    // 1-based, rests at 1 . 1 . 1 when stopped. At start it reads identically to the per-bar clock.
+    const { es } = sessionClock();
+    const sBar=Math.floor(es/STEPS_PER_BAR)+1;
+    const sBeat=Math.floor((es%STEPS_PER_BAR)/4)+1;
+    const sSix=(es%4)+1;
     const sess="  |  "+sBar+" . "+sBeat+" . "+sSix;
-    if(partyOn){
-      const el=Math.max(0, performance.now()-partyStart);
+    if(yoOn){
+      const el=Math.max(0, performance.now()-yoStart);
       const m=Math.floor(el/60000), s=Math.floor((el%60000)/1000);
-      timeDisp.textContent="party "+m+":"+String(s).padStart(2,"0")+" · bar "+bar+"/64"+sess;
+      timeDisp.textContent="yo "+m+":"+String(s).padStart(2,"0")+" · "+bar+" . "+beat+" . "+six+sess;
     } else {
-      timeDisp.textContent="bar "+bar+" · beat "+beat+sess;
+      timeDisp.textContent=bar+" . "+beat+" . "+six+sess;
     }
   }
 
@@ -2080,7 +2139,7 @@
   //  PARTY MODE  (start from the current vibe, then keep it rocking &
   //  evolving — re-roll every loop, sometimes drift genre/bars — for the duration)
   // ============================================================
-  let partyOn=false, partyStart=0;
+  let yoOn=false, yoStart=0;
   let loopStartAudio=0, loopDur=0;    // audio-time anchor + current loop length
   // (PARTY_GENRES removed V1.6.02 — dead code; genre is house-only, selecta owns the crate.)
 
@@ -2091,7 +2150,7 @@
   //    • SELECTA (SELECTAS) owns BARS — an allowed-set per style + change frequency + which
   //      genres it draws from (pool) and how often it hops (genreChance).
   //    • GENRE (GENRE[].tempo) owns TEMPO — a valid BPM range per genre (the hard outer clamp;
-  //      the selecta's bpm range only biases WITHIN it). See the tempo block in partyReroll().
+  //      the selecta's bpm range only biases WITHIN it). See the tempo block in yoReroll().
   //    • TIME SLOT (VIBES) owns LEVEL / DENSITY / PACE — multipliers for the club-night arc.
   //  To tune any automation behavior, change the value in its owner here. (House is precisely
   //  dialed; the other selectas/genres are reasonable-but-rough — refine per BLOG party-grid item.)
@@ -2124,6 +2183,10 @@
   //  entry, vocal-featured, ~5 breakdowns. Harmonic fields apply now; arrangement fields are captured
   //  DNA for a future party-arrangement-automation layer (breakdowns/instrument entries in a set).
   const SELECTAS=[
+    // index 0 = NONE: raw play, no conditioning, no auto-swap. selectaIdx===0 means the set is OFF —
+    // builders run stock, the loop repeats verbatim (an infinite piano roll). profile:null so every
+    // conditioning path (density/swing/bpm) no-ops exactly as plain play did before the party merge.
+    { id:"none", name:"None", genreChance:0.0, barsAllowed:null, barsChange:0, pool:["house"], bpm:[120,126], profile:null },
     { id:"jno", name:"Juice Night Out", genreChance:0.0, barsAllowed:[32,64], barsChange:0.35, pool:["house"], bpm:[124,128],
       // corpus = the DNA source: the 12 tracks AMU'd (omsanalyze v2) to derive this profile. A profile
       // self-documents which reference tracks conditioned it (Yo DNA provenance).
@@ -2152,7 +2215,7 @@
                   }
                 } } }
   ];
-  let selectaIdx=0;   // default (only selecta) Juice Night Out
+  let selectaIdx=0;   // default = None (index 0): raw play, no conditioning. JNO is index 1.
   const selecta = () => SELECTAS[selectaIdx];
 
   // VIBE / selecta time-slot — a second axis over the selecta (selecta style = genre engine).
@@ -2175,7 +2238,7 @@
 
   // Prepare the NEXT party loop as a pending swap, using the current selecta style.
   // The scheduler applies it at the loop boundary (seamless).
-  function partyReroll(){
+  function yoReroll(){
     const M=selecta();
     let nextGenre=genre, nextBars=BARS, nextBPM=BPM;
     // genre hop per the mode's chance (guaranteed different when it fires), from the mode's pool
@@ -2225,15 +2288,14 @@
     const nextEvents=buildEventsFrom(nextPattern);
     genre=saveGenre; setBars(saveBars); BPM=saveBPM; transpose=savedTranspose;
 
-    pendingParty={ events:nextEvents, pattern:nextPattern, genre:nextGenre,
+    pendingYo={ events:nextEvents, pattern:nextPattern, genre:nextGenre,
                    bars:nextBars, bpm:nextBPM, transpose:nextTranspose, seed };
   }
 
-  function startParty(){
+  function startSet(){
     ensureAudio();
-    partyOn=true;
-    partyStart=performance.now();
-    partyBtn.classList.add("live"); partyBtn.textContent="stop";
+    yoOn=true;
+    yoStart=performance.now();
     if(!playing) startTransport();
     applyVibeLevel();   // set the slot's master level for the set
     // Snap the genre into the SELECTA's pool before building the first loop — otherwise party opens
@@ -2255,21 +2317,20 @@
       const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar"; }
     loopStartAudio=(loopStartCtx||actx.currentTime);
     loopDur=loopLen();
-    setMsg("Party on — "+selecta().name+" · "+vibe().name+" 🎉", MAG);
+    setMsg(selecta().name+" set on — "+vibe().name+" 🎉", MAG);
   }
-  function stopParty(){
-    partyOn=false;
-    partyBtn.classList.remove("live"); partyBtn.textContent="party";
-    setMsg("Party over", CY);
+  function stopSet(){
+    yoOn=false;
+    setMsg("Selecta: None", CY);
   }
   // Queue the next party loop ahead of the boundary; the scheduler swaps it in
   // seamlessly. Prepare it once we're partway through the current loop and nothing's
   // pending — the scheduler's lookahead then applies it exactly on the downbeat.
-  function partyTick(){
-    if(!partyOn || !actx) return;
-    if(!pendingParty){
+  function yoTick(){
+    if(!yoOn || !actx) return;
+    if(!pendingYo){
       const into = actx.currentTime - loopStartAudio;   // seconds into current loop
-      if(into >= loopDur*0.5){ partyReroll(); }          // prepare next; applied at boundary
+      if(into >= loopDur*0.5){ yoReroll(); }          // prepare next; applied at boundary
     }
   }
 
@@ -2385,11 +2446,7 @@
       navigator.mediaSession.playbackState = playing ? "playing" : "paused";
     }catch(e){}
   }
-  const partyBtn=document.getElementById("partyBtn");
-  partyBtn.onclick=()=>{
-    if(partyOn){ stopParty(); }
-    else { startParty(); }
-  };
+  // (party button retired V1.8.01 — the selecta dropdown is now the mode switch; see applyDj)
   document.getElementById("genreSel").onchange=e=>{ const g=e.target.value; quantize(()=>setGenre(g)); };
   document.getElementById("lenSel").onchange=e=>{
     const nb=+e.target.value;
@@ -2505,9 +2562,30 @@
   function applyDj(i){
     selectaIdx=((i%SELECTAS.length)+SELECTAS.length)%SELECTAS.length;
     if(djSel.selectedIndex!==selectaIdx) djSel.selectedIndex=selectaIdx;
-    setMsg("Selecta: "+SELECTAS[selectaIdx].name, CY);
+    // Selecta selection IS the mode switch (party button retired V1.8.01).
+    // TIMING (V1.8.08): if the transport is PLAYING, ANY selecta change — None→selecta, selecta→
+    // selecta, including the very first pick from None — lets the CURRENT BAR FINISH, then the new
+    // selecta drops in on the next bar line (the DJ model: you don't cut the record playing, you let
+    // it run out). Coming from None counts: the None loop is a record in progress. The ONLY immediate
+    // case is picking a selecta while STOPPED, which has to start the transport from scratch.
+    if(selectaIdx===0){
+      if(yoOn) stopSet();
+      else setMsg("Selecta: None", CY);
+      return;
+    }
+    if(playing){
+      // Engage the set state now (conditioning on, vibe level, timer) but DON'T touch the audio yet —
+      // stage the new selecta's loop and let the scheduler swap it in at the next bar boundary.
+      yoOn=true; yoStart=performance.now();
+      applyVibeLevel();
+      yoReroll();                 // builds pendingYo under the now-current selectaIdx
+      if(pendingYo){ skipArmed=true; setMsg(selecta().name+" — in at next bar", MAG); }
+      else { startSet(); }        // safety net: nothing staged → open immediately
+    } else {
+      startSet();                 // stopped: start the transport + open the set now
+    }
   }
-  bindUctl(djSel, v=>quantizeKey("dj", ()=>applyDj(parseInt(v,10))));   // NEW SONG — quantize to the beat, clean restart
+  bindUctl(djSel, v=>applyDj(parseInt(v,10)));   // timing handled in applyDj: live switch → next bar boundary; cold → immediate
 
   // VIBE / time-slot dropdown
   const vibeSel=document.getElementById("vibeSel");
@@ -2580,7 +2658,7 @@
   // the focused control's value (see bindUctl/bindWheel).
   function navRows(){
     // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["playBtn","genBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","djSel","vibeSel"]
+    const controls=["playBtn","genBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","djSel","vibeSel"]
       .map(id=>document.getElementById(id)).filter(Boolean);
     // Voices row: the 7 voice-type selects, in DOM order.
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
