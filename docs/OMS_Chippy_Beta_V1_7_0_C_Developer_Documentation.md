@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_6_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_7_0] — DEVELOPER DOCUMENTATION
 
-**Run date:** 2026-08-30
-**Unix Epoch:** 1788109587
-**App Version:** Chippy Beta V1_6_0 (live at chippy.onemanshyo.com)
+**Run date:** 2026-08-31
+**Unix Epoch:** 1788134400
+**App Version:** Chippy Beta V1_7_0 (live at chippy.onemanshyo.com)
 **License:** GPL-3.0
 **Purpose:** The technical spec for OMS Chippy — architecture, systems, and internals. Modeled on
 the OMS Dojo Developer Documentation and using shared OMS vocabulary (Cortex / Node / Leaf), sized
@@ -12,7 +12,7 @@ to Chippy's actual (younger, simpler) scope. A living doc that grows as Chippy m
 
 ## TABLE OF CONTENTS
 - 1. ARCHITECTURE OVERVIEW
-- 2. CORTEX SYSTEMS (core — don't casually touch)
+- 2. CORTEX SYSTEMS (core — don't casually touch)  [incl. 2.5 The YoConditioner]
 - 3. NODE: THE PARTY GRID (automation constraint matrix + selecta profiles)
 - 4. NODE: VOICE / MODULE SYSTEM
 - 5. NODE: MATRIX / PIANO ROLL
@@ -111,6 +111,69 @@ When adding a new control, classify it into one of these three; that determines 
 `CY #00d4ff` (cyan), `MAG #ff006e` (magenta), `YEL #ffcc00`, `GRN #00e08a`, `PUR #c77dff`,
 `ORG #ffa500`. Voice lanes each carry a color; the palette is reused across matrix, modules, and the
 Glover visualizer for a consistent identity.
+
+### 2.5 The YoConditioner (the conditioned generative layer) — CORE
+
+**This is how the music gets generated.** The YoConditioner is the Cortex-tier system that sits ABOVE
+the audio layer (currently the chiptune sound set — swappable) and decides WHAT gets generated. It is
+not the audio engine, not the clock — those merely voice whatever it produces. It is the generative
+brain, plus the layer that biases that brain toward a real musical identity.
+
+Two primitives, kept strictly distinct (this separation is the whole point — it's what makes the method
+teachable and replicable):
+
+- **Yo DNA — the NOUN.** The committed reference information: the extracted fingerprint of a style.
+  Its *source* can be anything Wes officially commits — AMU analysis of tracks (omsanalyze), MIDI,
+  DJ-mix set-DNA, or authored knowledge (his 35 years of DJing). Yo DNA is inert data; it does nothing
+  on its own. It lives in a selecta's `profile:{}` (+ `corpus:[]`, the provenance list of which
+  reference tracks conditioned it).
+- **Yo Conditioning — the VERB.** The act of USING that DNA to bias the generator's parameters. This is
+  "corpus conditioning" — the actual ML term for biasing a generative system on extracted features —
+  reworded as a ONEMANSHYO pun without losing technical accuracy.
+
+**It is not training and not retrieval.** No weights are learned; nothing is looked up at runtime; the
+generated output is never stored. The DNA is extracted offline, committed, and then *biases a stochastic
+generative process*. It tilts the dice — it does not write the result. Same seed reproduces a loop; a new
+seed rolls a fresh one, within the DNA's biases.
+
+**Two roles of DNA (two tables, two sources of truth):**
+- **COMPOSITION DNA — what the music IS** (how a track is built). Mostly AMU-on-tracks. Fields: `mode`,
+  `swing`, per-band densities (`drumDensity`/`bassDensity`/`melodicDensity`), `bassEntry`, `breakdowns`,
+  `vocalRatio`, `structure`, `dynamics`, `bpm`.
+- **MIXING DNA — what the DJ DOES** (the performance layer, imposed on top of the generated track).
+  Authored by Wes. Fields under `profile.mixing`: `maxBpmJump`, `approach`/`approachBars` (tempo-approach
+  before a hard-cut change — Chippy does not overlap/blend), and `moves:{}` (kickCut, bassEqOut, leadDrop,
+  reverbThrow — each `{on,chance,minLen,maxLen}`, fired at musical boundaries with a probability so they're
+  alive, not mechanical).
+
+**What is WIRED to audio (as of V1.7.0):**
+- `mode` (app-wide minor lock) and `swing` (per-loop groove offset) — the originals.
+- **Density conditioning** — per-band densities bias each band's fire probability, normalized against the
+  busiest band (drums), floored so a band never fully vanishes. Drum-forward JNO ⇒ drums full,
+  bass/melodic thinned to their measured proportion. Code: `setDensityFromProfile()`, `dGate()`, `gk()`,
+  called at the top of `buildPattern` and applied at the house builder's band probability points.
+- **Mixing: `maxBpmJump`** — party reroll clamps the tempo move between consecutive loops (JNO creeps
+  ~2 BPM, never leaps). Code: the tempo block in `partyReroll()`.
+- **Mixing: performance moves** — `buildMoves()` plans per-band suppression windows at 4-bar phrase
+  boundaries (party only), each gated by `chance`; `fireVoice()` honors them (cut drums/bass/lead, or
+  boost reverb on a throw). Code: `buildMoves()`, `moveAt()`, `_moveWindows`, `fireVoice()`.
+
+**Captured DNA not yet wired** (present in the profile, no conditioning consuming it yet): `bassEntry`,
+`breakdowns` (needs a threshold definition), `vocalRatio` (no vocal voice in the chiptune set — target
+undefined), `structure`, `dynamics`, and mixing `approach`/`approachBars` (a true tempo glide of the
+outgoing loop needs its own scheduler-clock iteration).
+
+**Scope note (V1.7.0):** the app is HOUSE-ONLY while the YoConditioner is dialed in on JNO — the other
+genre builders (techno/breaks/dnb/bigroom) are retained in code but unlisted, and reintroduced rebuilt to
+this standard once House is proven. Mirrors the single-selecta focus move of V1.6.0.
+
+**The corpus** (JNO's committed Yo DNA source — 12 of Wes's own 124–128 house tracks, AMU'd via
+omsanalyze v2): AintNoTrick, AllTheFun, AnotherBrickInTheWall, Breakaway (Goldilox), Curita, DiscoBarbie,
+FrostyTheYoMan, HereComesTheSun (×2), JRSR400 DontTouch, JRSR541 FunkTrain, SevenNationArmada. Measured
+means drove the wired values (drumDensity 0.654, bassDensity 0.447, melodicDensity 0.452, mode 12/12
+minor, ~-9.8 LUFS, bpm 124–128). See §9 for the AMU → profile pipeline that produces this DNA.
+
+*(Name note: "YoConditioner" is a working/beta placeholder for this system and may change.)*
 
 ---
 
@@ -276,9 +339,12 @@ own catalog) → get JSON sidecars named to match each track → analyze *across
 signature (mode, swing/groove, BPM range, structural bar-grid, loudness/dynamics) → encode that
 signature as a selecta `profile:{}` (§3.1). This is not sampling or playback — it's learning the
 *DNA* (fingerprint) of a style and teaching the generator to produce fresh patterns that carry it.
-Juice Night Out (from 12 of Wes's 124–128 house tracks) is the proof-of-concept. omsanalyze's
-`instrumentActivity` (per-instrument onsets) is stubbed/TODO, so per-drum placement isn't yet
-extracted — profiles currently shape groove/key/structure/dynamics, not exact kick patterns.
+Juice Night Out (from 12 of Wes's 124–128 house tracks) is the proof-of-concept. **omsanalyze v2 now
+emits real `instrumentActivity`** (bass/drum/other/vocal, each with per-time activity curves + ranges) —
+this was previously stubbed/TODO but is live as of the v2 sidecars. Per-band DENSITY is therefore
+AMU-derived and wired (§2.5). Per-drum onset PLACEMENT (exact kick step patterns) is still not extracted
+— that's the micro layer MIDI DNA will supply. So profiles currently shape groove/key/structure/dynamics
+AND per-band density, not yet exact kick patterns.
 
 ---
 

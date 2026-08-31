@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_6_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_7_0] — CLAUDE PROJECT INSTRUCTIONS
 
 How an AI (or dev) should work in the Chippy project. Read this first. These rules were learned the
 hard way; follow them.
@@ -22,11 +22,11 @@ single-file philosophy, master clock, module system).
 
 ## VERSIONING (three-digit: major.minor.iteration)
 - **One change per iteration; increment only; never overwrite an iteration; never invent version numbers.**
-- Iterations bump the third digit during a work session (V1_6_01, _02, …).
-- A **published release bumps the MINOR** and resets iteration to 0 (V1.3.0 → V1.6.0).
-- Build/doc FILENAMES use UNDERSCORES with the version expanded (`OMS_Chippy_Beta_V1_6_0.html`).
-  Folders use dotted form (`V1.6.0_Deliverables/`). ONE separator per project — OMS = underscores.
-- The full release + git workflow lives in the OMS Suite VersionWorkflow doc (currently V2.4). Follow
+- Iterations bump the third digit during a work session (V1_7_01, _02, …).
+- A **published release bumps the MINOR** and resets iteration to 0 (V1.3.0 → V1.7.0).
+- Build/doc FILENAMES use UNDERSCORES with the version expanded (`OMS_Chippy_Beta_V1_7_0.html`).
+  Folders use dotted form (`V1.7.0_Deliverables/`). ONE separator per project — OMS = underscores.
+- The full release + git workflow lives in the OMS Suite VersionWorkflow doc (the OMS Suite PM Packaging Workflow — follow its current version). Follow
   its numbered steps and the HUMAN PAUSE / GATE REVIEW before any push.
 
 ## BUILD PROTOCOL (per iteration)
@@ -41,24 +41,42 @@ onto one iteration — it destroys rollback points.
   the closed BLOGs, NOT just version-bumped. Reviewed at the gate.
 
 ## ADDING A SELECTA (party grid)
-Define `{id,name,genreChance,barsAllowed,barsChange,pool,bpm}` in DJ_MODES. Optionally add a
-`profile:{mode,swing,structure,dynamics}` derived from AMU analysis of reference tracks (see the AMU
-pipeline). Bars must be real dropdown values. Genre owns tempo; selecta biases within it.
+Define `{id,name,genreChance,barsAllowed,barsChange,pool,bpm}` in SELECTAS. Optionally add a
+`profile:{}` (the Yo DNA — see THE YOCONDITIONER below) plus `corpus:[]` (the reference tracks it was
+derived from). Bars must be real dropdown values. Genre owns tempo; selecta biases within it.
 
 ## ADDING A GENRE
 Add to `GENRE{}` with `{name,bpm,tempo:[min,max],build:fn}` and write the `build(P,R)` pattern
-function (push events into P.drums/perc/bass/lead/synth/accent/fills/fx). Add to any selecta `pool`
-that should draw from it.
+function (push events into P.drums/perc/bass/lead/synth/accent/fills/fx). Gate band fire-probabilities
+with `gk('band',p)` so density conditioning applies. Add to any selecta `pool` that should draw from it.
+(NOTE: V1.7.0 is HOUSE-ONLY — non-house builders were removed; reintroduce them rebuilt to the
+YoConditioner standard.)
+
+## THE YOCONDITIONER (Cortex — how the music gets generated)
+The conditioned generative layer, above the swappable sound set. TWO PRIMITIVES, KEPT DISTINCT:
+- **Yo DNA** = the NOUN. The committed reference fingerprint (a selecta's `profile:{}`). Source is
+  anything Wes commits: AMU (omsanalyze), MIDI, DJ-mixes, or authored knowledge — not just AMU.
+- **Yo Conditioning** = the VERB. Applying that DNA to bias the generator. Corpus conditioning (the ML
+  term) as a pun. NOT training, NOT retrieval — it tilts a stochastic process, never writes the output.
+Two roles of DNA: COMPOSITION (what the music is — mode/swing/density/structure…, mostly AMU) and
+MIXING (what the DJ does — maxBpmJump/transition/moves…, authored). Applies ONLY in party mode.
+When wiring a new DNA field: read it from `profile`, bias a real generator parameter, and record in the
+C-doc §2.5 whether it's WIRED or CAPTURED. Keep the noun/verb separation crisp — it's what makes the
+method teachable. (Name "YoConditioner" is a working placeholder; may change.)
 
 ## THE AMU → PROFILE PIPELINE
-Selecta profiles come from Sozo's `omsanalyze` (Apple Music Understanding) JSON sidecars of real
-tracks. Extract the common signature (mode, swing, BPM, structure grid, dynamics), encode as a
-profile. It's learning the DNA, not sampling. See C-doc §9 and Y-doc AMU seam.
+Yo DNA is derived from Sozo's `omsanalyze` (Apple Music Understanding) JSON sidecars of real tracks.
+Extract the common signature (mode, swing, BPM, loudness, structure, and per-band densities from v2
+`instrumentActivity`), encode as a `profile:{}`. It's learning the DNA, not sampling. omsanalyze **v2
+emits real instrumentActivity** (bass/drum/other/vocal) — density is AMU-derived; per-drum note
+placement is not (MIDI-DNA layer). See C-doc §9 and Y-doc AMU seam.
 
 ## TERMINOLOGY (OMS + Chippy vocabulary)
 - **Cortex / Node / Leaf** — system stability tiers (Cortex = core, don't casually touch).
+- **YoConditioner** — the conditioned generative layer (Cortex). **Yo DNA** (noun) = committed
+  fingerprint; **Yo Conditioning** (verb) = biasing generation with it.
 - **Selecta** — the DJ/style (record crate). **Time slot** — the club-night arc (Opener…Closer).
-- **Party grid** — the automation constraint matrix. **Profile** — a selecta's AMU-derived DNA.
+- **Party grid** — the automation constraint matrix. **Profile** — a selecta's Yo DNA.
 - **Glover** — the light-show tab (from "gloving"). **Voices/modules** — the 8 lanes.
 - **FX (voice 8)** = the risers/glitches/horn effects voice. **Master FX** = the reverb bus.
 

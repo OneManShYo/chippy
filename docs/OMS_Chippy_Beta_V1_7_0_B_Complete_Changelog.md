@@ -1,5 +1,47 @@
 # OMS Chippy — Changelog
 
+## V1_7_0 — The YoConditioner: Yo DNA → Yo Conditioning wired to audio (2026-08-31)
+Rolled up from iterations V1_6_01 and V1_6_02. First release where committed DNA audibly biases
+generation beyond swing/mode — the YoConditioner is now a named Cortex-tier system.
+### Added
+- **The YoConditioner** — the conditioned generative layer, promoted to a canonical Cortex section
+  (C-doc §2.5, Y-doc). Two primitives kept strictly distinct: **Yo DNA** (the noun — committed
+  reference fingerprint) and **Yo Conditioning** (the verb — biasing the generator with it). Sits
+  ABOVE the swappable sound set (currently chiptune); not training, not retrieval — it tilts a
+  stochastic generative process, never writing the output.
+- **Density conditioning (COMPOSITION DNA)** — the JNO profile's measured per-band densities
+  (drumDensity 0.654, bassDensity 0.447, melodicDensity 0.452) now bias each band's fire probability,
+  normalized against the busiest band (drums) and floored so no band vanishes. Drum-forward JNO ⇒
+  drums full, bass/melodic thinned to their measured proportion. Code: `setDensityFromProfile`,
+  `dGate`, `gk`.
+- **Performance moves (MIXING DNA, authored)** — DJ gestures imposed on the generated track at 4-bar
+  phrase boundaries, each gated by a probability so they're alive, not mechanical: **kickCut**,
+  **bassEqOut**, **leadDrop**, **reverbThrow** — uniform baseline 25% chance, 1-note-to-1-bar length.
+  Code: `buildMoves`, `moveAt`, `_moveWindows`, honored in `fireVoice`.
+- **Tempo creep (MIXING DNA)** — `maxBpmJump` caps the tempo move between consecutive party loops
+  (JNO = 2 BPM: build energy by nudging, not leaping). Code: the tempo block in `partyReroll`.
+- **Corpus manifest** — the JNO profile now self-documents its Yo DNA source: the 12 AMU'd tracks
+  (`corpus:[]`), so every profile records which references conditioned it.
+- **Measured DNA** — profile values updated from real omsanalyze v2 `instrumentActivity` means across
+  the 12-track corpus (previously hand-authored approximations): densities, bassEntry 0.066,
+  vocalRatio 0.229, ~-9.8 LUFS, 12/12 minor, bpm 124–128.
+### Changed
+- **House-only focus** — genre dropdown collapsed to House; the techno/breaks/dnb/bigroom builders were
+  removed from the code to cut clutter while the YoConditioner is dialed in on JNO. They return rebuilt
+  to the new standard once House is proven (mirrors the V1.6.0 single-selecta move).
+- **YoConditioner is party-gated** — the whole system applies ONLY under party mode. Plain generate
+  gives raw stock house (neutral density, no moves); party applies the active selecta's DNA.
+- Dead `PARTY_GENRES` array removed.
+### Fixed
+- Stale docs corrected: omsanalyze v2 **does** emit `instrumentActivity` (bass/drum/other/vocal with
+  activity curves + ranges) — the "stubbed/TODO" claim in the C-doc §9 and Y-doc was outdated. Per-band
+  density is now AMU-derived. (Per-drum onset PLACEMENT is still not extracted — that's the MIDI-DNA
+  layer.)
+### Captured but not yet wired (present in the profile, no conditioning consuming them yet)
+- `bassEntry`, `breakdowns` (needs a threshold definition), `vocalRatio` (no vocal voice in the chiptune
+  set), `structure`, `dynamics`, and mixing `approach`/`approachBars` (a true tempo glide of the outgoing
+  loop needs its own scheduler-clock iteration).
+
 ## V1_6_0 — Juice Night Out Selecta / Single-Selecta Focus (2026-08-31)
 ### Changed
 - **Selecta renamed** Giorgio Levan → **Juice Night Out** (id `jno`) — the selecta now models the

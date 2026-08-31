@@ -1,6 +1,34 @@
-# OMS Chippy [Beta V1_6_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_7_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.7.0 — The YoConditioner
+
+This is the release where Chippy's DNA starts to actually shape the sound. Until now, a selecta's
+profile only nudged groove and key; everything else it "knew" about Wes's music was captured but
+silent. V1.7.0 turns that on.
+
+**The YoConditioner** is the name for the layer that decides *what* gets generated — the generative
+brain that sits above the sound set (chiptune today, swappable tomorrow). It runs on two ideas, kept
+deliberately separate: **Yo DNA** is the committed fingerprint of a style (measured from Wes's own
+tracks, or authored from his years of DJing); **Yo Conditioning** is the act of using that DNA to bias
+what the generator produces. It isn't training and it isn't sampling — it tilts the odds so the music
+leans toward the reference, while every loop is still generated fresh.
+
+**Juice Night Out is the proof.** Its profile was rebuilt from real analysis of 12 of Wes's own house
+tracks (now recorded in the profile itself as its corpus), and three things now flow from that DNA into
+the sound during party mode:
+
+- **It arranges drum-forward, like the source.** Each instrument's busyness is set by its measured
+  activity — drums stay full, bass and melody sit back in the exact proportion the real tracks show.
+- **It performs, not just plays.** The DJ moves are in: kick cuts, bass EQ-outs, lead drops, and reverb
+  throws land at phrase turns, each on a probability so they feel human, not clockwork.
+- **It builds energy by creeping the tempo.** Between songs the BPM only nudges a couple of beats at a
+  time — the way you actually walk a room up, instead of jumping.
+
+To keep the focus tight while this is dialed in, Chippy is **House-only** this release — the other
+genres were pulled from the code and will come back rebuilt to the new standard. The YoConditioner runs
+in **party mode**; plain generate still gives you clean, un-conditioned house.
 
 ## V1.6.0 — Juice Night Out
 
