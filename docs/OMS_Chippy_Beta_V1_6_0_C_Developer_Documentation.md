@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_5_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_6_0] — DEVELOPER DOCUMENTATION
 
 **Run date:** 2026-08-30
 **Unix Epoch:** 1788109587
-**App Version:** Chippy Beta V1_5_0 (live at chippy.onemanshyo.com)
+**App Version:** Chippy Beta V1_6_0 (live at chippy.onemanshyo.com)
 **License:** GPL-3.0
 **Purpose:** The technical spec for OMS Chippy — architecture, systems, and internals. Modeled on
 the OMS Dojo Developer Documentation and using shared OMS vocabulary (Cortex / Node / Leaf), sized
@@ -147,9 +147,9 @@ profile: {
   dynamics  : "punchy" | "smooth"         // accent emphasis
 }
 ```
-**Giorgio Levan** is the first profiled selecta — `{ mode:"minor", swing:[0,0.05], structure:[2,4,8],
+**Juice Night Out** is the first profiled selecta — `{ mode:"minor", swing:[0,0.05], structure:[2,4,8],
 dynamics:"punchy" }` — derived from AMU'ing 12 of Wes's own 124–128 BPM commercial house tracks
-(Moroder × Levan × Wes's catalog): 100% minor, dead-straight groove (0–5% swing), nested 2/4/8-bar
+(the Juice Night Out label catalog — the selecta IS the sound of the label): 100% minor, dead-straight groove (0–5% swing), nested 2/4/8-bar
 structure, loud/punchy (~-9.5 LUFS). On party reroll, the profile's swing is applied within its range
 (mode is already minor app-wide). NOTE: `structure` and `dynamics` are captured but not yet fully
 driving the pattern generator — that's the next layer of work.
@@ -254,7 +254,15 @@ strength, quantize readout (Q ♩ display), party duration, time-slot selector.
 
 ---
 
-## 9. THE AMU → PROFILE PIPELINE (Sozo / omsanalyze integration)
+## 9. THE AMU → PROFILE PIPELINE ("YO CONDITIONING")
+
+**The concept has a name: YO DNA (the artifact) and YO CONDITIONING (the method).**
+- **Yo DNA** = the extracted fingerprint of a style — the `profile:{}` object (mode, swing, structure,
+  dynamics + v2 arrangement: densities, bass entry, vocal ratio, breakdowns). The *noun*.
+- **Yo Conditioning** = the act of using that DNA to bias the generator toward the style. The *verb*.
+  It's "corpus conditioning" — the actual ML term for biasing a generative system on extracted
+  features — reworded as a ONEMANSHYO pun without losing technical accuracy. "Extract the Yo DNA from
+  the catalog, then use it for Yo Conditioning on the generator" is a literally-correct sentence.
 
 The lineage: **Dojo** (first, ~2025) established the OMS single-file/module/audio-engine framework and
 vocabulary. **Sozo** is the analysis app — it wraps Apple's **Music Understanding** framework via the
@@ -268,7 +276,7 @@ own catalog) → get JSON sidecars named to match each track → analyze *across
 signature (mode, swing/groove, BPM range, structural bar-grid, loudness/dynamics) → encode that
 signature as a selecta `profile:{}` (§3.1). This is not sampling or playback — it's learning the
 *DNA* (fingerprint) of a style and teaching the generator to produce fresh patterns that carry it.
-Giorgio Levan (from 12 of Wes's 124–128 house tracks) is the proof-of-concept. omsanalyze's
+Juice Night Out (from 12 of Wes's 124–128 house tracks) is the proof-of-concept. omsanalyze's
 `instrumentActivity` (per-instrument onsets) is stubbed/TODO, so per-drum placement isn't yet
 extracted — profiles currently shape groove/key/structure/dynamics, not exact kick patterns.
 

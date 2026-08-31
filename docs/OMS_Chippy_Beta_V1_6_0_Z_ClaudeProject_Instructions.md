@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_5_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_6_0] — CLAUDE PROJECT INSTRUCTIONS
 
 How an AI (or dev) should work in the Chippy project. Read this first. These rules were learned the
 hard way; follow them.
@@ -22,10 +22,10 @@ single-file philosophy, master clock, module system).
 
 ## VERSIONING (three-digit: major.minor.iteration)
 - **One change per iteration; increment only; never overwrite an iteration; never invent version numbers.**
-- Iterations bump the third digit during a work session (V1_5_01, _02, …).
-- A **published release bumps the MINOR** and resets iteration to 0 (V1.3.0 → V1.5.0).
-- Build/doc FILENAMES use UNDERSCORES with the version expanded (`OMS_Chippy_Beta_V1_5_0.html`).
-  Folders use dotted form (`V1.5.0_Deliverables/`). ONE separator per project — OMS = underscores.
+- Iterations bump the third digit during a work session (V1_6_01, _02, …).
+- A **published release bumps the MINOR** and resets iteration to 0 (V1.3.0 → V1.6.0).
+- Build/doc FILENAMES use UNDERSCORES with the version expanded (`OMS_Chippy_Beta_V1_6_0.html`).
+  Folders use dotted form (`V1.6.0_Deliverables/`). ONE separator per project — OMS = underscores.
 - The full release + git workflow lives in the OMS Suite VersionWorkflow doc (currently V2.4). Follow
   its numbered steps and the HUMAN PAUSE / GATE REVIEW before any push.
 

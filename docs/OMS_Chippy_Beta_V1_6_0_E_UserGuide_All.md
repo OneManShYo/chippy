@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_5_0] — USER GUIDE
+# OMS Chippy [Beta V1_6_0] — USER GUIDE
 
 Chippy is a browser instrument. Open the file, press play, and it makes music. No install, no account,
 no files. Here's everything you can do.
@@ -19,7 +19,7 @@ no files. Here's everything you can do.
 Press **party** and Chippy runs a nonstop set on its own, evolving loops seamlessly. Choose:
 - **Duration** — how long the set runs.
 - **Selecta (style)** — the DJ / record crate: House, Battle, Open Format, Warehouse Rave, Jungle,
-  Giorgio Levan. This picks which genres play and the vibe.
+  Juice Night Out. This picks which genres play and the vibe.
 - **Time slot** — the club-night arc: Opener → Support → Headliner → Closer (quieter/patient →
   loud/peak → wind-down).
 

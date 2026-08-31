@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_5_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_6_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_5_0]</title>
+<title>OMS Chippy [Beta V1_6_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -189,7 +189,6 @@
     50%     { transform:scale(1.05,0.95); box-shadow:0 0 14px 2px rgba(255,0,110,.25); }
   }
   @media (prefers-reduced-motion: reduce){ .party-btn{ animation:none; } }
-  .party-dur { font-size:12px; padding:5px 6px; }
 
   .micro { font-size:9px; color:#666; text-transform:uppercase; letter-spacing:.8px; font-family:'Courier New',monospace; margin-bottom:6px; }
 
@@ -238,6 +237,9 @@
   #voicesHdr .vh-mfx:hover { color:#00e08a; border-color:#00e08a; }
   #voicesHdr .vh-mfx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
   #voicesHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; }
+  #voicesHdr .vh-mkill { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; }
+  #voicesHdr .vh-mkill:hover { color:#fff; border-color:#555; }
+  #voicesHdr .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   /* the MATRIX header holds the taller counter box; trim its vertical margin so the row spacing
      matches the other section headers (the box height was expanding the gaps above/below). */
   /* MATRIX header uses the standard section-header margin (same as CONTROLS/VOICES) so all three
@@ -258,7 +260,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_5_0]</span>
+      <span class="ver">[Beta&nbsp;V1_6_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -267,13 +269,13 @@
   </div>
 
   <div class="tabbar">
-    <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop auto-DJ set">TRACKS</div>
+    <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop selecta set">TRACKS</div>
     <div class="tab" id="raveTab" data-panel="rave" title="Glover — Chippy gives you a full-screen light show. Pick a trick below.">GLOVER</div>
     <div class="tab" id="aboutTab" data-panel="about" title="What Chippy is, who made it, and the license">ABOUT</div>
     <div class="bar-right">
       <button class="bgtoggle on" id="bgBtn" title="persistence — keeps playing when you switch to another tab">∞</button>
       <button class="bgtoggle" id="aspectBtn" title="orientation — 16:9 (YouTube) / 9:16 (Shorts, TikTok, Reels)"><span class="ori-h"></span><span class="ori-v"></span></button>
-      <button class="bgtoggle" id="recBtn" title="record the Glover visuals — click again to stop &amp; download">⏺</button>
+      <button class="bgtoggle" id="recBtn" title="record the Glover visuals — click again to stop &amp; download"><svg viewBox="0 0 24 24" width="13" height="13" style="display:block"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg></button>
       <span id="recTime" class="rectime">00:00</span>
     </div>
   </div>
@@ -329,21 +331,14 @@
         <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
       </div>
       <div class="ctrlmod" title="Party">
-        <button class="party-btn" id="partyBtn" title="party — nonstop auto-DJ set: seamlessly rolls new loops in your chosen selecta style">party</button>
-        <span class="tctl"><select id="partyDur" class="sel uctl party-dur" title="party length. Up/Down then Enter to pick · Left/Right scrolls live">
-          <option value="5">5m</option>
-          <option value="10" selected>10m</option>
-          <option value="20">20m</option>
-          <option value="30">30m</option>
-          <option value="60">60m</option>
-        </select></span>
-        <span class="tctl"><select id="djSel" class="sel uctl" title="select the style — the record crate: which genres the set draws from and how often it hops. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+        <button class="party-btn" id="partyBtn" title="party — nonstop selecta set: seamlessly rolls new loops in your chosen selecta style">party</button>
+        <span class="tctl"><select id="djSel" class="sel uctl" title="pick the selecta that matches your vibe.&#10;&#10;Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
         <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level."></select></span>
       </div>
       <span class="loadhint" id="loadHint"></span>
     </div>
 
-    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span><span class="vh-mlabel">MASTER FX</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="master effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1" title="master FX strength — scroll or drag"><span class="wv" id="mfx-amt-v" style="color:#00d4ff">50</span></span></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span><span class="vh-mlabel">MASTER FX</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="master effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1" title="master FX strength — scroll or drag"><span class="wv" id="mfx-amt-v" style="color:#00d4ff">50</span></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="master kill — mute the whole mix without stopping playback">⏻</button></div>
     <div class="devstrip" id="devStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">MATRIX</span><span class="rule"></span><span class="time mono" id="timeDisp">bar 1 · beat 1</span></div>
@@ -737,6 +732,7 @@
   //  WEB AUDIO SYNTH
   // ============================================================
   let actx=null, master=null, noiseBuf=null, pinkBuf=null, brownBuf=null, reverbBus=null, reverbWet=null;
+  let airDest=null, airEl=null, airBridge=false;   // audio routes through an <audio> element (routable)
   let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
   let masterFxOn=true, masterFxAmt=0.10;   // master effects bus ON by default at 10% (dialed-in house)
   const pulseWaves={};   // duty -> PeriodicWave cache
@@ -751,7 +747,23 @@
   function ensureAudio(){
     if(actx) return;
     actx=new (window.AudioContext||window.webkitAudioContext)();
-    master=actx.createGain(); master.gain.value=0.5; master.connect(actx.destination);
+    master=actx.createGain(); master.gain.value=0.5;
+    // AUDIO OUTPUT — route through an <audio> element (via MediaStream), NOT straight to
+    // actx.destination. Web Audio's destination is invisible to the OS audio router (AirPlay/HomePod/
+    // Bluetooth all fail). An <audio> element IS routable media (same as how YouTube's audio routes).
+    // This is the DEFAULT, always-on output path — no toggle. Falls back to actx.destination only if
+    // the element bridge can't be created.
+    try{
+      airDest=actx.createMediaStreamDestination();
+      master.connect(airDest);
+      airEl=document.createElement("audio");
+      airEl.srcObject=airDest.stream;
+      airEl.setAttribute("playsinline","");
+      airEl.autoplay=true;
+      document.body.appendChild(airEl);
+      airBridge=true;
+    }catch(e){ airBridge=false; }
+    if(!airBridge){ master.connect(actx.destination); }   // fallback only
     curDest=master;
     // REVERB BUS — a convolver with a GENERATED impulse response (decaying noise, no file needed).
     // Per-voice FX sends route here for a reverb-like tail/space. reverbSend feeds the wet signal.
@@ -1111,6 +1123,7 @@
   function startTransport(){
     ensureAudio();
     if(actx.state==="suspended"){ actx.resume(); }
+    if(airEl && airEl.paused){ airEl.play().catch(()=>{}); }   // start the routable output element (user gesture)
     playing=true;
     sessionStart=performance.now();          // session timer: elapsed since play (resets on stop)
     loopStartCtx=actx.currentTime + 0.06;   // small offset so first hits aren't in the past
@@ -1119,12 +1132,14 @@
     schedIdx=0; schedUntil=0;
     playBtn.textContent="❚❚";
     setMsg("Playing", CY);
+    if(typeof setMediaSession==="function") setMediaSession();
   }
   function stopTransport(){
     playing=false;
     sessionStart=0;                          // reset session timer
     playBtn.textContent="▶";
     setMsg("Ready", CY);
+    if("mediaSession" in navigator){ try{ navigator.mediaSession.playbackState="paused"; }catch(e){} }
   }
   function toggleTransport(){ playing?stopTransport():startTransport(); }
 
@@ -1898,8 +1913,8 @@
     const sSix=(es%4)+1;                                     // sixteenth within the beat
     const sess="  |  "+sBar+" . "+sBeat+" . "+sSix;
     if(partyOn){
-      const left=Math.max(0, partyEndsAt-performance.now());
-      const m=Math.floor(left/60000), s=Math.floor((left%60000)/1000);
+      const el=Math.max(0, performance.now()-partyStart);
+      const m=Math.floor(el/60000), s=Math.floor((el%60000)/1000);
       timeDisp.textContent="party "+m+":"+String(s).padStart(2,"0")+" · bar "+bar+"/64"+sess;
     } else {
       timeDisp.textContent="bar "+bar+" · beat "+beat+sess;
@@ -2066,7 +2081,7 @@
   //  PARTY MODE  (start from the current vibe, then keep it rocking &
   //  evolving — re-roll every loop, sometimes drift genre/bars — for the duration)
   // ============================================================
-  let partyOn=false, partyEndsAt=0;
+  let partyOn=false, partyStart=0;
   let loopStartAudio=0, loopDur=0;    // audio-time anchor + current loop length
   const PARTY_GENRES=["house","breaks","dnb","bigroom"];
 
@@ -2074,7 +2089,7 @@
   //  THE PARTY GRID — the constraint matrix that governs AUTOMATION (party mode only).
   //  Nothing here applies to plain play; it's all the rules that fire while a party set runs.
   //  Three owners, cleanly separated:
-  //    • SELECTA (DJ_MODES) owns BARS — an allowed-set per style + change frequency + which
+  //    • SELECTA (SELECTAS) owns BARS — an allowed-set per style + change frequency + which
   //      genres it draws from (pool) and how often it hops (genreChance).
   //    • GENRE (GENRE[].tempo) owns TEMPO — a valid BPM range per genre (the hard outer clamp;
   //      the selecta's bpm range only biases WITHIN it). See the tempo block in partyReroll().
@@ -2090,27 +2105,38 @@
   //  bpm = [min,max] the style biases within — but the GENRE's tempo range is the hard outer clamp
   //        (never D&B at 75), so effective tempo = genre range ∩ this, pick inside.
   //
-  //  SELECTA PROFILE (the "DNA" schema) — optional `profile:{}` derived from AMU analysis of real
-  //  reference tracks. A repeatable way to define a selecta's character so styles stay consistent:
+  //  SELECTA PROFILE — the "YO DNA" schema. Optional `profile:{}` = the extracted fingerprint of a
+  //  style, derived from AMU analysis of real reference tracks (Wes's own catalog). The act of using
+  //  it to bias the generator toward that style is "YO CONDITIONING" (corpus conditioning — the ML
+  //  term — as a ONEMANSHYO pun; it's literally accurate). Yo DNA = the noun (the profile); Yo
+  //  Conditioning = the verb (applying it). A repeatable way to define a selecta's character:
+  //   HARMONIC/STRUCTURAL (omsanalyze v1):
   //    mode        : "minor" | "major" | null   — forced tonality
   //    swing       : [min,max]                   — allowed swing fraction (0=straight)
   //    structure   : [phrase,segment,section]    — nested bar grid for where variation happens
   //    dynamics    : "punchy" | "smooth"         — accent emphasis
-  //  Giorgio Levan's profile came from AMU'ing 12 of Wes's own 124–128 commercial house tracks:
-  //  100% minor, dead-straight groove, nested 2/4/8-bar structure, loud/punchy (~-9.5 LUFS).
-  const DJ_MODES=[
-    { id:"house",  name:"House",         genreChance:0.35, barsAllowed:[64,128],    barsChange:0.25, pool:["house"],                                  bpm:[120,126] },
-    { id:"battle", name:"Battle",        genreChance:0.90, barsAllowed:[4],         barsChange:0.0,  pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
-    { id:"open",   name:"Open Format",   genreChance:0.50, barsAllowed:[4,8,16,32], barsChange:0.5,  pool:["house","techno","breaks","dnb","bigroom"], bpm:[75,200] },
-    { id:"warehouse", name:"Warehouse Rave", genreChance:0.08, barsAllowed:[64,128], barsChange:0.15, pool:["house","techno","bigroom"],           bpm:[140,200] },
-    { id:"jungle", name:"Jungle", genreChance:0.0, barsAllowed:[32,64], barsChange:0.5, pool:["dnb"], bpm:[150,190] },   // pegged on D&B — jungle / UK hardcore
-    { id:"giorgio", name:"Giorgio Levan", genreChance:0.0, barsAllowed:[32,64], barsChange:0.35, pool:["house"], bpm:[124,128],
-      profile:{ mode:"minor", swing:[0,0.05], structure:[2,4,8], dynamics:"punchy" } }   // Moroder × Levan × Wes's own catalog (AMU-derived)
+  //   ARRANGEMENT (omsanalyze v2 instrumentActivity — energy/entry/breakdown DNA):
+  //    drum/bass/melodicDensity : 0-1 relative energy per band
+  //    bassEntry   : 0-1 fraction into the arrangement where bass enters (short vs long intro)
+  //    vocalRatio  : 0-1 how vocal-featured (0=instrumental, 1=vocal-led)
+  //    breakdowns  : ~count of drum drop-out/rebuild cycles per track (the energy rollercoaster)
+  //  Juice Night Out: AMU'd 12 of Wes's own 124–128 house tracks → 100% minor, dead-straight groove,
+  //  2/4/8 structure, punchy (~-9.5 LUFS), drum-forward (0.64) w/ balanced bass/melody, early bass
+  //  entry, vocal-featured, ~5 breakdowns. Harmonic fields apply now; arrangement fields are captured
+  //  DNA for a future party-arrangement-automation layer (breakdowns/instrument entries in a set).
+  const SELECTAS=[
+    { id:"jno", name:"Juice Night Out", genreChance:0.0, barsAllowed:[32,64], barsChange:0.35, pool:["house"], bpm:[124,128],
+      profile:{ mode:"minor", swing:[0,0.05], structure:[2,4,8], dynamics:"punchy",
+                // v2 ARRANGEMENT DNA (from omsanalyze v2 instrumentActivity across 12 of Wes's tracks):
+                drumDensity:0.64, bassDensity:0.42, melodicDensity:0.42,  // relative energy per band
+                bassEntry:0.10,     // bass enters ~10% into the arrangement (short intro)
+                vocalRatio:0.39,    // vocal-featured but instrumental-dominant
+                breakdowns:5 } }    // ~5 drum drop-outs/rebuilds per track — the drop-and-rebuild energy cycle
   ];
-  let djIdx=0;   // default House
-  const djMode = () => DJ_MODES[djIdx];
+  let selectaIdx=0;   // default (only selecta) Juice Night Out
+  const selecta = () => SELECTAS[selectaIdx];
 
-  // VIBE / DJ time-slot — a second axis over the selecta (DJ style = genre engine).
+  // VIBE / selecta time-slot — a second axis over the selecta (selecta style = genre engine).
   // Vibe = the slot in a club night; it scales pace (loop length), density, and master level.
   //  barBias: multiplies loop length (opener long/patient → headliner short/rapid cuts)
   //  density: multiplies per-step fire probabilities (sparse → busy)
@@ -2128,10 +2154,10 @@
   // masterKilled lives in wiring; guard so vibe level doesn't un-mute a kill
   let _masterKilled=false; function masterKilledRef(){ return _masterKilled; }
 
-  // Prepare the NEXT party loop as a pending swap, using the current DJ style.
+  // Prepare the NEXT party loop as a pending swap, using the current selecta style.
   // The scheduler applies it at the loop boundary (seamless).
   function partyReroll(){
-    const M=djMode();
+    const M=selecta();
     let nextGenre=genre, nextBars=BARS, nextBPM=BPM;
     // genre hop per the mode's chance (guaranteed different when it fires), from the mode's pool
     if(Math.random()<M.genreChance){
@@ -2179,22 +2205,22 @@
                    bars:nextBars, bpm:nextBPM, transpose:nextTranspose, seed };
   }
 
-  function startParty(mins){
+  function startParty(){
     ensureAudio();
     partyOn=true;
-    partyEndsAt=performance.now()+mins*60000;
+    partyStart=performance.now();
     partyBtn.classList.add("live"); partyBtn.textContent="stop";
     if(!playing) startTransport();
     applyVibeLevel();   // set the slot's master level for the set
     // Snap the genre into the SELECTA's pool before building the first loop — otherwise party opens
     // on whatever was manually set (e.g. house) instead of the selecta's genre (e.g. jungle → dnb).
-    { const M=djMode(); if(M.pool && !M.pool.includes(genre)){ genre=M.pool[Math.floor(Math.random()*M.pool.length)]; BPM=GENRE[genre].bpm; } }
+    { const M=selecta(); if(M.pool && !M.pool.includes(genre)){ genre=M.pool[Math.floor(Math.random()*M.pool.length)]; BPM=GENRE[genre].bpm; } }
     // Party DEFAULT on press: open the set at the max 128 bars (a full long phrase), regardless of
     // the plain-play loop length. Build a fresh 128-bar loop under the current genre and play it
     // NOW, and sync the UI to it. The normal reroll evolution then takes over at the next boundary.
     // Open at a bar length the SELECTA actually allows (prefer the longest for a full opening
     // phrase). House → 64/128, Jungle → 32/64, etc. Never violate the selecta's bars constraint.
-    { const M=djMode(); const allow=(M.barsAllowed&&M.barsAllowed.length)?M.barsAllowed:[128];
+    { const M=selecta(); const allow=(M.barsAllowed&&M.barsAllowed.length)?M.barsAllowed:[128];
       setBars(Math.max(...allow)); }
     { const seed=(Date.now()^(Math.floor(Math.random()*0xffffffff)))>>>0;
       transpose=[-5,-3,0,0,2,3,5,7][Math.floor(mkRnd(seed)()*8)];
@@ -2205,7 +2231,7 @@
       const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar"; }
     loopStartAudio=(loopStartCtx||actx.currentTime);
     loopDur=loopLen();
-    setMsg("Party on — "+djMode().name+" · "+vibe().name+" · "+mins+" min 🎉", MAG);
+    setMsg("Party on — "+selecta().name+" · "+vibe().name+" 🎉", MAG);
   }
   function stopParty(){
     partyOn=false;
@@ -2217,7 +2243,6 @@
   // pending — the scheduler's lookahead then applies it exactly on the downbeat.
   function partyTick(){
     if(!partyOn || !actx) return;
-    if(performance.now()>=partyEndsAt){ if(!pendingParty) stopParty(); return; }
     if(!pendingParty){
       const into = actx.currentTime - loopStartAudio;   // seconds into current loop
       if(into >= loopDur*0.5){ partyReroll(); }          // prepare next; applied at boundary
@@ -2236,15 +2261,18 @@
 
   playBtn.onclick=toggleTransport;
   genBtn.onclick=generate;
-  // NEXT / skip — jump to the next loop at the next bar (party: next DJ pick; else: fresh roll)
+  // NEXT / skip — jump to the next loop at the next bar (party: next selecta pick; else: fresh roll)
   // master kill switch — mute the mix without stopping the transport (talk / dictate, then unmute)
   const killBtn=document.getElementById("killBtn");
-  killBtn.onclick=()=>{
-    _masterKilled=!_masterKilled;
+  const vhKillBtn=document.getElementById("vhKillBtn");
+  function applyMasterKill(){
     if(master && actx){ master.gain.setTargetAtTime(_masterKilled?0:(vibe().level*0.5), actx.currentTime, 0.01); }
     killBtn.classList.toggle("killed",_masterKilled);
+    vhKillBtn.classList.toggle("killed",_masterKilled);
     setMsg(_masterKilled?"Muted (still playing)":"Unmuted", CY);
-  };
+  }
+  killBtn.onclick=()=>{ _masterKilled=!_masterKilled; applyMasterKill(); };
+  vhKillBtn.onclick=(e)=>{ e.stopPropagation(); _masterKilled=!_masterKilled; applyMasterKill(); };
 
   // ---- RAVE: aspect toggle (16:9 / 9:16) + canvas video recorder ----
   const aspectBtn=document.getElementById("aspectBtn");
@@ -2306,7 +2334,7 @@
     // clip as one blob and long recordings (~1 min+) produce a corrupt, unplayable file.
     mediaRec.start(1000);
     recStart=performance.now();
-    recBtn.classList.add("recording"); recBtn.textContent="⏹"; recTimeEl.classList.add("recording");
+    recBtn.classList.add("recording"); recBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" style="display:block"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor"/></svg>'; recTimeEl.classList.add("recording");
     recTimer=setInterval(()=>{
       const s=Math.floor((performance.now()-recStart)/1000);
       recTimeEl.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
@@ -2316,14 +2344,27 @@
   function stopRec(){
     if(mediaRec && mediaRec.state!=="inactive") mediaRec.stop();
     clearInterval(recTimer); recTimeEl.textContent="00:00";
-    recBtn.classList.remove("recording"); recBtn.textContent="⏺"; recTimeEl.classList.remove("recording");
+    recBtn.classList.remove("recording"); recBtn.innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" style="display:block"><circle cx="12" cy="12" r="6" fill="currentColor"/></svg>'; recTimeEl.classList.remove("recording");
   }
   recBtn.onclick=()=>{ (mediaRec && mediaRec.state==="recording") ? stopRec() : startRec(); };
+
+
+  // Media Session — makes Chippy show up in the iOS Now Playing tile (instead of a stale app session)
+  // and gives Control Center working transport. Called on play + on AirPlay engage + on title change.
+  function setMediaSession(){
+    if(!("mediaSession" in navigator)) return;
+    try{
+      const title=(document.getElementById("patName")||{}).textContent || "Chippy";
+      navigator.mediaSession.metadata=new MediaMetadata({ title:title, artist:"ONEMANSHYO", album:"Chippy" });
+      navigator.mediaSession.setActionHandler("play", ()=>{ if(!playing) toggleTransport(); });
+      navigator.mediaSession.setActionHandler("pause", ()=>{ if(playing) toggleTransport(); });
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    }catch(e){}
+  }
   const partyBtn=document.getElementById("partyBtn");
-  const partyDur=document.getElementById("partyDur");
   partyBtn.onclick=()=>{
     if(partyOn){ stopParty(); }
-    else { partyDur.disabled=true; startParty(+partyDur.value); }
+    else { startParty(); }
   };
   document.getElementById("genreSel").onchange=e=>{ const g=e.target.value; quantize(()=>setGenre(g)); };
   document.getElementById("lenSel").onchange=e=>{
@@ -2407,7 +2448,7 @@
   //   1. RESTART (new song, on the next beat) → route through quantizeKey().
   //      The change rebuilds the pattern; the scheduler waits for the next beat (Q) and
   //      cleanly restarts the loop from its top, so playback never skips mid-bar.
-  //      These are: genre, DJ style.
+  //      These are: genre, selecta style.
   //
   //   2. CONTINUE (shape the current song, immediately) → apply LIVE, no quantize/restart.
   //      Continuous parameters of the song already playing — like turning a knob. The loop
@@ -2436,11 +2477,11 @@
 
   // Selecta style select
   const djSel=document.getElementById("djSel");
-  (function(){ let h=""; DJ_MODES.forEach((m,i)=>{ h+='<option value="'+i+'"'+(i===djIdx?" selected":"")+'>'+m.name+'</option>'; }); djSel.innerHTML=h; })();
+  (function(){ let h=""; SELECTAS.forEach((m,i)=>{ h+='<option value="'+i+'"'+(i===selectaIdx?" selected":"")+'>'+m.name+'</option>'; }); djSel.innerHTML=h; })();
   function applyDj(i){
-    djIdx=((i%DJ_MODES.length)+DJ_MODES.length)%DJ_MODES.length;
-    if(djSel.selectedIndex!==djIdx) djSel.selectedIndex=djIdx;
-    setMsg("Selecta: "+DJ_MODES[djIdx].name, CY);
+    selectaIdx=((i%SELECTAS.length)+SELECTAS.length)%SELECTAS.length;
+    if(djSel.selectedIndex!==selectaIdx) djSel.selectedIndex=selectaIdx;
+    setMsg("Selecta: "+SELECTAS[selectaIdx].name, CY);
   }
   bindUctl(djSel, v=>quantizeKey("dj", ()=>applyDj(parseInt(v,10))));   // NEW SONG — quantize to the beat, clean restart
 
@@ -2469,7 +2510,6 @@
   }
   bindUctlNative(document.getElementById("genreSel"));
   bindUctlNative(document.getElementById("lenSel"));
-  bindUctlNative(document.getElementById("partyDur"));
   // background-play toggle
   const bgBtn=document.getElementById("bgBtn");
   bgBtn.onclick=()=>{
@@ -2516,7 +2556,7 @@
   // the focused control's value (see bindUctl/bindWheel).
   function navRows(){
     // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["playBtn","genBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","partyDur","djSel","vibeSel"]
+    const controls=["playBtn","genBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","partyBtn","djSel","vibeSel"]
       .map(id=>document.getElementById(id)).filter(Boolean);
     // Voices row: the 7 voice-type selects, in DOM order.
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
