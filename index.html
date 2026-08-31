@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_7_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_8_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_7_0]</title>
+<title>OMS Chippy [Beta V1_8_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -198,23 +198,23 @@
 
 
   /* voice strip (device strip from sozo) */
-  .devstrip { display:flex; gap:6px; flex-wrap:wrap; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:6px; padding:8px; margin-bottom:10px; }
-  .devmod { background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:5px 7px; flex:1; min-width:96px; cursor:pointer; }
+  .devstrip { display:flex; gap:6px; flex-wrap:wrap; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:6px; padding:6px; margin-bottom:6px; }
+  .devmod { background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:6px; flex:1; min-width:120px; cursor:pointer; }
   /* control-section modules — same Eurorack box treatment as the voice modules, so controls and
      voices read as one rack. Each groups a related cluster (Transport / Generate / Feel / Party). */
   .ctrlmod { display:flex; align-items:center; gap:6px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:5px 8px; }
   .devmod.off { opacity:.4; }
   .devmod .dm-led { width:9px; height:9px; border-radius:50%; background:#333; flex-shrink:0; cursor:pointer; }
   .devmod.on .dm-led { box-shadow:0 0 6px currentColor; }
-  .devmod .dm-row { display:flex; align-items:center; gap:5px; }
-  .devmod select { flex:1; min-width:0; background:#151515; color:#bbb; border:1px solid #333; border-radius:3px; font-size:10px; padding:2px 3px; font-family:'Courier New',monospace; }
-  .devmod input[type=range]{ width:40px; flex-shrink:0; height:3px; accent-color:#00d4ff; }
+  /* single row: every control is 30px tall so modules are uniform height and cleanly padded */
+  .devmod .dm-row { display:flex; align-items:stretch; gap:6px; height:30px; }
+  .devmod select { flex:1; min-width:0; background:#151515; color:#bbb; border:1px solid #333; border-radius:4px; font-size:11px; padding:0 6px; font-family:'Courier New',monospace; height:30px; }
   .devmod .dm-lvl { font-size:9px; color:#666; font-family:'Courier New',monospace; min-width:18px; text-align:right; }
-  .devmod .dm-wheel { padding:3px 8px; flex-shrink:0; }
-  .devmod .dm-wheel .wv { font-size:11px; min-width:22px; text-align:right; }
-  .devmod .dm-row2 { display:flex; gap:5px; margin-top:5px; }
+  /* level wheel = a value cell matching button height; flex-grows to fill the strip */
+  .devmod .dm-wheel { flex:1; min-width:0; height:30px; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; border-radius:4px; padding:0; }
+  .devmod .dm-wheel .wv { font-size:12px; text-align:center; }
   .devmod .dm-btn {
-    flex:1; padding:6px 0; min-height:30px; border-radius:4px; cursor:pointer;
+    flex:0 0 34px; width:34px; height:30px; padding:0; border-radius:4px; cursor:pointer;
     font-size:14px; line-height:1; background:#151515; border:1px solid #333; color:#999;
     transition:all .12s; display:inline-flex; align-items:center; justify-content:center;
   }
@@ -228,18 +228,18 @@
   .btn.dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   .devmod .dm-btn:focus { outline:none; box-shadow:0 0 0 2px rgba(0,212,255,.6); }
 
-  .sec-hdr { display:flex; align-items:center; gap:8px; margin:11px 0 6px; min-height:22px; }
-  /* MASTER FX in the voices header */
-  #voicesHdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
-  #voicesHdr .vh-mfx { min-height:0; height:20px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center;
+  .sec-hdr { display:flex; align-items:center; gap:8px; margin:6px 0 4px; min-height:18px; }
+  /* MASTER FX in the mixer header */
+  #mixerHdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
+  #mixerHdr .vh-mfx { min-height:0; height:20px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center;
     background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; }
-  #voicesHdr .vh-mfx svg { display:block; }
-  #voicesHdr .vh-mfx:hover { color:#00e08a; border-color:#00e08a; }
-  #voicesHdr .vh-mfx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
-  #voicesHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; }
-  #voicesHdr .vh-mkill { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; }
-  #voicesHdr .vh-mkill:hover { color:#fff; border-color:#555; }
-  #voicesHdr .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
+  #mixerHdr .vh-mfx svg { display:block; }
+  #mixerHdr .vh-mfx:hover { color:#00e08a; border-color:#00e08a; }
+  #mixerHdr .vh-mfx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
+  #mixerHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; }
+  #mixerHdr .vh-mkill { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; }
+  #mixerHdr .vh-mkill:hover { color:#fff; border-color:#555; }
+  #mixerHdr .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   /* the MATRIX header holds the taller counter box; trim its vertical margin so the row spacing
      matches the other section headers (the box height was expanding the gaps above/below). */
   /* MATRIX header uses the standard section-header margin (same as CONTROLS/VOICES) so all three
@@ -260,7 +260,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_7_0]</span>
+      <span class="ver">[Beta&nbsp;V1_8_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -284,8 +284,8 @@
    <div class="panel active" id="panelGen">
 
     <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Info</span><span class="rule"></span></div>
-    <div class="summary" style="display:flex;align-items:stretch;gap:10px;padding:10px;">
-      <div style="flex:1;min-width:0;padding:12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
+    <div class="summary" style="display:flex;align-items:stretch;gap:10px;padding:6px;">
+      <div style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
         <div class="summary-title" id="patName">Chippy Loop 01</div>
         <div class="summary-grid" style="margin-top:4px;">
           <span class="k">genre</span><span id="patGenre">House</span>
@@ -294,8 +294,8 @@
           <span class="k">length</span><span id="patLen">4 bars · 16 steps/bar</span>
         </div>
       </div>
-      <div style="flex:1;min-width:0;padding:8px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
-        <canvas id="face" width="480" height="300" style="display:block;width:100%;height:110px;border-radius:4px;background:#080808;"></canvas>
+      <div style="flex:1;min-width:0;padding:6px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
+        <canvas id="face" width="480" height="300" style="display:block;width:100%;height:96px;border-radius:4px;background:#080808;"></canvas>
       </div>
     </div>
 
@@ -334,8 +334,11 @@
       <span class="loadhint" id="loadHint"></span>
     </div>
 
-    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span><span class="vh-mlabel">MASTER FX</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="master effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1" title="master FX strength — scroll or drag"><span class="wv" id="mfx-amt-v" style="color:#00d4ff">50</span></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="master kill — mute the whole mix without stopping playback">⏻</button></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span></div>
     <div class="devstrip" id="devStrip"></div>
+
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Mixer</span><span class="rule"></span><span class="vh-mlabel">MASTER FX</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="master effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1" title="master FX strength — scroll or drag"><span class="wv" id="mfx-amt-v" style="color:#00d4ff">50</span></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="master kill — mute the whole mix without stopping playback">⏻</button></div>
+    <div class="devstrip" id="mixStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">MATRIX</span><span class="rule"></span><span class="time mono" id="timeDisp">bar 1 · beat 1</span></div>
     <div id="chartWrap" title="MATRIX — the live piano roll. Top strip = whole-loop overview with Chippy; below = the 7 voice lanes scrolling past the playhead."><canvas id="tl"></canvas></div>
@@ -1911,6 +1914,9 @@
   const FX_OPTS=[["riserUp","Riser Up"],["riserDn","Riser Down"],["glitchUp","Glitch Up"],["glitchDn","Glitch Down"],["impact","Impact"],["sweep","Sweep"],["horn","Ship Horn"]];
   const KICK_OPTS=[["909","909 Kick"],["808","808 Kick"],["punch","Punch Kick"],["click","Click Kick"],["noise","Noise Kick"]];
   const devStrip=document.getElementById("devStrip");
+  const mixStrip=document.getElementById("mixStrip");
+  // VOICES (③ the instrument) — selector + dice ONLY. What sound is loaded, and re-roll it.
+  //  Level / reverb / kill moved to the MIXER (④ the console) — see buildMixer below.
   function buildStrip(){
     devStrip.innerHTML="";
     VOICES.forEach(v=>{
@@ -1926,8 +1932,7 @@
         accent:"Accents — extra stabs on accented steps.",
         fills:"Fills — noise fills & transitions."
       };
-      d.title=(DESC[v.id]||v.name)+"  ·  click to mute · scroll/drag the level";
-      // drums = kick-flavor selector (stays a kick); every other voice = oscillator selector
+      d.title=(DESC[v.id]||v.name)+"  ·  pick the sound · dice re-rolls it";
       const isKick=(v.id==="drums");
       const isFx=(v.id==="fx");
       const opts=isKick?KICK_OPTS:(isFx?FX_OPTS:OSC_OPTS);
@@ -1935,31 +1940,13 @@
       d.innerHTML=
         '<div class="dm-row">'+
           '<select data-sel="'+v.id+'">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===cur?" selected":"")+'>'+o[1]+'</option>').join("")+'</select>'+
-          '<span class="wheel dm-wheel" data-lvl="'+v.id+'" title="level — scroll or drag"><span class="wv" id="lvl-'+v.id+'" style="color:'+v.color+'">'+Math.round(v.lvl*100)+'</span></span>'+
-        '</div>'+
-        '<div class="dm-row2">'+
           '<button class="dm-btn dm-rand" data-rand="'+v.id+'" title="randomize this module\u2019s voice"><svg viewBox="0 0 26 24" width="17" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+
             '<g transform="rotate(-18 9 9)" opacity="0.45"><rect x="3.5" y="2.5" width="12" height="12" rx="2.4"/><circle cx="7" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1" fill="currentColor" stroke="none"/></g>'+
             '<g><rect x="11" y="9" width="12" height="12" rx="2.4" fill="#151515"/><rect x="11" y="9" width="12" height="12" rx="2.4"/><circle cx="14.4" cy="12.4" r="1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="12.4" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="14.4" cy="17.6" r="1" fill="currentColor" stroke="none"/><circle cx="19.6" cy="17.6" r="1" fill="currentColor" stroke="none"/></g>'+
           '</svg></button>'+
-          '<button class="dm-btn dm-fx" data-fx="'+v.id+'" title="audio effect \u2014 adds a reverb-like tail/space to this voice"><svg viewBox="0 0 24 24" width="18" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button>'+
-          '<button class="dm-btn dm-kill" data-mute="'+v.id+'" title="kill switch \u2014 silence this module">\u23fb</button>'+
         '</div>';
       devStrip.appendChild(d);
-      const lvlSpan=d.querySelector("#lvl-"+v.id);
-      const killBtn=d.querySelector('[data-mute="'+v.id+'"]');
       const randBtn=d.querySelector('[data-rand="'+v.id+'"]');
-      const fxBtn=d.querySelector('[data-fx="'+v.id+'"]');
-      fxBtn.classList.toggle("fxon", !!v.fxRev);
-      fxBtn.onclick=(e)=>{ e.stopPropagation(); v.fxRev=!v.fxRev;
-        fxBtn.classList.toggle("fxon", !!v.fxRev);
-        setMsg(v.name+" FX "+(v.fxRev?"on":"off"), v.color); };
-      const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
-        lvlSpan.style.color=v.on?v.color:"#555";
-        killBtn.classList.toggle("killed",!v.on);   // solid red when killed
-        setMsg(v.name+(v.on?" on":" killed"), v.color); draw(); };
-      killBtn.classList.toggle("killed",!v.on);
-      killBtn.onclick=(e)=>{ e.stopPropagation(); toggle(); };
       // random: switch the module's voice-type value only (not the level)
       randBtn.onclick=(e)=>{ e.stopPropagation();
         const sel=d.querySelector('[data-sel="'+v.id+'"]');
@@ -1969,13 +1956,46 @@
         }
         randBtn.classList.add("flash"); setTimeout(()=>randBtn.classList.remove("flash"),150);
       };
-      // click the card body toggles kill too — but not the dropdown, level, or the two buttons
-      d.onclick=(e)=>{ if(e.target.closest("select")||e.target.closest(".dm-wheel")||e.target.closest(".dm-btn")) return; toggle(); };
       const voiceSel=d.querySelector('[data-sel="'+v.id+'"]');
       bindUctl(voiceSel, val=>{
         if(isKick){ v.kick=val; setMsg("Kick → "+val, v.color); }
         else { v.osc=val; setMsg(v.name+" → "+val, v.color); }
       });
+    });
+  }
+
+  // MIXER (④ the console) — level (fader) + reverb (send) + kill (channel mute), one strip per voice.
+  //  These are the DJ's hands on the gear. The YoConditioner's mixing moves act on THESE controls.
+  function buildMixer(){
+    mixStrip.innerHTML="";
+    VOICES.forEach(v=>{
+      const d=document.createElement("div");
+      d.className="devmod"+(v.on?" on":" off");
+      d.style.color=v.color;
+      d.title=v.name+" channel  ·  click to mute · scroll/drag the level";
+      d.innerHTML=
+        '<div class="dm-row">'+
+          '<span class="wheel dm-wheel" data-lvl="'+v.id+'" title="level — scroll or drag"><span class="wv" id="lvl-'+v.id+'" style="color:'+v.color+'">'+Math.round(v.lvl*100)+'</span></span>'+
+          '<button class="dm-btn dm-fx" data-fx="'+v.id+'" title="reverb send \u2014 adds space/tail to this channel"><svg viewBox="0 0 24 24" width="18" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button>'+
+          '<button class="dm-btn dm-kill" data-mute="'+v.id+'" title="kill \u2014 mute this channel">\u23fb</button>'+
+        '</div>';
+      mixStrip.appendChild(d);
+      const lvlSpan=d.querySelector("#lvl-"+v.id);
+      const killBtn=d.querySelector('[data-mute="'+v.id+'"]');
+      const fxBtn=d.querySelector('[data-fx="'+v.id+'"]');
+      fxBtn.classList.toggle("fxon", !!v.fxRev);
+      fxBtn.onclick=(e)=>{ e.stopPropagation(); v.fxRev=!v.fxRev;
+        fxBtn.classList.toggle("fxon", !!v.fxRev);
+        setMsg(v.name+" reverb "+(v.fxRev?"on":"off"), v.color); };
+      const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
+        lvlSpan.style.color=v.on?v.color:"#555";
+        killBtn.classList.toggle("killed",!v.on);
+        // keep the Voices card in sync (dimmed when killed)
+        const vc=devStrip.children[VOICES.indexOf(v)]; if(vc) vc.className="devmod"+(v.on?" on":" off");
+        setMsg(v.name+(v.on?" on":" killed"), v.color); draw(); };
+      killBtn.classList.toggle("killed",!v.on);
+      killBtn.onclick=(e)=>{ e.stopPropagation(); toggle(); };
+      d.onclick=(e)=>{ if(e.target.closest(".dm-wheel")||e.target.closest(".dm-btn")) return; toggle(); };
       const lvlEl=d.querySelector('[data-lvl="'+v.id+'"]');
       bindWheel(lvlEl,
         ()=>Math.round(v.lvl*100),
@@ -1984,10 +2004,10 @@
     });
   }
 
-  // MASTER FX (in the VOICES header) — reverb on the whole mix EXCEPT drums, with a strength value.
+  // MASTER FX (in the MIXER header) — reverb on the whole mix EXCEPT drums, with a strength value.
   (function(){
-    const mBtn=document.querySelector('#voicesHdr [data-mfx]');
-    const mAmt=document.querySelector('#voicesHdr [data-mfxamt]');
+    const mBtn=document.querySelector('#mixerHdr [data-mfx]');
+    const mAmt=document.querySelector('#mixerHdr [data-mfxamt]');
     if(!mBtn) return;
     mBtn.classList.toggle("fxon", masterFxOn);
     document.getElementById("mfx-amt-v").textContent=Math.round(masterFxAmt*100);
@@ -2566,7 +2586,7 @@
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
     const mutes=Array.from(document.querySelectorAll('.devstrip [data-mute]'));
     const rands=Array.from(document.querySelectorAll('.devstrip [data-rand]'));
-    const master=Array.from(document.querySelectorAll('#voicesHdr [data-mfx], #voicesHdr [data-mfxamt]'));
+    const master=Array.from(document.querySelectorAll('#mixerHdr [data-mfx], #mixerHdr [data-mfxamt]'));
     return [controls, voices, rands, mutes, master];
   }
   function wasdMove(key){
@@ -2619,6 +2639,7 @@
   pattern=buildPattern(0x1337);
   rebuildEvents();
   buildStrip();
+  buildMixer();
   document.getElementById("patName").textContent=makeTitle();
   { const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE.house.name; }
   document.getElementById("patSrc").textContent="generated · "+GENRE.house.name+" · seed 1337";

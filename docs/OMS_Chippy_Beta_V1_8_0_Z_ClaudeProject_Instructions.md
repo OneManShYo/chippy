@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_7_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_8_0] — CLAUDE PROJECT INSTRUCTIONS
 
 How an AI (or dev) should work in the Chippy project. Read this first. These rules were learned the
 hard way; follow them.
@@ -19,13 +19,18 @@ single-file philosophy, master clock, module system).
 - **Only add what's asked.** Do not invent content (e.g. word-bank terms). Contributed lists are
   provenance-classed — only Wes's terms go in his classes; anything Claude adds is labeled separately.
 - **No opinions injected into his app.** It's his creative work; match his intent, don't editorialize.
+- **Follow the Design System (Cortex).** Before building or moving any UI, read the Design System in the
+  Y System Reference and inherit its tokens/classes (`.sec-hdr`, `.devmod`, `.dm-btn`, the palette). Do
+  NOT hand-roll parallel styles. Hard rules: section headers are always cyan `#00d4ff`; module controls
+  are a uniform 30px height; no text labels on modules except the Matrix lane chips; when a styled
+  element moves between containers, move its CSS scope too. (Skipping this is how UI drift happens.)
 
 ## VERSIONING (three-digit: major.minor.iteration)
 - **One change per iteration; increment only; never overwrite an iteration; never invent version numbers.**
 - Iterations bump the third digit during a work session (V1_7_01, _02, …).
-- A **published release bumps the MINOR** and resets iteration to 0 (V1.3.0 → V1.7.0).
+- A **published release bumps the MINOR** and resets iteration to 0 (V1.3.0 → V1.8.0).
 - Build/doc FILENAMES use UNDERSCORES with the version expanded (`OMS_Chippy_Beta_V1_7_0.html`).
-  Folders use dotted form (`V1.7.0_Deliverables/`). ONE separator per project — OMS = underscores.
+  Folders use dotted form (`V1.8.0_Deliverables/`). ONE separator per project — OMS = underscores.
 - The full release + git workflow lives in the OMS Suite VersionWorkflow doc (the OMS Suite PM Packaging Workflow — follow its current version). Follow
   its numbered steps and the HUMAN PAUSE / GATE REVIEW before any push.
 
@@ -49,7 +54,7 @@ derived from). Bars must be real dropdown values. Genre owns tempo; selecta bias
 Add to `GENRE{}` with `{name,bpm,tempo:[min,max],build:fn}` and write the `build(P,R)` pattern
 function (push events into P.drums/perc/bass/lead/synth/accent/fills/fx). Gate band fire-probabilities
 with `gk('band',p)` so density conditioning applies. Add to any selecta `pool` that should draw from it.
-(NOTE: V1.7.0 is HOUSE-ONLY — non-house builders were removed; reintroduce them rebuilt to the
+(NOTE: V1.8.0 is HOUSE-ONLY — non-house builders were removed; reintroduce them rebuilt to the
 YoConditioner standard.)
 
 ## THE YOCONDITIONER (Cortex — how the music gets generated)

@@ -1,7 +1,7 @@
-# OMS Chippy [Beta V1_7_0] — DELIVERABLES
+# OMS Chippy [Beta V1_8_0] — DELIVERABLES
 
 **Run date:** 2026-08-31
-**App Version:** Chippy Beta V1_7_0 (live at chippy.onemanshyo.com)
+**App Version:** Chippy Beta V1_8_0 (live at chippy.onemanshyo.com)
 **License:** GPL-3.0
 **Purpose:** Manifest of the V1_7_0 deliverables bundle — the transportable package so another AI or
 person can pick up Chippy cold and understand it fully.

@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_7_0] — USER GUIDE
+# OMS Chippy [Beta V1_8_0] — USER GUIDE
 
 Chippy is a browser instrument. Open the file, press play, and it makes music. No install, no account,
 no files. Here's everything you can do.

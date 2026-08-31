@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_7_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_8_0] — DEVELOPER DOCUMENTATION
 
 **Run date:** 2026-08-31
 **Unix Epoch:** 1788134400
-**App Version:** Chippy Beta V1_7_0 (live at chippy.onemanshyo.com)
+**App Version:** Chippy Beta V1_8_0 (live at chippy.onemanshyo.com)
 **License:** GPL-3.0
 **Purpose:** The technical spec for OMS Chippy — architecture, systems, and internals. Modeled on
 the OMS Dojo Developer Documentation and using shared OMS vocabulary (Cortex / Node / Leaf), sized
@@ -107,10 +107,19 @@ deferred:
   current phrase finishes before the new length takes effect.
 When adding a new control, classify it into one of these three; that determines its wiring.
 
-### 2.4 Theme Constants
+### 2.4 Theme Constants & the Design System
 `CY #00d4ff` (cyan), `MAG #ff006e` (magenta), `YEL #ffcc00`, `GRN #00e08a`, `PUR #c77dff`,
 `ORG #ffa500`. Voice lanes each carry a color; the palette is reused across matrix, modules, and the
 Glover visualizer for a consistent identity.
+
+These constants are the seed of a fuller **Design System** — a Cortex-tier UI/UX spec (tokens,
+typography, layout/spacing, color semantics, component patterns, and anti-drift hard rules) documented
+in the Y System Reference (§ THE DESIGN SYSTEM). It's Cortex because it governs visual consistency
+app-wide; changing a token means auditing the whole UI. Core rules: section headers are always cyan;
+new UI inherits existing classes (`.sec-hdr`/`.devmod`/`.dm-btn`) rather than hand-rolling; module
+controls are a uniform 30px height; no text labels on modules except the Matrix lane chips. (The spec
+was written after UI drift — a magenta header, oversized master-FX, invented labels — proved the tokens
+needed to be a documented law, not just values in the CSS.)
 
 ### 2.5 The YoConditioner (the conditioned generative layer) — CORE
 
@@ -146,7 +155,7 @@ seed rolls a fresh one, within the DNA's biases.
   reverbThrow — each `{on,chance,minLen,maxLen}`, fired at musical boundaries with a probability so they're
   alive, not mechanical).
 
-**What is WIRED to audio (as of V1.7.0):**
+**What is WIRED to audio (as of V1.8.0):**
 - `mode` (app-wide minor lock) and `swing` (per-loop groove offset) — the originals.
 - **Density conditioning** — per-band densities bias each band's fire probability, normalized against the
   busiest band (drums), floored so a band never fully vanishes. Drum-forward JNO ⇒ drums full,
@@ -163,7 +172,7 @@ seed rolls a fresh one, within the DNA's biases.
 undefined), `structure`, `dynamics`, and mixing `approach`/`approachBars` (a true tempo glide of the
 outgoing loop needs its own scheduler-clock iteration).
 
-**Scope note (V1.7.0):** the app is HOUSE-ONLY while the YoConditioner is dialed in on JNO — the other
+**Scope note (V1.8.0):** the app is HOUSE-ONLY while the YoConditioner is dialed in on JNO — the other
 genre builders (techno/breaks/dnb/bigroom) are retained in code but unlisted, and reintroduced rebuilt to
 this standard once House is proven. Mirrors the single-selecta focus move of V1.6.0.
 

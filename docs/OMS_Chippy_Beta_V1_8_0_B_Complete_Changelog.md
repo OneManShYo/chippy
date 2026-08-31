@@ -1,5 +1,29 @@
 # OMS Chippy — Changelog
 
+## V1_8_0 — Voices/Mixer split, module cleanup, Design System documented (2026-08-31)
+Rolled up from iterations V1_8_01…V1_8_05 (the UI line following the V1.7.0 YoConditioner ship).
+### Added
+- **Mixer section** — split the per-voice **level + reverb + kill** out of Voices into a new **Mixer**
+  row (the console/④ in the seven-section model). Voices now holds only the instrument controls
+  (**selector + dice**); the Mixer holds the DJ's-hands controls. They line up lane-for-lane. This is
+  the surface the YoConditioner's mixing moves will visibly act on (kickCut/bassEqOut/leadDrop/throw).
+- **MASTER FX** moved from the Voices header into the **Mixer header** (where the console lives).
+- **The Design System** — documented as a Cortex system in the Y-doc (System Reference): tokens,
+  typography, layout/spacing, color semantics, component patterns, and the anti-drift hard rules.
+  Previously only a 6-value palette existed; the full spec now exists so UI work has a written law to
+  build against (this addition is recorded in the backlog as its own ticket).
+### Changed
+- **Module cleanup** — every module control (selector, level, dice, reverb, kill) is now a uniform
+  30px-tall single row. Fixed truncated selectors ("909 Kic" → "909 Kick"), floating values, mismatched
+  padding, and oversized boxes. Voices and Mixer modules are consistent, modular, clean.
+- **Vertical squeeze** — trimmed section-header margins/height, strip padding, and the Info row
+  (padding + face-canvas height) so the whole TRACKS tab fits one screen on a 14" MacBook Pro.
+### Fixed
+- iOS AirPlay routing (BLOG#0025) — verified working on device; Chippy audio now routes to
+  HomePod/AirPlay via the `<audio>`-element output path. Ticket closed.
+- Mixer header shipped magenta / MASTER FX rendered oversized / channel labels added — all corrected to
+  match the (now documented) design system: cyan headers, small-gray master-FX label, no module labels.
+
 ## V1_7_0 — The YoConditioner: Yo DNA → Yo Conditioning wired to audio (2026-08-31)
 Rolled up from iterations V1_6_01 and V1_6_02. First release where committed DNA audibly biases
 generation beyond swing/mode — the YoConditioner is now a named Cortex-tier system.

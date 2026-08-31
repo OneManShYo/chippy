@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_7_0] — SYSTEM REFERENCE
+# OMS Chippy [Beta V1_8_0] — SYSTEM REFERENCE
 
 Machine-readable reference for an AI/dev picking up the single-file codebase. Names below are the
 actual identifiers in the HTML's inline script.
@@ -9,6 +9,87 @@ actual identifiers in the HTML's inline script.
 - `LOOKAHEAD = 0.25` (scheduler lookahead seconds).
 - `A4 = 440`; `midiToHz(m)`; `NOTE{}`, `MINOR[]` (natural minor); `keyTonic` (default "A", app is minor-locked).
 
+## THE DESIGN SYSTEM (Cortex — universal UI/UX spec)
+
+**Purpose:** the universal UI/UX rules for Chippy. Change any of these = audit the whole app. This is
+CORTEX: it governs visual consistency across every section and tab. Deviation reads as amateur slop and
+breaks the OMS look. **When building or moving any UI, inherit these tokens/classes — never hand-roll a
+one-off.** (This section exists because unlisted tokens are how drift happens — a hand-rolled panel
+picks the wrong color and nothing catches it.)
+
+**Lineage:** Chippy inherits the OMS design language from the Sozo/Dojo template (dark rack aesthetic,
+Eurorack-style module boxes, cyan section headers). It is a scaled-down sibling of the Dojo Design
+System (which is also a Cortex system). Same language, Chippy's own values.
+
+### Design Tokens (the real CSS values)
+```
+/* Section frame (Info/Controls/Voices/Mixer/Matrix panels + module boxes) */
+background:  #0a0a0a        /* panel + module fill */
+border:      1px solid #2a2a2a
+radius:      6px (panels) · 5px (modules) · 4px (inner controls/buttons)
+
+/* Inner control fill (selectors, level cells, buttons) */
+control-bg:      #151515
+control-border:  1px solid #333
+control-height:  30px        /* EVERY module control is 30px tall — uniform rows */
+
+/* Palette (JS consts CY/MAG/YEL/GRN/PUR/ORG) */
+CY  #00d4ff  cyan     GRN #00e08a  green
+MAG #ff006e  magenta  PUR #c77dff  purple
+YEL #ffcc00  yellow   ORG #ffa500  orange
+```
+
+### Typography
+- **Section headers** (`.sec-hdr .txt`): 11px, weight 600, uppercase, letter-spacing 1px, Courier New (mono).
+- **Mono UI** (values, counters, selectors, buttons): `'Courier New', monospace`.
+- **Display/body**: `'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif`.
+- **Module selector text**: 11px mono; must be fully readable (selector flex-grows to fit — never clip
+  "909 Kick" to "909 Kic").
+
+### Layout & Spacing
+- **Platform target:** Chrome on MacBook Pro 14" — the whole TRACKS tab should fit one screen.
+- **Section header** (`.sec-hdr`): margin `6px 0 4px`, min-height 18px, cyan bar (3×13px) + cyan
+  uppercase label + a `#262626` rule line filling the row.
+- **Module strip** (`.devstrip`): flex, gap 6px, padding 6px, margin-bottom 6px, wrap.
+- **Module** (`.devmod`): padding 6px, min-width 120px, flex:1; a single 30px-tall control row.
+- **Control heights are uniform 30px** across selector, level cell, and buttons so Voices and Mixer
+  rows align lane-for-lane.
+- **Button** (`.dm-btn`): 34px wide × 30px tall, `#151515`/`#333`, radius 4px.
+
+### Color Semantics (each color MEANS something — not decorative)
+| Color | Hex | Meaning / where |
+|---|---|---|
+| Cyan | `#00d4ff` | **Selection/focus + ALL section headers.** Every `.sec-hdr` is cyan. Info/Controls/Voices/Mixer/Matrix headers, focus rings, active tab. |
+| Magenta | `#ff006e` | Kill/mute state + the party button + matrix playhead. |
+| Green | `#00e08a` | Audio-effect ON (reverb sends, master FX `fxon` glow). |
+| Yellow/Orange | `#ffcc00`/`#ffa500` | Accent/time-slot warmth; per-voice lane colors. |
+| Purple | `#c77dff` | Per-voice lane color (synth-ish lanes). |
+| Red | `#e0114b` | Engaged kill (solid-red `.killed` state). |
+
+**Voice-lane colors** carry through matrix, modules, and Glover for one identity per voice.
+
+### Component Patterns (the reusable furniture)
+- **Section header** = `.sec-hdr` → `<span class="bar">` (colored 3px bar) + `<span class="txt">`
+  (uppercase label) + `<span class="rule">` (filler line). Always cyan unless a section owns a color.
+- **Module box** = `.devmod` inside a `.devstrip`. One `.dm-row` (30px) of controls.
+- **Icon button** = `.dm-btn` (+ `.dm-rand` dice / `.dm-fx` reverb ring / `.dm-kill` power). States:
+  `:hover` tints to the semantic color; `.fxon` = green glow; `.killed` = solid red.
+- **Value wheel** = `.dm-wheel .wv` — scroll/drag numeric cell, 30px tall, centered value.
+- **Master-FX cluster** (mixer header): small gray `.vh-mlabel` + green-ring `.vh-mfx` + value
+  `.vh-mamt` + `.vh-mkill`. (Scoped to `#mixerHdr` — if this cluster moves, move its CSS scope with it.)
+
+### Hard Rules (the anti-drift laws)
+1. **Section headers are ALWAYS cyan** `#00d4ff`. Never recolor a header (this was violated once —
+   a mixer header shipped magenta; corrected).
+2. **Inherit existing classes; never hand-roll a parallel style.** New UI reuses `.devmod`/`.dm-btn`/
+   `.sec-hdr`. Hand-rolled inline styles drift.
+3. **No text labels on modules** except in the Matrix piano-roll lane chips. (Channel-name labels were
+   added to the mixer once and removed — the lane alignment identifies the channel.)
+4. **Uniform 30px control height** — selector, level, buttons all match so rows align.
+5. **Buttons are square-ish** (34×30), `#151515`/`#333`. Not pills, not full-width.
+6. **When a styled element moves between headers, move its CSS scope too** (the `#voicesHdr .vh-*` →
+   `#mixerHdr .vh-*` bug: styles were ID-scoped and broke on the move).
+
 ## AUDIO NODES
 - `actx` AudioContext; `master` master gain → destination.
 - `noiseBuf` (white), `pinkBuf`, `brownBuf`.
@@ -18,7 +99,7 @@ actual identifiers in the HTML's inline script.
 ## DATA CONTAINERS
 - `VOICES[]` — 8 voices `{id,name,color,osc,on,lvl,decay,...}`: drums, perc, bass, lead, synth, accent, fills, fx.
   `V{}` = id→voice. Voice ids also index pattern arrays `P{}`.
-- `GENRE{}` — per-genre `{name, bpm, tempo:[min,max], build:fn}`. **House-only as of V1.7.0** (techno/
+- `GENRE{}` — per-genre `{name, bpm, tempo:[min,max], build:fn}`. **House-only as of V1.8.0** (techno/
   breaks/dnb/bigroom builders REMOVED while the YoConditioner is dialed in on JNO; return rebuilt later).
 - `SELECTAS[]` — selectas: `{id,name,genreChance,barsAllowed[],barsChange,pool[],bpm:[min,max], corpus[]?, profile?}`.
   Ships one: `jno` (Juice Night Out). `selecta()` = active; `selectaIdx`.
@@ -50,7 +131,7 @@ profile:{
   }
 }
 ```
-**Wired to audio (V1.7.0):** `mode`, `swing`; per-band DENSITY (`setDensityFromProfile`→`dGate`→`gk`,
+**Wired to audio (V1.8.0):** `mode`, `swing`; per-band DENSITY (`setDensityFromProfile`→`dGate`→`gk`,
 applied at the house builder's band probability points); `maxBpmJump` (clamp in `partyReroll`);
 performance MOVES (`buildMoves`→`_moveWindows`→`moveAt`, honored in `fireVoice`).
 **Captured, not yet wired:** `bassEntry`, `breakdowns`, `vocalRatio`, `structure`, `dynamics`,

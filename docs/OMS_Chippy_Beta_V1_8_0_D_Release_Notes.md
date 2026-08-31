@@ -1,12 +1,29 @@
-# OMS Chippy [Beta V1_7_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_8_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.8.0 — The Mixer (and a documented Design System)
+
+This release splits Chippy's console out from its instrument. The old "Voices" section did two jobs at
+once — it held both the *sound* of each voice (which kick, which oscillator) and the *mixer* controls
+(level, reverb, mute). Those are two different machines: the instrument you load, versus the hands you
+run over a mixer. V1.8.0 separates them into two rows — **Voices** (selector + dice) and a new **Mixer**
+(level + reverb + kill per channel) — lined up lane-for-lane. It's the same split a real DJ rig keeps:
+the decks that make the sound, and the mixer you perform on. It also sets up the next step — the
+YoConditioner's automatic DJ moves will visibly fire on the Mixer, since that's where mixing lives.
+
+Alongside that, the modules were cleaned up (uniform heights, readable selectors, consistent padding)
+and the whole layout tightened so it fits one screen. And the **Design System** — the colors, spacing,
+type, and component rules that keep Chippy looking like OMS — is now written down as a core spec, so the
+look stays consistent as the app grows.
+
+Also fixed: iOS audio now routes to AirPlay / HomePod correctly, verified on device.
 
 ## V1.7.0 — The YoConditioner
 
 This is the release where Chippy's DNA starts to actually shape the sound. Until now, a selecta's
 profile only nudged groove and key; everything else it "knew" about Wes's music was captured but
-silent. V1.7.0 turns that on.
+silent. V1.8.0 turns that on.
 
 **The YoConditioner** is the name for the layer that decides *what* gets generated — the generative
 brain that sits above the sound set (chiptune today, swappable tomorrow). It runs on two ideas, kept
