@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_9_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_10_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_9_0]</title>
+<title>OMS Chippy [Beta V1_10_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -115,6 +115,19 @@
   .summary-title { font-size:15px; font-weight:600; color:#fff; margin-bottom:6px; }
   .summary-grid { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; font-size:11px; color:#999; }
   .summary-grid .k { color:#666; }
+  .console-grid { gap:6px 16px; align-content:center; height:100%; }
+  .console-grid .mono { color:#00d4ff; font-size:12px; }
+  /* MESSAGE BAR (footer) — the Message System's display, ported from Dojo. Strictly UI/UX interaction
+     feedback (what you DID in the interface) — distinct from MONITOR, which is performance feedback.
+     Type colors are Dojo's: info=cyan, state=orange, error=magenta. */
+  .message-bar { padding:7px 18px; font-family:'Courier New',monospace; font-size:12px; line-height:1.3;
+    background:linear-gradient(180deg,#1a1a1a,#141414); border-top:1px solid #333;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:30px; box-sizing:border-box;
+    display:flex; align-items:center; justify-content:center; text-align:center; }
+  .message-bar.msg-info  { color:#00d4ff; }
+  .message-bar.msg-state { color:#ffa500; }
+  .message-bar.msg-error { color:#ff006e; }
+  .message-bar.clickable { cursor:pointer; text-decoration:underline; }
 
   /* transport */
   .transport {
@@ -135,9 +148,19 @@
   .btn.mag { border-color:#ff006e; color:#ff006e; }
   .btn.mag:hover { background:rgba(255,0,110,.1); }
   .btn:disabled { opacity:.4; cursor:default; }
-  .time { font-size:11px; color:#00d4ff; font-family:'Courier New',monospace; min-width:104px;
+  .cc-lbl { font-size:9px; font-weight:600; letter-spacing:1px; color:#5a5a5a; font-family:'Courier New',monospace; text-transform:uppercase; }
+  .selecta-lbl { align-self:center; margin-right:2px; }
+  /* CONTROLS split into two peer sections sharing a row: TRANSPORT (left, content-width) + SELECTA
+     (right, fills remaining). Each column = its own sec-hdr sitting directly above its own module. */
+  .ctrl-sections { display:flex; align-items:flex-start; gap:10px; }
+  .ctrl-col-transport { flex:0 0 auto; }
+  .ctrl-col-selecta { flex:1 1 auto; min-width:0; }
+  .ctrl-col .transport { margin-bottom:0; }
+  .time { font-size:11px; color:#bbb; font-family:'Courier New',monospace; min-width:58px;
     background:#0a0a0a; border:1px solid #2a2a2a; border-radius:4px; padding:0 9px;
-    margin-right:2px; text-align:right; height:20px; line-height:20px; box-sizing:border-box; }
+    text-align:right; height:20px; line-height:20px; box-sizing:border-box; }
+  #timeLoop.finishing { animation:loopblink 0.5s steps(1) infinite; }
+  @keyframes loopblink { 0%,50%{ opacity:1; } 51%,100%{ opacity:0.25; } }
   .loadhint { font-size:11px; color:#666; font-family:'Courier New',monospace; margin-left:auto; }
 
   /* control-strip controls — consistent baseline + spacing */
@@ -145,7 +168,7 @@
   .tctl input[type=range]{ width:88px; height:3px; accent-color:#00d4ff; vertical-align:middle; }
   .tctl .tv { color:#00d4ff; min-width:30px; }
   .sel {
-    background:#151515; color:#00d4ff; border:1px solid #333; border-radius:4px;
+    background:#151515; color:#bbb; border:1px solid #333; border-radius:4px;
     font-size:12px; padding:5px 7px; font-family:'Courier New',monospace; line-height:1.2; cursor:pointer;
   }
   .sel:hover { border-color:#444; }
@@ -153,7 +176,6 @@
   .qread { color:#6a6a6a; cursor:default; opacity:.85; user-select:none; display:inline-flex; align-items:center; gap:3px; }
   .qread:hover { border-color:#333; }
   .qread .qnote { font-size:16px; line-height:1; position:relative; top:1px; }
-  .tsep { width:1px; align-self:stretch; background:#2a2a2a; margin:0 2px; }
 
   /* compact wheel picker (replaces tempo/swing sliders) */
   .wheel {
@@ -224,6 +246,9 @@
   .devmod .dm-rand:hover { color:#00d4ff; border-color:#00d4ff; }
   .devmod .dm-rand.flash { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.15); }
   .devmod .dm-kill:hover { color:#ff5a7a; border-color:#ff5a7a; }
+  .devmod .dm-solo { font-weight:700; font-family:'Courier New',monospace; }
+  .devmod .dm-solo:hover { color:#ffcc00; border-color:#ffcc00; }
+  .devmod .dm-solo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; box-shadow:0 0 8px rgba(255,204,0,.5); }
   .devmod .dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   .devmod .dm-fx:hover { color:#00e08a; border-color:#00e08a; }
   .devmod .dm-fx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
@@ -232,6 +257,7 @@
 
   .sec-hdr { display:flex; align-items:center; gap:8px; margin:6px 0 4px; min-height:18px; }
   /* MASTER FX in the mixer header */
+  .sec-hdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
   #mixerHdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
   #mixerHdr .vh-mfx { min-height:0; height:20px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center;
     background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; }
@@ -262,7 +288,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_9_0]</span>
+      <span class="ver">[Beta&nbsp;V1_10_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -271,7 +297,7 @@
   </div>
 
   <div class="tabbar">
-    <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop selecta set">TRACKS</div>
+    <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop selecta set">MUSIC</div>
     <div class="tab" id="raveTab" data-panel="rave" title="Glover — Chippy gives you a full-screen light show. Pick a trick below.">GLOVER</div>
     <div class="tab" id="aboutTab" data-panel="about" title="What Chippy is, who made it, and the license">ABOUT</div>
     <div class="bar-right">
@@ -285,9 +311,9 @@
   <div class="body">
    <div class="panel active" id="panelGen">
 
-    <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Info</span><span class="rule"></span></div>
-    <div class="summary" style="display:flex;align-items:stretch;gap:10px;padding:6px;">
-      <div style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
+    <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblInfo">Info</span><span class="rule"></span></div>
+    <div class="summary" id="summaryRow" style="display:flex;align-items:stretch;gap:10px;padding:6px;">
+      <div id="infoBox" style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
         <div class="summary-title" id="patName">Chippy Loop 01</div>
         <div class="summary-grid" style="margin-top:4px;">
           <span class="k">genre</span><span id="patGenre">House</span>
@@ -296,52 +322,63 @@
           <span class="k">length</span><span id="patLen">4 bars · 16 steps/bar</span>
         </div>
       </div>
-      <div style="flex:1;min-width:0;padding:6px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
+      <div id="monitorBox" style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
+        <div class="summary-grid console-grid">
+          <span class="k">master</span><span class="mono" id="timeSess" title="master (session) position — continuous bar . beat . 16th since play started">1 . 1 . 1</span>
+          <span class="k">loop</span><span class="mono" id="timeLoop" title="loop position — bar . beat . 16th of the current loop (blinks on the last bar before it changes)">1 . 1 . 1</span>
+          <span class="k">tempo</span><span class="mono" id="tempoRead">124 bpm</span>
+        </div>
+      </div>
+      <div id="faceBox" style="flex:1;min-width:0;padding:6px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
         <canvas id="face" width="480" height="300" style="display:block;width:100%;height:96px;border-radius:4px;background:#080808;"></canvas>
       </div>
     </div>
 
-    <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Controls</span><span class="rule"></span></div>
-    <div class="transport">
-      <div class="ctrlmod" title="Transport">
-        <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
-        <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
-        <button class="btn dm-kill" id="killBtn" title="kill switch — mute the mix without stopping playback (talk / dictate, then unmute)">⏻</button>
+    <div class="ctrl-sections">
+      <div class="ctrl-col ctrl-col-transport">
+        <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblTransport">Transport</span><span class="rule"></span></div>
+        <div class="transport">
+          <div class="ctrlmod" title="Transport">
+            <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
+            <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
+          </div>
+        </div>
       </div>
-      <div class="ctrlmod" title="Generate">
-        <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — House (4-on-the-floor). Other genres return once the House YoConditioner is proven.">
-            <option value="house" selected>House</option>
-          </select>
-        </span>
-        <span class="tctl"><select id="lenSel" class="sel uctl" title="loop length in bars — longer loops build through more phrasing. Up/Down then Enter to pick · Left/Right scrolls live">
-            <option value="4" selected>4 bars</option>
-            <option value="8">8 bars</option>
-            <option value="16">16 bars</option>
-            <option value="32">32 bars</option>
-            <option value="64">64 bars</option>
-            <option value="128">128 bars</option>
-          </select>
-        </span>
-        <span class="tctl"><span id="quantReadout" class="sel qread" title="quantize — control changes apply on the next beat (quarter note), so playback never skips mid-bar">Q <span class="qnote">♩</span></span></span>
+      <div class="ctrl-col ctrl-col-selecta">
+        <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblSelecta">Selecta</span><span class="rule"></span></div>
+        <div class="transport">
+          <div class="ctrlmod selecta-mod" title="Selecta">
+            <span class="tctl"><select id="djSel" class="sel uctl" title="name — the selecta. None = raw play (looping, no conditioning). Pick a selecta to run a nonstop conditioned set that rolls fresh loops in that style.&#10;&#10;Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+            <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — House (4-on-the-floor). Other genres return once the House YoConditioner is proven.">
+                <option value="house" selected>House</option>
+              </select>
+            </span>
+            <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level. Applies only with a selecta active."></select></span>
+            <span class="tctl"><select id="lenSel" class="sel uctl" title="bars — loop length. Longer loops build through more phrasing. Up/Down then Enter to pick · Left/Right scrolls live">
+                <option value="4" selected>4 bars</option>
+                <option value="8">8 bars</option>
+                <option value="16">16 bars</option>
+                <option value="32">32 bars</option>
+                <option value="64">64 bars</option>
+                <option value="128">128 bars</option>
+              </select>
+            </span>
+            <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+            <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
+            <span class="tctl"><span id="quantReadout" class="sel qread" title="quantize — control changes apply on the next beat (quarter note), so playback never skips mid-bar">Q <span class="qnote">♩</span></span></span>
+          </div>
+          <span class="loadhint" id="loadHint"></span>
+        </div>
       </div>
-      <div class="ctrlmod" title="Feel">
-        <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-        <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-      </div>
-      <div class="ctrlmod" title="Selecta">
-        <span class="tctl"><select id="djSel" class="sel uctl" title="selecta — None = raw play (looping, no conditioning). Pick a selecta to run a nonstop conditioned set that rolls fresh loops in that style.&#10;&#10;Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-        <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level. Applies only with a selecta active."></select></span>
-      </div>
-      <span class="loadhint" id="loadHint"></span>
     </div>
 
-    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Voices</span><span class="rule"></span></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox" title="sound source — the hardware Chippy's synthesis is modeled after (variable-duty pulse + triangle + LFSR noise = Ricoh 2A03, the NES / Famicom sound chip)">Ricoh 2A03</span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">Mixer</span><span class="rule"></span><span class="vh-mlabel">MASTER FX</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="master effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1" title="master FX strength — scroll or drag"><span class="wv" id="mfx-amt-v" style="color:#00d4ff">50</span></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="master kill — mute the whole mix without stopping playback">⏻</button></div>
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">AUDIO EFFECTS</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="audio effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1"><span class="wv" id="mfx-amt-v" style="color:#bbb">50</span></span><span class="vh-mlabel vh-mutelabel">MUTE</span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="mute — silence the whole mix without stopping playback">⏻</button></div>
     <div class="devstrip" id="mixStrip"></div>
 
-    <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff">MATRIX</span><span class="rule"></span><span class="time mono" id="timeDisp">bar 1 · beat 1</span></div>
+    <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><span class="rule"></span></div>
     <div id="chartWrap" title="MATRIX — the live piano roll. Top strip = whole-loop overview with Chippy; below = the 7 voice lanes scrolling past the playhead."><canvas id="tl"></canvas></div>
 
    </div><!-- /panelGen -->
@@ -405,6 +442,7 @@
     </div>
    </div><!-- /panelAbout -->
   </div>
+  <div id="messageBar" class="message-bar msg-info">Ready</div>
 </div>
 
 <script>
@@ -457,7 +495,7 @@
     {id:"synth",  name:"Synth",   color:"#4aa3df", osc:"pulse50", on:true, lvl:0.42, decay:0.30 },
     {id:"accent", name:"Accents", color:YEL, osc:"pulse25",  on:true, lvl:0.4, decay:0.10 },
     {id:"fills",  name:"Fills",   color:PUR, osc:"noise",    on:true, lvl:0.45, decay:0.08, noiseLo:400, noiseHi:4000 },
-    {id:"fx",     name:"FX",      color:ORG, osc:"riserUp",  on:true, lvl:0.3, decay:0.5, fxRev:true, noiseLo:200, noiseHi:9000 }
+    {id:"fx",     name:"FX",      color:ORG, osc:"riserUp",  on:true, lvl:0.3, decay:0.5, noiseLo:200, noiseHi:9000 }
   ];
   const V={}; VOICES.forEach(v=>V[v.id]=v);
 
@@ -947,8 +985,10 @@
   }
 
   // fire one event's voice at absolute audio time `when`
+  function _anySolo(){ return VOICES.some(v=>v.solo); }
   function fireVoice(ev, when){
     const v=V[ev.voice]; if(!v.on) return;
+    if(_anySolo() && !v.solo) return;   // solo: only soloed channels sound
     // YOCONDITIONER performance moves: if a move window covers this event's step, apply it.
     //  kickCut/bassEqOut/leadDrop → suppress (skip the hit — a clean cut/duck).
     //  reverbThrow → let it play but force it wet (handled via forceRev below).
@@ -1085,6 +1125,47 @@
     const cycles = TOTAL_STEPS>0 ? Math.floor(es/TOTAL_STEPS) : 0;
     return { es, esF, cycles };
   }
+
+  // ============================================================
+  //  MASTER LOOP CLOCK  (CORTEX — single source of loop-phase truth)
+  // ============================================================
+  // One clock, one formula, read by EVERY loop-phase visual (Chippy rider, the loop readout + its
+  // last-bar blink, the face bob, the FX phase). Dojo's Golden Rule: same formula everywhere = perfect
+  // alignment, nothing can drift. This is the LOOP-PHASE timeline (wraps at the true loop boundary).
+  // It is distinct from sessionClock() above, which is the CONTINUOUS timeline (never wraps) used by
+  // the scroll, the playhead, and the session readout — those two clocks are the whole timing model.
+  //
+  // Anchor = loopStartCtx: the audio time the current loop actually began. It is reset to the true
+  // top on EVERY real loop event — natural wrap, party skip, AND a selecta/genre switch (which waits
+  // for the loop end, then restarts at the top). So keying off it means a switch reads ~0 (Chippy
+  // restarts at the left), not a stale running phase.
+  //
+  // The wrap is MODULO, not clamp-to-0. The scheduler advances loopStartCtx up to LOOKAHEAD (0.25s)
+  // AHEAD of audio at a boundary, so (currentTime - loopStartCtx) briefly goes slightly negative right
+  // at the wrap. Modulo maps that small negative to near-L (finish the loop's tail) instead of snapping
+  // to 0 — this is the fix for the ~250ms-early reset that made Chippy vanish and the blink fire early.
+  // The ONE case that must still read 0 is pre-origin at play start (loopStartCtx set ~60-180ms in the
+  // future, audio not there yet); that is detected as currentTime < playOriginCtx and held at 0 so the
+  // loop doesn't pre-roll through its tail before any audio.
+  function masterLoopClock(){
+    const L = loopLen();
+    const sps = secPerStep();
+    if(!(playing && actx && playOriginCtx) || L<=0 || sps<=0){
+      return { loopSec:0, loopStep:0, loopFrac:0, bar:1, beat:1, six:1, L, TOTAL_STEPS };
+    }
+    let loopSec;
+    if(actx.currentTime < playOriginCtx){
+      loopSec = 0;                                   // pre-origin at play start — hold at the top
+    } else {
+      loopSec = ((actx.currentTime - loopStartCtx) % L + L) % L;   // loop-phase, modulo-wrapped
+    }
+    const loopStep = loopSec / sps;                  // fractional 16th-steps into the loop
+    const bar  = Math.floor(loopStep/STEPS_PER_BAR)+1;
+    const beat = Math.floor((loopStep%STEPS_PER_BAR)/4)+1;
+    const six  = Math.floor(loopStep%4)+1;
+    return { loopSec, loopStep, loopFrac:loopSec/L, bar, beat, six, L, TOTAL_STEPS };
+  }
+
   let schedIdx=0;          // next event index to schedule
   let schedUntil=0;        // audio time scheduled up to
   const LOOKAHEAD=0.25;    // seconds of lookahead (generous buffer so bg pump stutters don't drop notes)
@@ -1341,13 +1422,22 @@
     for(const li of (cycledOnce ? [baseLoop-1, baseLoop, baseLoop+1] : [baseLoop, baseLoop+1])){
       if(li>=0) wrapShifts.push(li*TOTAL_STEPS);
     }
-    // Chippy the conductor rides the loop position (shown at rest too)
+    // Chippy the conductor rides the loop position (shown at rest too). Reads the MASTER LOOP CLOCK
+    // (loopStep) — the single loop-phase source shared with the loop readout, face bob, and FX. Keyed
+    // off the true loop start, so a selecta switch (which restarts the loop at the top) puts him back
+    // at the left; modulo-wrapped so he finishes the tail instead of vanishing ~250ms early. Travel is
+    // INSET by his radius so his whole body stays inside the frame wall-to-wall.
     {
-      const s=posSec/secPerStep();
-      const sx=Xo(s);
+      const mc=masterLoopClock();
+      const s=mc.loopStep;
+      const rad=ohBar*0.42;
+      const inset=rad+2;                              // radius + frame border
+      const lo=PAD+inset, hi=W-PAD-inset;            // travel bounds (face centers)
+      const frac=mc.TOTAL_STEPS>0 ? (s/mc.TOTAL_STEPS) : 0;
+      const sx=lo + frac*(hi-lo);
       const intoBar = s % STEPS_PER_BAR;
       const onBar = (intoBar < 0.6) || (intoBar > STEPS_PER_BAR-0.15);
-      drawSmiley(sx, oy+ohBar/2, ohBar*0.42, onBar);
+      drawSmiley(sx, oy+ohBar/2, rad, onBar);
     }
 
     // ---------- SONG ROLL (fixed size, scrolling) ----------
@@ -1529,7 +1619,7 @@
     // gentle eye drift: a slow wander over ~4 bars, max ~10% of head radius
     const barLen = STEPS_PER_BAR*secPerStep();
     const cycle = barLen*4;                                   // 4-bar drift cycle
-    const phase = cycle>0 ? (posSec % cycle)/cycle : 0;       // 0..1 over 4 bars
+    const phase = cycle>0 ? (masterLoopClock().loopSec % cycle)/cycle : 0;   // 0..1 over 4 bars (master clock)
     const dx = Math.sin(phase*Math.PI*2)      * r*0.10;       // left/right
     const dy = Math.sin(phase*Math.PI*2*0.5)  * r*0.06;       // up/down, slower
 
@@ -1919,7 +2009,7 @@
     c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2);
     c.fillStyle=headColor||YEL; c.fill(); c.lineWidth=r*0.05; c.strokeStyle="#000"; c.stroke();
     const barLen=STEPS_PER_BAR*secPerStep(), cyc=barLen*4;
-    const phase=cyc>0?(posSec%cyc)/cyc:0;
+    const phase=cyc>0?(masterLoopClock().loopSec%cyc)/cyc:0;   // master clock (loop-phase)
     const dx=Math.sin(phase*Math.PI*2)*r*0.10, dy=Math.sin(phase*Math.PI*2*0.5)*r*0.06;
     const ex=r*0.40, ey=-r*0.10, eyeR=r*0.12;
     const xEyes=barEnv>0.5;
@@ -1942,24 +2032,23 @@
   }
 
   function updateTime(){
-    const step=Math.floor(posSec/secPerStep());
-    const bar=Math.floor(step/STEPS_PER_BAR)+1;
-    const beat=Math.floor((step%STEPS_PER_BAR)/4)+1;
-    const six=(step%4)+1;                                    // sixteenth within the current-loop beat
+    // LOOP readout — reads the MASTER LOOP CLOCK (shared with Chippy, face bob, FX). Loop-phase,
+    // wraps at the true boundary, no ~250ms-early reset. bar/beat/six are 1-based within the loop.
+    const mc=masterLoopClock();
+    const bar=mc.bar, beat=mc.beat, six=mc.six;
     // Session clock (shared accessor) — Ableton-style continuous bars.beats.sixteenths since play,
     // 1-based, rests at 1 . 1 . 1 when stopped. At start it reads identically to the per-bar clock.
     const { es } = sessionClock();
     const sBar=Math.floor(es/STEPS_PER_BAR)+1;
     const sBeat=Math.floor((es%STEPS_PER_BAR)/4)+1;
     const sSix=(es%4)+1;
-    const sess="  |  "+sBar+" . "+sBeat+" . "+sSix;
-    if(yoOn){
-      const el=Math.max(0, performance.now()-yoStart);
-      const m=Math.floor(el/60000), s=Math.floor((el%60000)/1000);
-      timeDisp.textContent="yo "+m+":"+String(s).padStart(2,"0")+" · "+bar+" . "+beat+" . "+six+sess;
-    } else {
-      timeDisp.textContent=bar+" . "+beat+" . "+six+sess;
-    }
+    // Two clocks only (per spec): loop-relative bar.beat.six  |  Ableton-style session bar.beat.six.
+    // The LOOP readout blinks during its last bar so you get a heads-up the pattern is about to change.
+    // Blink now agrees with Chippy (same master clock) — both fire on the true last bar, not early.
+    timeLoop.textContent=bar+" . "+beat+" . "+six;
+    timeSess.textContent=sBar+" . "+sBeat+" . "+sSix;
+    timeLoop.classList.toggle("finishing", playing && bar===BARS);
+    { const tr=document.getElementById("tempoRead"); if(tr) tr.textContent=BPM+" bpm"; }
   }
 
   // ============================================================
@@ -2017,8 +2106,8 @@
       };
       const voiceSel=d.querySelector('[data-sel="'+v.id+'"]');
       bindUctl(voiceSel, val=>{
-        if(isKick){ v.kick=val; setMsg("Kick → "+val, v.color); }
-        else { v.osc=val; setMsg(v.name+" → "+val, v.color); }
+        if(isKick){ v.kick=val; msgState("voice", v.name, val); }
+        else { v.osc=val; msgState("voice", v.name, val); }
       });
     });
   }
@@ -2035,30 +2124,30 @@
       d.innerHTML=
         '<div class="dm-row">'+
           '<span class="wheel dm-wheel" data-lvl="'+v.id+'" title="level — scroll or drag"><span class="wv" id="lvl-'+v.id+'" style="color:'+v.color+'">'+Math.round(v.lvl*100)+'</span></span>'+
-          '<button class="dm-btn dm-fx" data-fx="'+v.id+'" title="reverb send \u2014 adds space/tail to this channel"><svg viewBox="0 0 24 24" width="18" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button>'+
+          '<button class="dm-btn dm-solo" data-solo="'+v.id+'" title="solo \u2014 play only soloed channels (silences the rest)">S</button>'+
           '<button class="dm-btn dm-kill" data-mute="'+v.id+'" title="kill \u2014 mute this channel">\u23fb</button>'+
         '</div>';
       mixStrip.appendChild(d);
       const lvlSpan=d.querySelector("#lvl-"+v.id);
       const killBtn=d.querySelector('[data-mute="'+v.id+'"]');
-      const fxBtn=d.querySelector('[data-fx="'+v.id+'"]');
-      fxBtn.classList.toggle("fxon", !!v.fxRev);
-      fxBtn.onclick=(e)=>{ e.stopPropagation(); v.fxRev=!v.fxRev;
-        fxBtn.classList.toggle("fxon", !!v.fxRev);
-        setMsg(v.name+" reverb "+(v.fxRev?"on":"off"), v.color); };
+      const soloBtn=d.querySelector('[data-solo="'+v.id+'"]');
+      soloBtn.classList.toggle("soloon", !!v.solo);
+      soloBtn.onclick=(e)=>{ e.stopPropagation(); v.solo=!v.solo;
+        soloBtn.classList.toggle("soloon", !!v.solo);
+        msgState("solo", v.name, v.solo); draw(); };
       const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
         lvlSpan.style.color=v.on?v.color:"#555";
         killBtn.classList.toggle("killed",!v.on);
         // keep the Voices card in sync (dimmed when killed)
         const vc=devStrip.children[VOICES.indexOf(v)]; if(vc) vc.className="devmod"+(v.on?" on":" off");
-        setMsg(v.name+(v.on?" on":" killed"), v.color); draw(); };
+        msgState("kill", v.name, !v.on); draw(); };
       killBtn.classList.toggle("killed",!v.on);
       killBtn.onclick=(e)=>{ e.stopPropagation(); toggle(); };
       d.onclick=(e)=>{ if(e.target.closest(".dm-wheel")||e.target.closest(".dm-btn")) return; toggle(); };
       const lvlEl=d.querySelector('[data-lvl="'+v.id+'"]');
       bindWheel(lvlEl,
         ()=>Math.round(v.lvl*100),
-        val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); v.lvl=p/100; document.getElementById("lvl-"+v.id).textContent=p; },
+        val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); v.lvl=p/100; document.getElementById("lvl-"+v.id).textContent=p; msgState("level", v.name, p); },
         1);
     });
   }
@@ -2071,7 +2160,7 @@
     mBtn.classList.toggle("fxon", masterFxOn);
     document.getElementById("mfx-amt-v").textContent=Math.round(masterFxAmt*100);
     mBtn.onclick=(e)=>{ e.stopPropagation(); masterFxOn=!masterFxOn; mBtn.classList.toggle("fxon",masterFxOn);
-      setMsg("Master FX "+(masterFxOn?"on":"off"), CY); };
+      msgState("masterFx", masterFxOn); };
     bindWheel(mAmt,
       ()=>Math.round(masterFxAmt*100),
       val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); masterFxAmt=p/100; document.getElementById("mfx-amt-v").textContent=p; },
@@ -2093,7 +2182,7 @@
     document.getElementById("patGenre").textContent=GENRE[genre].name;
     document.getElementById("patSrc").textContent="generated · "+GENRE[genre].name+" · seed "+seed.toString(16);
     document.getElementById("patKey").textContent=keyTonic+" minor"+(transpose?(" ("+(transpose>0?"+":"")+transpose+" st)"):"");
-    setMsg("Generated "+GENRE[genre].name+" roll", MAG);
+    msgState("generated", GENRE[genre].name);
     draw();
   }
 
@@ -2132,14 +2221,14 @@
     BPM=GENRE[g].bpm;
     { const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM); }
     generate();
-    setMsg(GENRE[g].name+" · "+BPM+" BPM", CY);
+    msgState("genre", GENRE[g].name);
   }
 
   // ============================================================
   //  PARTY MODE  (start from the current vibe, then keep it rocking &
   //  evolving — re-roll every loop, sometimes drift genre/bars — for the duration)
   // ============================================================
-  let yoOn=false, yoStart=0;
+  let yoOn=false;
   let loopStartAudio=0, loopDur=0;    // audio-time anchor + current loop length
   // (PARTY_GENRES removed V1.6.02 — dead code; genre is house-only, selecta owns the crate.)
 
@@ -2295,7 +2384,6 @@
   function startSet(){
     ensureAudio();
     yoOn=true;
-    yoStart=performance.now();
     if(!playing) startTransport();
     applyVibeLevel();   // set the slot's master level for the set
     // Snap the genre into the SELECTA's pool before building the first loop — otherwise party opens
@@ -2321,7 +2409,7 @@
   }
   function stopSet(){
     yoOn=false;
-    setMsg("Selecta: None", CY);
+    msgState("selecta","None");
   }
   // Queue the next party loop ahead of the boundary; the scheduler swaps it in
   // seamlessly. Prepare it once we're partway through the current loop and nothing's
@@ -2339,25 +2427,48 @@
   // ============================================================
   const playBtn=document.getElementById("playBtn");
   const genBtn=document.getElementById("genBtn");
-  const timeDisp=document.getElementById("timeDisp");
+  const timeLoop=document.getElementById("timeLoop");   // loop-relative bar.beat.six (blinks on its last bar)
+  const timeSess=document.getElementById("timeSess");   // Ableton-style session clock (never blinks)
   // (tempo/swing now render inside their <select> options; no separate value spans)
-  const statusMsg=document.getElementById("statusMsg");
-  function setMsg(t,c){ if(!statusMsg) return; statusMsg.textContent=t; statusMsg.style.color=c||CY; }
+  // ============================================================
+  //  MESSAGE SYSTEM  (CORTEX — sole channel for UI/UX interaction feedback)
+  // ============================================================
+  // Ported from Dojo's Message Bar. ONE entry point; every module speaks through it. Renders into the
+  // footer message bar (#messageBar). STRICTLY UI/UX interaction feedback — what the user DID in the
+  // interface (muted a channel, generated a roll, started recording). This is DISTINCT from MONITOR,
+  // which shows PERFORMANCE feedback (the live musical state: clocks, tempo). Never mix the two.
+  // Dojo type colors, carried into Chippy verbatim:
+  //   info  = cyan   #00d4ff — help text, shortcuts, idle/ready
+  //   state = orange #ffa500 — action results, confirmations (you changed something)
+  //   error = magenta#ff006e — failures, problems
+  const messageBar=document.getElementById("messageBar");
+  function showMessage(text, type, onClick){
+    if(!messageBar) return;
+    const t = (type==="state"||type==="error"||type==="info") ? type : "info";
+    messageBar.textContent = text;
+    messageBar.className = "message-bar msg-"+t + (onClick ? " clickable" : "");
+    messageBar.onclick = onClick || null;
+  }
+  // Back-compat shim: existing setMsg(text, color) calls map their color to a Dojo type. In Chippy
+  // MAG is used for confirmations (generate, party) far more than errors, so color alone can't flag
+  // errors — genuine failures are converted to showMessage(...,"error") directly. Here: CY/undefined
+  // → info; every other color (MAG, ORG, GRN, voice lanes) → state (a confirmation).
+  function setMsg(t,c){
+    showMessage(t, (!c || c===CY) ? "info" : "state");
+  }
 
   playBtn.onclick=toggleTransport;
   genBtn.onclick=generate;
   // NEXT / skip — jump to the next loop at the next bar (party: next selecta pick; else: fresh roll)
-  // master kill switch — mute the mix without stopping the transport (talk / dictate, then unmute)
-  const killBtn=document.getElementById("killBtn");
+  // master kill switch — now lives ONLY on the mixer header (vhKillBtn). Mutes the mix without
+  // stopping the transport (talk / dictate, then unmute).
   const vhKillBtn=document.getElementById("vhKillBtn");
   function applyMasterKill(){
     if(master && actx){ master.gain.setTargetAtTime(_masterKilled?0:(vibe().level*0.5), actx.currentTime, 0.01); }
-    killBtn.classList.toggle("killed",_masterKilled);
-    vhKillBtn.classList.toggle("killed",_masterKilled);
-    setMsg(_masterKilled?"Muted (still playing)":"Unmuted", CY);
+    if(vhKillBtn) vhKillBtn.classList.toggle("killed",_masterKilled);
+    msgState("mute", _masterKilled);
   }
-  killBtn.onclick=()=>{ _masterKilled=!_masterKilled; applyMasterKill(); };
-  vhKillBtn.onclick=(e)=>{ e.stopPropagation(); _masterKilled=!_masterKilled; applyMasterKill(); };
+  if(vhKillBtn) vhKillBtn.onclick=(e)=>{ e.stopPropagation(); _masterKilled=!_masterKilled; applyMasterKill(); };
 
   // ---- RAVE: aspect toggle (16:9 / 9:16) + canvas video recorder ----
   const aspectBtn=document.getElementById("aspectBtn");
@@ -2367,13 +2478,13 @@
     raveWrap.classList.toggle("vertical", raveVertical);
     aspectBtn.classList.toggle("vert", raveVertical);
     resizeRave();
-    setMsg(raveVertical ? "Vertical 9:16 (Shorts/TikTok/Reels)" : "Landscape 16:9 (YouTube)", CY);
+    msgState("orientation", raveVertical ? "Vertical 9:16" : "Landscape 16:9");
   };
 
   const recBtn=document.getElementById("recBtn"), recTimeEl=document.getElementById("recTime");
   let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recExt="webm", recAudioDest=null;
   function startRec(){
-    if(!raveCv.captureStream){ setMsg("Recording not supported in this browser", MAG); return; }
+    if(!raveCv.captureStream){ msgError("recNoSupport"); return; }
     // ensure the rave canvas is sized so it draws (the frame loop now draws it while recording,
     // no tab switch needed — you stay on TRACKS to keep tweaking the sound)
     resizeRave();
@@ -2405,7 +2516,7 @@
     try {
       mediaRec = mime ? new MediaRecorder(stream, { mimeType:mime, videoBitsPerSecond:12000000, audioBitsPerSecond:192000 })
                       : new MediaRecorder(stream);   // let the browser choose if none matched
-    } catch(e){ setMsg("Recording not supported here", MAG); return; }
+    } catch(e){ msgError("recNoSupport"); return; }
     mediaRec.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
     mediaRec.onstop=()=>{
       const type = recExt==="mp4" ? "video/mp4" : "video/webm";
@@ -2454,11 +2565,11 @@
       setBars(nb);
       generate();
       document.getElementById("patLen").textContent=BARS+" bars · 16 steps/bar";
-      setMsg(BARS+"-bar loop · "+GENRE[genre].name, CY);
+      msgState("bars", BARS);
     };
     // LENGTH: not a beat-quantized restart — let the current loop play out, switch at its end.
     if(!playing || !actx){ apply(); }
-    else { pendingLen=apply; setMsg("Length → "+nb+" bars at loop end", CY); }
+    else { pendingLen=apply; msgState("length", nb); }
   };
 
   // ---- control apply functions ----
@@ -2468,11 +2579,13 @@
     BPM=Math.max(70,Math.min(180, Math.round(v)));
     const bs=document.getElementById("bpmSel"); if(bs && String(BPM)!==bs.value) bs.value=String(BPM);
     rebuildEvents();
+    msgState("tempo", BPM);
   }
   function applySwing(v){
     const p=Math.max(0,Math.min(60, Math.round(v))); SWING=p/100;
     const ss=document.getElementById("swingSel"); if(ss && String(p)!==ss.value) ss.value=String(p);
     rebuildEvents();
+    msgState("swing", p);
   }
   // generic wheel binder: el, getter, setter, step
   function bindWheel(el, get, set, step){
@@ -2570,16 +2683,16 @@
     // case is picking a selecta while STOPPED, which has to start the transport from scratch.
     if(selectaIdx===0){
       if(yoOn) stopSet();
-      else setMsg("Selecta: None", CY);
+      else msgState("selecta","None");
       return;
     }
     if(playing){
       // Engage the set state now (conditioning on, vibe level, timer) but DON'T touch the audio yet —
       // stage the new selecta's loop and let the scheduler swap it in at the next bar boundary.
-      yoOn=true; yoStart=performance.now();
+      yoOn=true;
       applyVibeLevel();
       yoReroll();                 // builds pendingYo under the now-current selectaIdx
-      if(pendingYo){ skipArmed=true; setMsg(selecta().name+" — in at next bar", MAG); }
+      if(pendingYo){ skipArmed=true; msgState("selecta", selecta().name+" (next bar)"); }
       else { startSet(); }        // safety net: nothing staged → open immediately
     } else {
       startSet();                 // stopped: start the transport + open the set now
@@ -2594,7 +2707,7 @@
     vibeIdx=((i%VIBES.length)+VIBES.length)%VIBES.length;
     if(vibeSel.selectedIndex!==vibeIdx) vibeSel.selectedIndex=vibeIdx;
     applyVibeLevel();   // master level ramps to the slot (unless killed)
-    setMsg("Time slot: "+VIBES[vibeIdx].name, CY);
+    msgState("vibe", VIBES[vibeIdx].name);
   }
   bindUctl(vibeSel, v=>applyVibe(parseInt(v,10)));   // SHAPE — level applies live; pace affects the next party reroll
 
@@ -2619,7 +2732,7 @@
     bgPumpEnabled=!bgPumpEnabled;
     bgBtn.textContent = "∞";
     bgBtn.classList.toggle("on", bgPumpEnabled);
-    setMsg(bgPumpEnabled ? "Persistence on — keeps playing when you switch tabs" : "Persistence off", bgPumpEnabled?GRN:CY);
+    msgState("persistence", bgPumpEnabled);
   };
 
   // tabs
@@ -2628,7 +2741,7 @@
       document.querySelectorAll(".glovbtn").forEach(x=>x.classList.remove("active"));
       b.classList.add("active");
       gloverTrick=b.dataset.trick;
-      setMsg("Glover: "+b.textContent, CY);
+      msgState("glover", b.textContent);
     };
   });
   document.querySelectorAll(".tab").forEach(t=>{
@@ -2658,7 +2771,7 @@
   // the focused control's value (see bindUctl/bindWheel).
   function navRows(){
     // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["playBtn","genBtn","killBtn","genreSel","lenSel","bpmSel","swingSel","djSel","vibeSel"]
+    const controls=["playBtn","genBtn","genreSel","lenSel","bpmSel","swingSel","djSel","vibeSel"]
       .map(id=>document.getElementById(id)).filter(Boolean);
     // Voices row: the 7 voice-type selects, in DOM order.
     const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
@@ -2718,6 +2831,102 @@
   rebuildEvents();
   buildStrip();
   buildMixer();
+  // ============================================================
+  //  MSG — the central message registry (CORTEX)
+  // ============================================================
+  // THE single source of truth for every user-facing UI string. Nothing anywhere else in the code holds
+  // a hover/label string — to change any message, change it HERE (one place). Keyed by control. Static
+  // entries are strings; dynamic value messages (phase 2) are functions of the new value. The docs carry
+  // a table mirroring this object exactly (C §12 / Y). Grouped: hints (phase-1 hover, 'info') and states
+  // (phase-2 change, 'state').
+  const MSG = {
+    // ── phase-1 HOVER hints (info / cyan) — keyed by element id or [data-*] attribute ──
+    hint: {
+      // section-header labels
+      lblInfo:    "INFO — the current loop: name, genre, source, key, length",
+      lblTransport:"TRANSPORT — play/pause and generate a new roll",
+      lblSelecta: "SELECTA — the set: name, genre, time slot, bars, tempo, swing, quantize",
+      lblVoices:  "VOICES — pick each lane's sound; SOURCE shows the modeled chip",
+      lblMixer:   "MIXER — per-channel level, solo, kill; master audio effects + mute",
+      lblMatrix:  "MATRIX — the live piano roll and whole-loop overview with Chippy",
+      // tabs
+      genTab:     "MUSIC — make loops: pick genre + length, generate, or run a selecta set",
+      raveTab:    "GLOVER — full-screen beat-reactive light show",
+      aboutTab:   "ABOUT — what Chippy is, who made it, the license",
+      // tab-bar buttons
+      bgBtn:      "Persistence — keep playing when you switch tabs",
+      aspectBtn:  "Orientation — 16:9 (YouTube) / 9:16 (Shorts, TikTok, Reels)",
+      recBtn:     "Record the Glover visuals — click again to stop & download",
+      // transport
+      playBtn:    "Play / pause (Space)",
+      genBtn:     "Generate a new roll (G)",
+      // selecta row
+      djSel:      "Selecta — None = raw play; pick one to run a conditioned set",
+      genreSel:   "Genre — House (others return once the House conditioner is proven)",
+      vibeSel:    "Time slot — Opener / Support / Headliner / Closer (pace + level)",
+      lenSel:     "Bars — loop length; longer loops build through more phrasing",
+      bpmSel:     "Tempo (BPM) — up/down pick, left/right scroll live",
+      swingSel:   "Swing % — up/down pick, left/right scroll live",
+      quantReadout:"Quantize — control changes apply on the next beat",
+      // voices header
+      sourceBox:  "Sound source — the hardware Chippy's synthesis is modeled after",
+      // mixer header
+      vhKillBtn:  "Mute — silence the whole mix without stopping playback",
+      // matrix
+      chartWrap:  "MATRIX — live piano roll; top strip is the whole-loop overview with Chippy",
+      // dynamic per-voice + master-FX buttons ([data-*])
+      "data-rand":  "Randomize this module's voice",
+      "data-sel":   "Pick this voice's sound",
+      "data-lvl":   "Level — scroll or drag",
+      "data-solo":  "Solo — play only soloed channels",
+      "data-mute":  "Kill — mute this channel",
+      "data-mfx":   "Audio effects — reverb on the whole mix except drums",
+      "data-mfxamt":"Audio Effects strength — scroll or drag"
+    },
+    // ── phase-2 CHANGE messages (state / orange) — functions of the new value ──
+    state: {
+      tempo:   v => "Tempo "+v,
+      swing:   v => "Swing "+v+"%",
+      bars:    v => v+" bars",
+      genre:   v => "Genre "+v,
+      selecta: v => "Selecta "+v,
+      vibe:    v => "Time slot "+v,
+      voice:   (name,val) => name+" "+val,
+      level:   (name,val) => name+" "+val,
+      mute:    on => on?"Muted (still playing)":"Unmuted",
+      solo:    (name,on) => name+(on?" solo on":" solo off"),
+      kill:    (name,on) => name+(on?" killed":" on"),
+      masterFx:on => "Audio effects "+(on?"on":"off"),
+      persistence:on => "Persistence "+(on?"on":"off"),
+      orientation:v => v,
+      glover:  v => "Glover "+v,
+      generated:g => "Generated "+g+" roll",
+      length:  v => "Length \u2192 "+v+" bars at loop end"
+    },
+    // ── errors (error / magenta) ──
+    error: {
+      recNoSupport: "Recording not supported in this browser"
+    }
+  };
+  // convenience: fire a hint / state / error from the registry
+  const msgHint  = key => { if(MSG.hint[key]) showMessage(MSG.hint[key], "info"); };
+  const msgState = (key,...a) => { const f=MSG.state[key]; if(f) showMessage(typeof f==="function"?f(...a):f, "state"); };
+  const msgError = key => { if(MSG.error[key]) showMessage(MSG.error[key], "error"); };
+
+  // HOVER HELP (phase 1): wire every registry hint at boot-end. Section labels use data-hint pointing at
+  // a MSG.hint key; id-keyed controls and [data-*] buttons wire straight from MSG.hint.
+  document.querySelectorAll("[data-hint]").forEach(el=>{
+    const k=el.getAttribute("data-hint");
+    if(MSG.hint[k]) el.addEventListener("mouseenter", ()=>showMessage(MSG.hint[k], "info"));
+  });
+  Object.keys(MSG.hint).forEach(k=>{
+    if(k.startsWith("data-")){
+      document.querySelectorAll("["+k+"]").forEach(el=>el.addEventListener("mouseenter", ()=>showMessage(MSG.hint[k],"info")));
+    } else if(!k.startsWith("lbl")){
+      const el=document.getElementById(k);
+      if(el) el.addEventListener("mouseenter", ()=>showMessage(MSG.hint[k],"info"));
+    }
+  });
   document.getElementById("patName").textContent=makeTitle();
   { const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE.house.name; }
   document.getElementById("patSrc").textContent="generated · "+GENRE.house.name+" · seed 1337";

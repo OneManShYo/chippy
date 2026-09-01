@@ -1,14 +1,14 @@
-# OMS Chippy [Beta V1_9_0] — DELIVERABLES
+# OMS Chippy [Beta V1_10_0] — DELIVERABLES
 
-**Run date:** 2026-08-31
-**Unix Epoch:** 1788214413
-**App Version:** Chippy Beta V1_9_0 (live at chippy.onemanshyo.com)
+**Run date:** 2026-09-01
+**Unix Epoch:** 1788220800
+**App Version:** Chippy Beta V1_10_0 (live at chippy.onemanshyo.com)
 **License:** GPL-3.0
-**Purpose:** Manifest of the V1_9_0 deliverables bundle — the transportable package so another AI or
+**Purpose:** Manifest of the V1_10_0 deliverables bundle — the transportable package so another AI or
 person can pick up Chippy cold and understand it fully.
 
 ## Contents
-- **OMS_Chippy_Beta_V1_9_0.html** — the app. Single-file, zero-dependency, runs offline in any browser.
+- **OMS_Chippy_Beta_V1_10_0.html** — the app. Single-file, zero-dependency, runs offline in any browser.
 - **A_Deliverables** — this manifest.
 - **B_Complete_Changelog** — full version history, newest first.
 - **C_Developer_Documentation** — the technical spec (architecture, Cortex/Node/Leaf systems). Also

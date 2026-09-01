@@ -1,6 +1,35 @@
-# OMS Chippy [Beta V1_9_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_10_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.10.0 — The Message System, the Monitor, and a proper UI pass
+
+This release is about the interface growing up. The headline is a real **message system**, ported from
+OMS Dojo: a feedback bar across the bottom of the app. Hover any control and it tells you what that
+control does; change a value and it shows you the new value. It replaces scattered browser tooltips with
+one consistent, in-app channel — and it's managed centrally, so every label and message lives in one
+place. Cyan for help, orange for a value you just changed, magenta for an error.
+
+The center of the top row is now the **Monitor** — a live readout of what the music is doing right now:
+the master clock, the loop clock, and the tempo, laid out to match the Info panel beside it. Info tells
+you what the track *is*; the Monitor tells you what it's *doing*. The loop clock blinks through its last
+bar so you can see a change coming.
+
+The controls got a real structure pass. The old "Controls" row is now two clearly-labelled sections
+sharing a row — **Transport** (play + generate) and **Selecta** (name, genre, time slot, bars, tempo,
+swing, quantize) — so it reads like gear, not a pile of dropdowns. The **Mixer** gained a per-channel
+**Solo** (replacing the per-channel reverb, since reverb belongs on the master bus), the master effects
+are now clearly labelled **Audio Effects** (distinct from the FX *voice* in the piano roll), and the
+master **Mute** is labelled. The **Voices** header now shows the **Source** — the hardware Chippy's
+sound is modeled after (a Ricoh 2A03, the NES/Famicom chip).
+
+The first tab was renamed from **Tracks** to **Music**. And a design-system pass brought field colors
+back in line: value text is neutral, with cyan reserved for headers, focus, and the live readouts where
+it actually means something.
+
+Under the hood, two long-standing visual bugs were fixed for good: the conductor "Chippy" on the overview
+strip no longer vanishes early or jumps at the loop boundary (he now rides the master clock like
+everything else), and the loop/session clocks were split into their own clean readouts.
 
 ## V1.9.0 — One play button, one continuous roll
 

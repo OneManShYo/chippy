@@ -1,14 +1,20 @@
-# OMS Chippy [Beta V1_9_0] — USER GUIDE
+# OMS Chippy [Beta V1_10_0] — USER GUIDE
 
 Chippy is a browser instrument. Open the file, press play, and it makes music. No install, no account,
 no files. Here's everything you can do.
 
 ## The three tabs
-- **TRACKS** — the instrument (make and shape loops).
+- **MUSIC** — the instrument (make and shape loops). (Renamed from TRACKS.)
 - **GLOVER** — the full-screen light show. Pick a trick, watch the Chippy family rave.
 - **ABOUT** — what it is, who made it, PLUR.
 
-## Making music (TRACKS)
+## The message bar + monitor
+- **Message bar** (bottom of the app) — hover any control and it tells you what it does; change a value
+  and it shows the new value. Cyan = help, orange = a value you changed, magenta = an error.
+- **Monitor** (top row, center) — the live readout: master clock, loop clock, tempo. The loop clock
+  blinks through its last bar so you can see a change coming.
+
+## Making music (MUSIC)
 - **Play (▶)** — start/stop.
 - **Randomize (⚄)** — generate a fresh loop. Each press = a new tune with a new name.
 - **Kill (⏻)** — mute the whole mix without stopping (talk over it, then unmute).

@@ -1,5 +1,43 @@
 # OMS Chippy — Changelog
 
+## V1_10_0 — Message System, Monitor, and UI structure pass (2026-09-01)
+Rolled up from iterations V1_9_01…V1_9_24 (the UI/feedback line following the V1.9.0 selecta ship).
+### Added
+- **Message System (CORTEX)** — Dojo's message bar ported: a footer `#messageBar` and one entry point
+  `showMessage(text, type, onClick)`. Hover-driven (phase 1 = `info` help on hover; phase 2 = `state`
+  value on change; `error` = failures). Dojo colors verbatim: info cyan `#00d4ff`, state orange
+  `#ffa500`, error magenta `#ff006e`. All feedback flows through it; no native `title=` tooltips remain
+  (BLOG0038/0039/0040).
+- **Central `MSG` registry** — single source of truth for every user-facing string: `MSG.hint` (hover),
+  `MSG.state` (value-change, as functions of the new value), `MSG.error`. One place to change any
+  message; the docs' field/label table is generated from it (BLOG0040).
+- **MONITOR** — the center box of the top row rebuilt as a live realtime readout: master clock, loop
+  clock, tempo, in the INFO box's grid grammar. Distinct from INFO (static description). Loop clock
+  blinks through its last bar (BLOG0035/0030).
+- **SOURCE readout** (VOICES header) — names the hardware the synthesis is modeled after: Ricoh 2A03
+  (NES/Famicom). "Source" not "chip" so it stays correct for a future non-chip model (BLOG0034).
+- **Per-channel SOLO** (MIXER) — replaces the per-channel reverb send; standard behavior (any solo
+  silences non-soloed channels), gated at `fireVoice` (BLOG0032).
+- **Canonical area names + internal handles** — INFO/MONITOR/FACE/TRANSPORT/SELECTA/VOICES/MIXER/MATRIX,
+  each with a code handle, for docs + reference (BLOG0036).
+### Changed
+- **TRACKS tab renamed → MUSIC** (label only; internal wiring unchanged) (BLOG0037).
+- **CONTROLS row split into two peer sections** — TRANSPORT (play + generate) and SELECTA (name, genre,
+  time slot, bars, tempo, swing, quantize), two labelled sections sharing one header row (BLOG0033).
+- **MIXER header relabeled** — "MASTER FX" → **AUDIO EFFECTS**; master kill labeled **MUTE**; transport
+  kill removed (master mute now lives only on the mixer) (BLOG0031).
+- **FX vs Audio Effects** distinction locked — FX = the FX voice (piano-roll lane 8); Audio Effects =
+  the master reverb/processing bus. Labels/hints made consistent (BLOG0041).
+- **Design-system color cleanup** — field value text set to neutral `#bbb` (selecta fields, SOURCE,
+  audio-effects strength); cyan reserved for headers, focus, and the live MONITOR clocks (BLOG0041).
+### Fixed
+- **Overview Chippy rider** no longer vanishes early or jumps at the loop tail — it now reads the master
+  loop clock (`masterLoopClock`) like the rest of the visuals, wrapped so it finishes the loop instead
+  of resetting ~250ms early on the scheduler's lookahead (BLOG0029).
+- **Matrix-header clocks** split into two independent readouts (loop + session); removed an un-specked
+  "yo m:ss" counter; loop clock blinks on its last bar (BLOG0028).
+
+
 ## V1_9_0 — Selecta-driven playback + Master-Clock/visual fixes (2026-08-31)
 Rolled up from iterations V1_9_01…V1_9_012 (the transport/clock line following the V1.8.0 Mixer ship).
 ### Added

@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_9_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_10_0] — CLAUDE PROJECT INSTRUCTIONS
 
 How an AI (or dev) should work in the Chippy project. Read this first. These rules were learned the
 hard way; follow them.
@@ -24,6 +24,14 @@ single-file philosophy, master clock, module system).
   NOT hand-roll parallel styles. Hard rules: section headers are always cyan `#00d4ff`; module controls
   are a uniform 30px height; no text labels on modules except the Matrix lane chips; when a styled
   element moves between containers, move its CSS scope too. (Skipping this is how UI drift happens.)
+
+## THE MESSAGE SYSTEM (Cortex — the ONLY feedback channel)
+All transient user feedback goes through `showMessage(text, type, onClick)` → the footer `#messageBar`.
+Ported from Dojo; hover-driven. Types + colors are fixed: `info` cyan (hover help), `state` orange
+(value changed), `error` magenta (failure). NEVER hard-code a user-facing string at a call site: every
+message lives in the central `MSG` registry (`MSG.hint` / `MSG.state` / `MSG.error`) — one place to
+change any message. No native `title=` tooltips. The C-doc field/label table is generated from `MSG`;
+keep them in sync.
 
 ## VERSIONING (three-digit: major.minor.iteration)
 - **One change per iteration; increment only; never overwrite an iteration; never invent version numbers.**
