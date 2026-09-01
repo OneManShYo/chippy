@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_10_10  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_10_18  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_10_10]</title>
+<title>OMS Chippy [Beta V1_10_18]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -251,21 +251,21 @@
   .devmod .dm-solo:hover { color:#ffcc00; border-color:#ffcc00; }
   .devmod .dm-solo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; box-shadow:0 0 8px rgba(255,204,0,.5); }
   .devmod .dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
-  .devmod .dm-fx:hover { color:#00e08a; border-color:#00e08a; }
-  .devmod .dm-fx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
+  .devmod .dm-audioeffects:hover { color:#00e08a; border-color:#00e08a; }
+  .devmod .dm-audioeffects.audioEffectsOn { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
   .btn.dm-kill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   .devmod .dm-btn:focus { outline:none; box-shadow:0 0 0 2px rgba(0,212,255,.6); }
 
   .sec-hdr { display:flex; align-items:center; gap:8px; margin:6px 0 4px; min-height:18px; }
-  /* MASTER FX in the mixer header */
+  /* MASTER AUDIO EFFECTS in the mixer header */
   .sec-hdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
   #mixerHdr .vh-mlabel { font-size:10px; font-weight:700; letter-spacing:1px; color:#666; font-family:'Courier New',monospace; margin-right:2px; }
-  #mixerHdr .vh-mfx { min-height:0; height:20px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center;
+  #mixerHdr .vh-audioeffects { min-height:0; height:20px; padding:0 8px; display:inline-flex; align-items:center; justify-content:center;
     background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; }
-  #mixerHdr .vh-mfx svg { display:block; }
-  #mixerHdr .vh-mfx:hover { color:#00e08a; border-color:#00e08a; }
-  #mixerHdr .vh-mfx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
-  #mixerHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; touch-action:pan-y; }
+  #mixerHdr .vh-audioeffects svg { display:block; }
+  #mixerHdr .vh-audioeffects:hover { color:#00e08a; border-color:#00e08a; }
+  #mixerHdr .vh-audioeffects.audioEffectsOn { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
+  #mixerHdr .vh-audioeffects-amt { height:20px; padding:0 8px; min-width:34px; touch-action:pan-y; }
   #mixerHdr .vh-mkill { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; }
   #mixerHdr .vh-mkill:hover { color:#fff; border-color:#555; }
   #mixerHdr .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
@@ -292,7 +292,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_10_10]</span>
+      <span class="ver">[Beta&nbsp;V1_10_18]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -379,7 +379,7 @@
     <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox" title="sound source — the hardware Chippy's synthesis is modeled after (variable-duty pulse + triangle + LFSR noise = Ricoh 2A03, the NES / Famicom sound chip)">Ricoh 2A03</span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">AUDIO EFFECTS</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="audio effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1"><span class="wv" id="mfx-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn" title="master solo — clear all soloed channels (return the full mix)">S</button><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="mute — silence the whole mix without stopping playback">⏻</button></div>
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">AUDIO EFFECTS</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">30</span></span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn" title="master solo — clear all soloed channels (return the full mix)">S</button><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="mute — silence the whole mix without stopping playback">⏻</button></div>
     <div class="devstrip" id="mixStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><span class="rule"></span></div>
@@ -458,6 +458,8 @@
 <script>
 (function(){
   "use strict";
+
+  var _hintsReady=false;   // gate: hint wiring (which needs MSG) only runs once MSG is initialized (boot-end)
 
   // ============================================================
   //  CONSTANTS / THEME
@@ -752,9 +754,15 @@
   //  WEB AUDIO SYNTH
   // ============================================================
   let actx=null, master=null, noiseBuf=null, pinkBuf=null, brownBuf=null, reverbBus=null, reverbWet=null;
+  let echoDelay=null, echoFeedback=null, echoWet=null, echoHiPass=null;   // ECHO (audio effect): master-bus tempo-synced delay w/ low-cut feedback
+  let filterLP=null, filterHP=null;   // FILTER (audio effect): master-bus insert — bipolar DJ filter (50=off, <50 low-pass sweep, >50 high-pass sweep)
+  let brakeLowpass=null, brakeGain=null, brakePitch=null;   // BACKSPIN/TAPE-STOP: pitch-drop delay + lowpass + gain sag on hold
   let airDest=null, airEl=null, airBridge=false;   // audio routes through an <audio> element (routable)
   let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
-  let masterFxOn=true, masterFxAmt=0.10;   // master effects bus ON by default at 10% (dialed-in house)
+  let audioEffectsReverbOn=true, audioEffectsReverbAmt=0.10;   // master effects bus ON by default at 10% (dialed-in house)
+  let audioEffectsEchoOn=false, audioEffectsEchoAmt=0.30;      // ECHO off by default; wheel = wet/feedback amount
+  let audioEffectsFilterPos=50, audioEffectsFilterOn=true;   // FILTER position 0..100 (50=neutral). On/off is a BYPASS toggle — position is remembered when off.
+  let audioEffectsBrakeLen=50, audioEffectsBrakeHeld=false;   // BACKSPIN duration 0..100 → 16th note (fast snap) .. 1 bar (long sag); held = momentary engage
   const pulseWaves={};   // duty -> PeriodicWave cache
 
   function makePulseWave(duty){
@@ -769,6 +777,26 @@
     audioColdStart=true;   // first transport start after creation gets extra warm-up lead (bridge spin-up)
     actx=new (window.AudioContext||window.webkitAudioContext)();
     master=actx.createGain(); master.gain.value=0.5;
+    // FILTER (audio effect) — bipolar DJ filter inserted on the master bus: master → HP → LP → output.
+    // At neutral (pos 50) HP sits at ~20Hz and LP at ~20kHz = fully transparent. Sweeping the wheel
+    // moves ONE of them: pos<50 pulls the LP cutoff down (muffle/underwater), pos>50 pushes the HP
+    // cutoff up (thin/bass-out). filterLP is the master OUTPUT bus — everything downstream taps it.
+    filterHP=actx.createBiquadFilter(); filterHP.type="highpass"; filterHP.frequency.value=20;  filterHP.Q.value=0.7;
+    filterLP=actx.createBiquadFilter(); filterLP.type="lowpass";  filterLP.frequency.value=20000; filterLP.Q.value=0.7;
+    master.connect(filterHP); filterHP.connect(filterLP);
+    // BACKSPIN / TAPE-STOP (audio effect) — a brake stage after the filter. Both nodes default
+    // transparent; on hold, brakeLowpass sweeps DOWN and brakeGain sags toward silence over the
+    // chosen duration (16th note .. 1 bar), giving the powering-down/tape-stop sound. Release snaps
+    // both back. The transport CLOCK is never touched — only what you HEAR is braked, so on release
+    // playback continues exactly on the live grid (no time lost).
+    brakeLowpass=actx.createBiquadFilter(); brakeLowpass.type="lowpass"; brakeLowpass.frequency.value=20000; brakeLowpass.Q.value=0.9;
+    brakeGain=actx.createGain(); brakeGain.gain.value=1;
+    // brakePitch — a DelayNode whose delay time RISES during the brake. A steadily increasing delay
+    // pitch-shifts the signal DOWNWARD (Doppler) — this is the "vviuuup" spin-down. At rest delay=0
+    // (transparent). Chain: filterLP → brakePitch → brakeLowpass → brakeGain → out.
+    brakePitch=actx.createDelay(1.5); brakePitch.delayTime.value=0;
+    filterLP.connect(brakePitch); brakePitch.connect(brakeLowpass); brakeLowpass.connect(brakeGain);
+    const outBus=brakeGain;   // post-brake master output — route this to the OS bridge / destination
     // AUDIO OUTPUT — route through an <audio> element (via MediaStream), NOT straight to
     // actx.destination. Web Audio's destination is invisible to the OS audio router (AirPlay/HomePod/
     // Bluetooth all fail). An <audio> element IS routable media (same as how YouTube's audio routes).
@@ -776,7 +804,7 @@
     // the element bridge can't be created.
     try{
       airDest=actx.createMediaStreamDestination();
-      master.connect(airDest);
+      outBus.connect(airDest);
       airEl=document.createElement("audio");
       airEl.srcObject=airDest.stream;
       airEl.setAttribute("playsinline","");
@@ -790,10 +818,10 @@
       try{ const pr=airEl.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){}
       airBridge=true;
     }catch(e){ airBridge=false; }
-    if(!airBridge){ master.connect(actx.destination); }   // fallback only
+    if(!airBridge){ outBus.connect(actx.destination); }   // fallback only
     curDest=master;
     // REVERB BUS — a convolver with a GENERATED impulse response (decaying noise, no file needed).
-    // Per-voice FX sends route here for a reverb-like tail/space. reverbSend feeds the wet signal.
+    // Per-voice reverb sends route here for a reverb-like tail/space. reverbSend feeds the wet signal.
     reverbBus=actx.createConvolver();
     { const len=actx.sampleRate*2.2, ir=actx.createBuffer(2, len, actx.sampleRate);
       for(let ch=0; ch<2; ch++){ const d=ir.getChannelData(ch);
@@ -801,6 +829,19 @@
       reverbBus.buffer=ir; }
     reverbWet=actx.createGain(); reverbWet.gain.value=0.9;
     reverbBus.connect(reverbWet); reverbWet.connect(master);
+    // ECHO (audio effect) — master-bus tempo-synced delay. Taps the whole mix off `master`, runs a
+    // feedback loop with a HIGH-PASS in the loop (DJ low-cut echo: repeats don't muddy the low end),
+    // and returns the wet tail in PARALLEL to master's output (never back into master → no runaway).
+    // Delay time is set tempo-synced (3/16, dotted-eighth) whenever playback (re)starts. Off by default.
+    echoDelay=actx.createDelay(2.0);
+    echoDelay.delayTime.value=0.28;                       // placeholder; retuned to 3/16 of the bar on play
+    echoFeedback=actx.createGain(); echoFeedback.gain.value=0;   // 0 until echo toggled on (amount-driven)
+    echoHiPass=actx.createBiquadFilter(); echoHiPass.type="highpass"; echoHiPass.frequency.value=300; // low-cut
+    echoWet=actx.createGain(); echoWet.gain.value=0;      // wet return level (amount-driven, 0 = silent/off)
+    master.connect(echoDelay);                            // tap the full mix
+    echoDelay.connect(echoHiPass); echoHiPass.connect(echoFeedback); echoFeedback.connect(echoDelay); // low-cut feedback loop
+    echoDelay.connect(echoWet);                           // wet tap
+    if(airBridge && airDest){ echoWet.connect(airDest); } else { echoWet.connect(actx.destination); }   // parallel to master out
     pulseWaves[0.125]=makePulseWave(0.125);
     pulseWaves[0.25] =makePulseWave(0.25);
     pulseWaves[0.5]  =makePulseWave(0.5);
@@ -1011,14 +1052,14 @@
       if(mk==="reverbThrow" && ev.voice!=="drums") forceRev=true;
     }
     const dur=Math.max(v.decay, ev.dur*0.9);
-    // AUDIO FX routing. Two sources of reverb send: the per-voice button (v.fxRev), and the MASTER
-    // effects bus (masterFxOn) which sends EVERY voice EXCEPT drums through the reverb at masterFxAmt.
-    const masterHits = (masterFxOn || forceRev) && reverbBus && ev.voice!=="drums";
-    if((v.fxRev || masterHits) && reverbBus){
+    // AUDIO EFFECTS routing. Two sources of reverb send: the per-voice button (v.reverbSend), and the MASTER
+    // effects bus (audioEffectsReverbOn) which sends EVERY voice EXCEPT drums through the reverb at audioEffectsReverbAmt.
+    const masterHits = (audioEffectsReverbOn || forceRev) && reverbBus && ev.voice!=="drums";
+    if((v.reverbSend || masterHits) && reverbBus){
       const tap=actx.createGain(); tap.gain.value=1;
       tap.connect(master);            // dry
       const send=actx.createGain();
-      send.gain.value = Math.max(v.fxRev?0.6:0, masterHits?masterFxAmt:0, forceRev?0.7:0);   // strongest; throw = wet 0.7
+      send.gain.value = Math.max(v.reverbSend?0.6:0, masterHits?audioEffectsReverbAmt:0, forceRev?0.7:0);   // strongest; throw = wet 0.7
       tap.connect(send); send.connect(reverbBus);   // wet send
       curDest=tap;
     } else { curDest=master; }
@@ -1232,6 +1273,7 @@
     schedIdx=0; schedUntil=0;
     playBtn.textContent="❚❚";
     setMsg("Playing", CY);
+    if(typeof setEchoTime==="function") setEchoTime();   // lock echo to 3/16 of the current tempo
     if(typeof setMediaSession==="function") setMediaSession();
   }
   function stopTransport(){
@@ -2120,6 +2162,7 @@
         else { v.osc=val; msgState("voice", v.name, val); }
       });
     });
+    if(typeof wireAllHints==="function") wireAllHints();   // re-attach hover+focus to the fresh voice controls
   }
 
   // MIXER (④ the console) — level (fader) + reverb (send) + kill (channel mute), one strip per voice.
@@ -2161,20 +2204,153 @@
         val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); v.lvl=p/100; document.getElementById("lvl-"+v.id).textContent=p; msgState("level", v.name, p); },
         1);
     });
+    if(typeof wireAllHints==="function") wireAllHints();   // re-attach hover+focus to the fresh strip controls
   }
 
-  // MASTER FX (in the MIXER header) — reverb on the whole mix EXCEPT drums, with a strength value.
+  // MASTER AUDIO EFFECTS (in the MIXER header) — reverb on the whole mix EXCEPT drums, with a strength value.
   (function(){
-    const mBtn=document.querySelector('#mixerHdr [data-mfx]');
-    const mAmt=document.querySelector('#mixerHdr [data-mfxamt]');
+    const mBtn=document.querySelector('#mixerHdr [data-audioeffects-reverb]');
+    const mAmt=document.querySelector('#mixerHdr [data-audioeffects-reverb-amt]');
     if(!mBtn) return;
-    mBtn.classList.toggle("fxon", masterFxOn);
-    document.getElementById("mfx-amt-v").textContent=Math.round(masterFxAmt*100);
-    mBtn.onclick=(e)=>{ e.stopPropagation(); masterFxOn=!masterFxOn; mBtn.classList.toggle("fxon",masterFxOn);
-      msgState("masterFx", masterFxOn); };
+    mBtn.classList.toggle("audioEffectsOn", audioEffectsReverbOn);
+    document.getElementById("audioeffects-reverb-amt-v").textContent=Math.round(audioEffectsReverbAmt*100);
+    mBtn.onclick=(e)=>{ e.stopPropagation(); audioEffectsReverbOn=!audioEffectsReverbOn; mBtn.classList.toggle("audioEffectsOn",audioEffectsReverbOn);
+      msgState("audioEffectsReverb", audioEffectsReverbOn); };
     bindWheel(mAmt,
-      ()=>Math.round(masterFxAmt*100),
-      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); masterFxAmt=p/100; document.getElementById("mfx-amt-v").textContent=p; },
+      ()=>Math.round(audioEffectsReverbAmt*100),
+      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsReverbAmt=p/100; document.getElementById("audioeffects-reverb-amt-v").textContent=p; },
+      1);
+  })();
+
+  // ECHO (audio effect) — apply on/off + amount to the delay's wet + feedback; set tempo-synced 3/16 time.
+  //  Amount (0..1) scales BOTH the wet return and the feedback (more amount = louder + longer trail).
+  //  Feedback is capped below 1.0 so the loop always decays (never self-oscillates).
+  function setEchoTime(){ if(echoDelay && actx){ echoDelay.delayTime.setTargetAtTime(3*secPerStep(), actx.currentTime, 0.02); } }
+  function applyEcho(){
+    if(!echoWet || !echoFeedback || !actx) return;
+    const on=audioEffectsEchoOn, a=audioEffectsEchoAmt;
+    setEchoTime();
+    echoWet.gain.setTargetAtTime(on ? a*0.9 : 0, actx.currentTime, 0.03);          // wet return
+    echoFeedback.gain.setTargetAtTime(on ? Math.min(0.85, 0.25+a*0.6) : 0, actx.currentTime, 0.03); // decaying trail
+  }
+  (function(){
+    const eBtn=document.querySelector('#mixerHdr [data-audioeffects-echo]');
+    const eAmt=document.querySelector('#mixerHdr [data-audioeffects-echo-amt]');
+    if(!eBtn) return;
+    eBtn.classList.toggle("audioEffectsOn", audioEffectsEchoOn);
+    document.getElementById("audioeffects-echo-amt-v").textContent=Math.round(audioEffectsEchoAmt*100);
+    eBtn.onclick=(e)=>{ e.stopPropagation(); audioEffectsEchoOn=!audioEffectsEchoOn;
+      eBtn.classList.toggle("audioEffectsOn",audioEffectsEchoOn); applyEcho();
+      msgState("audioEffectsEcho", audioEffectsEchoOn); };
+    bindWheel(eAmt,
+      ()=>Math.round(audioEffectsEchoAmt*100),
+      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsEchoAmt=p/100;
+        document.getElementById("audioeffects-echo-amt-v").textContent=p; applyEcho(); },
+      1);
+  })();
+
+  // FILTER (audio effect) — bipolar single-knob DJ filter on the master bus. Position 0..100:
+  //  50 = neutral (both filters wide open, transparent). BELOW 50 sweeps the LOW-PASS cutoff DOWN
+  //  (progressive muffle / underwater — highs removed). ABOVE 50 sweeps the HIGH-PASS cutoff UP
+  //  (progressive thin / bass removed — tension). Log-frequency sweep so it feels even to the ear.
+  function applyFilter(){
+    if(!filterHP || !filterLP || !actx) return;
+    const t=actx.currentTime;
+    if(!audioEffectsFilterOn){   // BYPASS — both filters wide open, transparent; stored position untouched
+      filterHP.frequency.setTargetAtTime(20, t, 0.02);
+      filterLP.frequency.setTargetAtTime(20000, t, 0.02);
+      return;
+    }
+    const pos=audioEffectsFilterPos;
+    if(pos<=50){
+      // low-pass sweep: pos 50 -> 20kHz (open), pos 0 -> ~200Hz (heavily muffled). HP stays open.
+      const frac=pos/50;                                  // 1 at center, 0 at far-left
+      const lp=200*Math.pow(20000/200, frac);             // 200Hz..20kHz, log
+      filterLP.frequency.setTargetAtTime(lp, t, 0.02);
+      filterHP.frequency.setTargetAtTime(20, t, 0.02);
+    } else {
+      // high-pass sweep: pos 50 -> 20Hz (open), pos 100 -> ~4kHz (bass fully gone). LP stays open.
+      const frac=(pos-50)/50;                             // 0 at center, 1 at far-right
+      const hp=20*Math.pow(4000/20, frac);                // 20Hz..4kHz, log
+      filterHP.frequency.setTargetAtTime(hp, t, 0.02);
+      filterLP.frequency.setTargetAtTime(20000, t, 0.02);
+    }
+  }
+  (function(){
+    const fBtn=document.querySelector('#mixerHdr [data-audioeffects-filter]');
+    const fAmt=document.querySelector('#mixerHdr [data-audioeffects-filter-amt]');
+    if(!fAmt) return;
+    document.getElementById("audioeffects-filter-amt-v").textContent=Math.round(audioEffectsFilterPos);
+    if(fBtn){
+      fBtn.classList.toggle("audioEffectsOn", audioEffectsFilterOn);
+      fBtn.onclick=(e)=>{ e.stopPropagation();   // BYPASS toggle — flips filter in/out; wheel value is kept
+        audioEffectsFilterOn=!audioEffectsFilterOn;
+        fBtn.classList.toggle("audioEffectsOn", audioEffectsFilterOn);
+        applyFilter(); msgState("audioEffectsFilter", audioEffectsFilterOn?audioEffectsFilterPos:-1); };
+    }
+    bindWheel(fAmt,
+      ()=>Math.round(audioEffectsFilterPos),
+      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsFilterPos=p;
+        document.getElementById("audioeffects-filter-amt-v").textContent=p; applyFilter();
+        msgState("audioEffectsFilter", audioEffectsFilterOn?p:-1); },
+      1);
+  })();
+
+  // BACKSPIN / TAPE-STOP (audio effect) — momentary HOLD brake. Press+hold sweeps the master down to
+  //  silence over a musical duration (wheel: 0 = 16th-note snap .. 100 = full bar sag); release snaps
+  //  back to full. The transport clock is untouched, so playback resumes exactly on the live grid.
+  function brakeDurSec(){ const frac=audioEffectsBrakeLen/100; return 0.15*Math.pow((4*secPerBeat())/0.15, frac); } // ~0.15s snap .. 1 bar sag, log
+  function brakeEngage(){
+    if(!brakeLowpass || !brakeGain || !brakePitch || !actx || audioEffectsBrakeHeld) return;
+    audioEffectsBrakeHeld=true;
+    const t=actx.currentTime, dur=brakeDurSec();
+    // PITCH DROP (the tape-stop core): rise the delay time so the signal Dopplers DOWNWARD — the
+    // "vviuuup" spin-down, the dominant audible effect. Rise to ~90ms over the duration.
+    brakePitch.delayTime.cancelScheduledValues(t);
+    brakePitch.delayTime.setValueAtTime(0, t);
+    brakePitch.delayTime.linearRampToValueAtTime(0.09, t+dur);
+    // MUFFLE: sweep lowpass down hard as it spins down.
+    brakeLowpass.frequency.cancelScheduledValues(t);
+    brakeLowpass.frequency.setValueAtTime(brakeLowpass.frequency.value, t);
+    brakeLowpass.frequency.exponentialRampToValueAtTime(90, t+dur);
+    // SAG to silence, but hold near-full through the first 60% so you HEAR the pitch drop before it dies.
+    brakeGain.gain.cancelScheduledValues(t);
+    brakeGain.gain.setValueAtTime(brakeGain.gain.value, t);
+    brakeGain.gain.setValueAtTime(0.9, t+dur*0.6);
+    brakeGain.gain.exponentialRampToValueAtTime(0.0008, t+dur);
+  }
+  function brakeRelease(){
+    if(!brakeLowpass || !brakeGain || !brakePitch || !actx || !audioEffectsBrakeHeld) return;
+    audioEffectsBrakeHeld=false;
+    const t=actx.currentTime;
+    brakePitch.delayTime.cancelScheduledValues(t);
+    brakePitch.delayTime.setValueAtTime(brakePitch.delayTime.value, t);
+    brakePitch.delayTime.setTargetAtTime(0, t, 0.015);           // snap pitch back
+    brakeLowpass.frequency.cancelScheduledValues(t);
+    brakeLowpass.frequency.setValueAtTime(brakeLowpass.frequency.value, t);
+    brakeLowpass.frequency.setTargetAtTime(20000, t, 0.02);       // snap back open
+    brakeGain.gain.cancelScheduledValues(t);
+    brakeGain.gain.setValueAtTime(brakeGain.gain.value, t);
+    brakeGain.gain.setTargetAtTime(1, t, 0.02);                   // snap back to full
+  }
+  (function(){
+    const bBtn=document.querySelector('#mixerHdr [data-audioeffects-backspin]');
+    const bAmt=document.querySelector('#mixerHdr [data-audioeffects-backspin-amt]');
+    if(!bBtn) return;
+    document.getElementById("audioeffects-backspin-amt-v").textContent=Math.round(audioEffectsBrakeLen);
+    // momentary: pointerdown engages, pointerup/leave/cancel releases. Lit while held.
+    const down=(e)=>{ e.preventDefault(); e.stopPropagation(); ensureAudio();
+      bBtn.classList.add("audioEffectsOn"); brakeEngage(); msgState("audioEffectsBackspin", true); };
+    const up=(e)=>{ if(e){ e.stopPropagation(); } bBtn.classList.remove("audioEffectsOn"); brakeRelease();
+      msgState("audioEffectsBackspin", false); };
+    bBtn.addEventListener("pointerdown", down);
+    bBtn.addEventListener("pointerup", up);
+    bBtn.addEventListener("pointerleave", (e)=>{ if(audioEffectsBrakeHeld) up(e); });
+    bBtn.addEventListener("pointercancel", up);
+    bindWheel(bAmt,
+      ()=>Math.round(audioEffectsBrakeLen),
+      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsBrakeLen=p;
+        document.getElementById("audioeffects-backspin-amt-v").textContent=p; },
       1);
   })();
 
@@ -2804,7 +2980,7 @@
   //  Rows (top→bottom), fields (left→right):
   //    TRANSPORT+SELECTA : play · generate · selecta · genre · timeSlot · bars · tempo · swing
   //    VOICES            : per voice module, in DOM order: [ voiceSelect · dice ] × N (interleaved)
-  //    MIXER (master)    : audioEffects · fxAmount · masterSolo · masterMute
+  //    MIXER (master)    : audioEffects · reverbAmount · masterSolo · masterMute
   //    MIXER (channels)  : per channel, in DOM order: [ level · solo · kill ] × N (interleaved)
   //
   //  Interleaved rows are collected by walking the module containers in DOM order, so a field
@@ -2822,11 +2998,11 @@
     // interleaved in DOM order automatically.
     const voices = inDom(document.getElementById("devStrip"), "[data-sel],[data-rand]");
 
-    // MIXER master (header) — fx · amount · master-solo · master-mute, visual order.
+    // MIXER master (header) — reverb · amount · master-solo · master-mute, visual order.
     const mixerMaster = byId(["vhSoloBtn","vhKillBtn"]);
     const hdr = document.getElementById("mixerHdr");
-    const fx  = hdr ? Array.from(hdr.querySelectorAll("[data-mfx],[data-mfxamt]")) : [];
-    const masterRow = [...fx, ...mixerMaster];
+    const audioEffectsButtons  = hdr ? Array.from(hdr.querySelectorAll("[data-audioeffects-reverb],[data-audioeffects-reverb-amt],[data-audioeffects-echo],[data-audioeffects-echo-amt],[data-audioeffects-filter],[data-audioeffects-filter-amt],[data-audioeffects-backspin],[data-audioeffects-backspin-amt]")) : [];
+    const masterRow = [...audioEffectsButtons, ...mixerMaster];
 
     // MIXER channels — each channel is a .dm-row of [ level, solo, kill ]; interleaved in DOM order.
     const mixerChannels = inDom(document.getElementById("mixStrip"), "[data-lvl],[data-solo],[data-mute]");
@@ -2930,14 +3106,20 @@
       vhSoloBtn:  "Master solo — clear all soloed channels (return the full mix)",
       // matrix
       chartWrap:  "MATRIX — live piano roll; top strip is the whole-loop overview with Chippy",
-      // dynamic per-voice + master-FX buttons ([data-*])
+      // dynamic per-voice + master audio-effects buttons ([data-*])
       "data-rand":  "Randomize this module's voice",
       "data-sel":   "Pick this voice's sound",
       "data-lvl":   "Level — scroll or drag",
       "data-solo":  "Solo — play only soloed channels",
       "data-mute":  "Kill — mute this channel",
-      "data-mfx":   "Audio effects — reverb on the whole mix except drums",
-      "data-mfxamt":"Audio Effects strength — scroll or drag"
+      "data-audioeffects-reverb":   "Audio effects — reverb on the whole mix except drums",
+      "data-audioeffects-reverb-amt":"Audio Effects strength — scroll or drag",
+      "data-audioeffects-echo":     "Audio effects — tempo-synced echo (3/16, low-cut) on the whole mix",
+      "data-audioeffects-echo-amt": "Echo amount — scroll or drag",
+      "data-audioeffects-filter":   "Audio effects — filter on/off (bypass; keeps your sweep setting)",
+      "data-audioeffects-filter-amt":"Filter sweep — 50 neutral · down = muffle · up = bass out",
+      "data-audioeffects-backspin": "Audio effects — backspin/tape-stop (press & hold to brake)",
+      "data-audioeffects-backspin-amt":"Brake length — 16th note (snap) up to a full bar (long sag)"
     },
     // ── phase-2 CHANGE messages (state / orange) — functions of the new value ──
     state: {
@@ -2952,7 +3134,10 @@
       mute:    on => on?"Muted (still playing)":"Unmuted",
       solo:    (name,on) => name+(on?" solo on":" solo off"),
       kill:    (name,on) => name+(on?" killed":" on"),
-      masterFx:on => "Audio effects "+(on?"on":"off"),
+      audioEffectsReverb:on => "Audio effects "+(on?"on":"off"),
+      audioEffectsEcho:on => "Echo "+(on?"on":"off"),
+      audioEffectsFilter:pos => pos===-1 ? "Filter off (bypass)" : (pos===50 ? "Filter neutral" : (pos<50 ? "Filter — low-pass "+pos : "Filter — high-pass "+pos)),
+      audioEffectsBackspin:held => held ? "Backspin — braking" : "Backspin released",
       persistence:on => "Persistence "+(on?"on":"off"),
       orientation:v => v,
       glover:  v => "Glover "+v,
@@ -2969,20 +3154,34 @@
   const msgState = (key,...a) => { const f=MSG.state[key]; if(f) showMessage(typeof f==="function"?f(...a):f, "state"); };
   const msgError = key => { if(MSG.error[key]) showMessage(MSG.error[key], "error"); };
 
-  // HOVER HELP (phase 1): wire every registry hint at boot-end. Section labels use data-hint pointing at
-  // a MSG.hint key; id-keyed controls and [data-*] buttons wire straight from MSG.hint.
-  document.querySelectorAll("[data-hint]").forEach(el=>{
-    const k=el.getAttribute("data-hint");
-    if(MSG.hint[k]) el.addEventListener("mouseenter", ()=>showMessage(MSG.hint[k], "info"));
-  });
-  Object.keys(MSG.hint).forEach(k=>{
-    if(k.startsWith("data-")){
-      document.querySelectorAll("["+k+"]").forEach(el=>el.addEventListener("mouseenter", ()=>showMessage(MSG.hint[k],"info")));
-    } else if(!k.startsWith("lbl")){
-      const el=document.getElementById(k);
-      if(el) el.addEventListener("mouseenter", ()=>showMessage(MSG.hint[k],"info"));
-    }
-  });
+  // HOVER + KEYBOARD HELP: wire every registry hint to BOTH mouseenter (mouse) and focus (WASD/tab/
+  // external controller), so keyboard-first nav updates the footer message bar exactly like hovering.
+  // Idempotent + re-runnable: strip controls are rebuilt by buildStrip/buildMixer, so this is called
+  // again after each rebuild to re-attach to the fresh elements. A per-element flag prevents the static
+  // controls (section labels, master header) from stacking duplicate listeners across rebuilds.
+  const wireHint=(el,msg)=>{
+    if(!el || el.dataset.hintWired) return;
+    el.dataset.hintWired="1";
+    const f=()=>showMessage(msg,"info");
+    el.addEventListener("mouseenter",f); el.addEventListener("focus",f);
+  };
+  function wireAllHints(){
+    if(!_hintsReady) return;   // MSG/showMessage not initialized yet (early boot). The explicit call
+    // after MSG is defined does the first wiring; post-boot rebuilds run fully.
+    document.querySelectorAll("[data-hint]").forEach(el=>{
+      const k=el.getAttribute("data-hint");
+      if(MSG.hint[k]) wireHint(el, MSG.hint[k]);
+    });
+    Object.keys(MSG.hint).forEach(k=>{
+      if(k.startsWith("data-")){
+        document.querySelectorAll("["+k+"]").forEach(el=>wireHint(el, MSG.hint[k]));
+      } else if(!k.startsWith("lbl")){
+        wireHint(document.getElementById(k), MSG.hint[k]);
+      }
+    });
+  }
+  _hintsReady=true;   // MSG + showMessage now defined; hint wiring is safe from here on (incl. rebuilds)
+  wireAllHints();
   document.getElementById("patName").textContent=makeTitle();
   { const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE.house.name; }
   document.getElementById("patSrc").textContent="1337";
