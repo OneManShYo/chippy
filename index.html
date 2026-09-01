@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_10_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_10_02  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_10_0]</title>
+<title>OMS Chippy [Beta V1_10_02]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -155,7 +155,8 @@
   .ctrl-sections { display:flex; align-items:flex-start; gap:10px; }
   .ctrl-col-transport { flex:0 0 auto; }
   .ctrl-col-selecta { flex:1 1 auto; min-width:0; }
-  .ctrl-col .transport { margin-bottom:0; }
+  .ctrl-col .transport { margin-bottom:0; padding:0; border:none; background:none; }
+  .ctrl-col .sec-hdr { margin-top:0; }
   .time { font-size:11px; color:#bbb; font-family:'Courier New',monospace; min-width:58px;
     background:#0a0a0a; border:1px solid #2a2a2a; border-radius:4px; padding:0 9px;
     text-align:right; height:20px; line-height:20px; box-sizing:border-box; }
@@ -288,7 +289,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_10_0]</span>
+      <span class="ver">[Beta&nbsp;V1_10_02]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
