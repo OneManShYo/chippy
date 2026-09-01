@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_10_02  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_10_10  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_10_02]</title>
+<title>OMS Chippy [Beta V1_10_10]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -236,7 +236,7 @@
   .devmod select { flex:1; min-width:0; background:#151515; color:#bbb; border:1px solid #333; border-radius:4px; font-size:11px; padding:0 6px; font-family:'Courier New',monospace; height:30px; }
   .devmod .dm-lvl { font-size:9px; color:#666; font-family:'Courier New',monospace; min-width:18px; text-align:right; }
   /* level wheel = a value cell matching button height; flex-grows to fill the strip */
-  .devmod .dm-wheel { flex:1; min-width:0; height:30px; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; border-radius:4px; padding:0; }
+  .devmod .dm-wheel { flex:1; min-width:0; height:30px; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; border-radius:4px; padding:0; touch-action:pan-y; }
   .devmod .dm-wheel .wv { font-size:12px; text-align:center; }
   .devmod .dm-btn {
     flex:0 0 34px; width:34px; height:30px; padding:0; border-radius:4px; cursor:pointer;
@@ -265,10 +265,13 @@
   #mixerHdr .vh-mfx svg { display:block; }
   #mixerHdr .vh-mfx:hover { color:#00e08a; border-color:#00e08a; }
   #mixerHdr .vh-mfx.fxon { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
-  #mixerHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; }
+  #mixerHdr .vh-mamt { height:20px; padding:0 8px; min-width:34px; touch-action:pan-y; }
   #mixerHdr .vh-mkill { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; }
   #mixerHdr .vh-mkill:hover { color:#fff; border-color:#555; }
   #mixerHdr .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
+  #mixerHdr .vh-msolo { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; font-weight:700; font-family:'Courier New',monospace; }
+  #mixerHdr .vh-msolo:hover { color:#ffcc00; border-color:#ffcc00; }
+  #mixerHdr .vh-msolo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; box-shadow:0 0 8px rgba(255,204,0,.5); }
   /* the MATRIX header holds the taller counter box; trim its vertical margin so the row spacing
      matches the other section headers (the box height was expanding the gaps above/below). */
   /* MATRIX header uses the standard section-header margin (same as CONTROLS/VOICES) so all three
@@ -289,7 +292,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_10_02]</span>
+      <span class="ver">[Beta&nbsp;V1_10_10]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -318,9 +321,9 @@
         <div class="summary-title" id="patName">Chippy Loop 01</div>
         <div class="summary-grid" style="margin-top:4px;">
           <span class="k">genre</span><span id="patGenre">House</span>
-          <span class="k">source</span><span id="patSrc">generated · House · seed 1337</span>
+          <span class="k">seed</span><span id="patSrc">1337</span>
           <span class="k">key</span><span id="patKey">A minor</span>
-          <span class="k">length</span><span id="patLen">4 bars · 16 steps/bar</span>
+          <span class="k">length</span><span id="patLen">4 bars</span>
         </div>
       </div>
       <div id="monitorBox" style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
@@ -376,7 +379,7 @@
     <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox" title="sound source — the hardware Chippy's synthesis is modeled after (variable-duty pulse + triangle + LFSR noise = Ricoh 2A03, the NES / Famicom sound chip)">Ricoh 2A03</span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">AUDIO EFFECTS</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="audio effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1"><span class="wv" id="mfx-amt-v" style="color:#bbb">50</span></span><span class="vh-mlabel vh-mutelabel">MUTE</span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="mute — silence the whole mix without stopping playback">⏻</button></div>
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">AUDIO EFFECTS</span><button class="dm-btn dm-fx vh-mfx" data-mfx="1" title="audio effects — reverb on the whole mix except the drums"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-mamt" data-mfxamt="1"><span class="wv" id="mfx-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn" title="master solo — clear all soloed channels (return the full mix)">S</button><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="mute — silence the whole mix without stopping playback">⏻</button></div>
     <div class="devstrip" id="mixStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><span class="rule"></span></div>
@@ -423,8 +426,13 @@
       <div class="ab-h">SOFTWARE</div>
       <div style="color:#888;font-size:12px;line-height:1.9;">
         <div><span style="color:#c77dff;">Copyright</span> <span style="color:#666;margin-left:8px;">© 2024–2026 Wes Smith / ONEMANSHYO</span></div>
-        <div><span style="color:#c77dff;">License</span> <span style="color:#666;margin-left:8px;">GPL-3.0 — Free &amp; Open Source</span></div>
+        <div><span style="color:#c77dff;">License</span> <span style="color:#666;margin-left:8px;">GPL-3.0 — source code; free &amp; open source</span></div>
         <div><span style="color:#c77dff;">Build</span> <span style="color:#666;margin-left:8px;">Single-file HTML — no paywalls, no dependencies</span></div>
+      </div>
+
+      <div class="ab-h">ASSETS</div>
+      <div style="color:#888;font-size:12px;line-height:1.9;">
+        <div><span style="color:#c77dff;">Squint and Wowzer icons, music, and MIDI</span> <span style="color:#666;margin-left:8px;">Copyright © 1997–2026 Juice Recordings LLC (Yo Team) — all rights reserved. Not covered by the GPL-3.0 license. The GPL applies to Chippy's source code only; these assets are proprietary and separately reserved.</span></div>
       </div>
 
       <div class="ab-h">TECHNICAL</div>
@@ -439,8 +447,9 @@
         <div><span style="color:#c77dff;">Claude AI</span> <span style="color:#666;margin-left:8px;">(Anthropic) — development partner</span></div>
         <div><span style="color:#c77dff;">Web Audio API</span> <span style="color:#666;margin-left:8px;">— synthesis + playback</span></div>
       </div>
-      <div style="color:#c77dff;font-size:16px;font-weight:700;letter-spacing:6px;text-align:center;margin-top:34px;font-family:'Courier New',monospace;">PLUR</div>
     </div>
+    <hr style="border:none;border-top:1px solid #2a2a2a;margin:34px 0 0;">
+    <div style="color:#c77dff;font-size:16px;font-weight:700;letter-spacing:6px;text-align:center;margin-top:20px;font-family:'Courier New',monospace;">PLUR</div>
    </div><!-- /panelAbout -->
   </div>
   <div id="messageBar" class="message-bar msg-info">Ready</div>
@@ -496,7 +505,7 @@
     {id:"synth",  name:"Synth",   color:"#4aa3df", osc:"pulse50", on:true, lvl:0.42, decay:0.30 },
     {id:"accent", name:"Accents", color:YEL, osc:"pulse25",  on:true, lvl:0.4, decay:0.10 },
     {id:"fills",  name:"Fills",   color:PUR, osc:"noise",    on:true, lvl:0.45, decay:0.08, noiseLo:400, noiseHi:4000 },
-    {id:"fx",     name:"FX",      color:ORG, osc:"riserUp",  on:true, lvl:0.3, decay:0.5, noiseLo:200, noiseHi:9000 }
+    {id:"fx",     name:"FX",      color:ORG, osc:"glitchDn",  on:true, lvl:0.3, decay:0.5, noiseLo:200, noiseHi:9000 }
   ];
   const V={}; VOICES.forEach(v=>V[v.id]=v);
 
@@ -1317,9 +1326,9 @@
     const ls=document.getElementById("lenSel"); if(ls) ls.value=String(BARS);
     const pn=document.getElementById("patName"); if(pn) pn.textContent=makeTitle();
     const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE[genre].name;
-    const ps=document.getElementById("patSrc"); if(ps) ps.textContent="party · "+GENRE[genre].name+" · "+BARS+" bars · seed "+pp.seed.toString(16);
+    const ps=document.getElementById("patSrc"); if(ps) ps.textContent=pp.seed.toString(16);
     const pk=document.getElementById("patKey"); if(pk) pk.textContent=keyTonic+" minor"+(transpose?(" ("+(transpose>0?"+":"")+transpose+" st)"):"");
-    const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar";
+    const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars";
   }
 
   // ============================================================
@@ -2055,7 +2064,7 @@
   // ============================================================
   //  VOICE STRIP UI
   // ============================================================
-  const OSC_OPTS=[["pulse12","Pulse 12%"],["pulse25","Pulse 25%"],["pulse50","Pulse 50%"],["triangle","Triangle"],["noise","Noise"],["sweep","Sweep FX"]];
+  const OSC_OPTS=[["pulse12","Pulse 12%"],["pulse25","Pulse 25%"],["pulse50","Pulse 50%"],["triangle","Triangle"],["noise","Noise"]];
   // FX = noise sweeps: 3 noise colors x 2 directions. Uppers start silent+low and sweep UP (tension
   // into the drop); downers start bright+high and sweep DOWN (release/fall). All swell in from quiet.
   // FX = white-noise + LOW-PASS sweep (with resonance). The type sets the frequency BAND (per the
@@ -2135,6 +2144,7 @@
       soloBtn.classList.toggle("soloon", !!v.solo);
       soloBtn.onclick=(e)=>{ e.stopPropagation(); v.solo=!v.solo;
         soloBtn.classList.toggle("soloon", !!v.solo);
+        syncMasterSolo();
         msgState("solo", v.name, v.solo); draw(); };
       const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
         lvlSpan.style.color=v.on?v.color:"#555";
@@ -2181,7 +2191,7 @@
     rebuildEvents();
     document.getElementById("patName").textContent=makeTitle();
     document.getElementById("patGenre").textContent=GENRE[genre].name;
-    document.getElementById("patSrc").textContent="generated · "+GENRE[genre].name+" · seed "+seed.toString(16);
+    document.getElementById("patSrc").textContent=seed.toString(16);
     document.getElementById("patKey").textContent=keyTonic+" minor"+(transpose?(" ("+(transpose>0?"+":"")+transpose+" st)"):"");
     msgState("generated", GENRE[genre].name);
     draw();
@@ -2403,7 +2413,7 @@
     { const ls=document.getElementById("lenSel"); if(ls) ls.value=String(BARS);
       const gs=document.getElementById("genreSel"); if(gs) gs.value=genre;
       const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM);
-      const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars · 16 steps/bar"; }
+      const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars"; }
     loopStartAudio=(loopStartCtx||actx.currentTime);
     loopDur=loopLen();
     setMsg(selecta().name+" set on — "+vibe().name+" 🎉", MAG);
@@ -2470,6 +2480,15 @@
     msgState("mute", _masterKilled);
   }
   if(vhKillBtn) vhKillBtn.onclick=(e)=>{ e.stopPropagation(); _masterKilled=!_masterKilled; applyMasterKill(); };
+  // master solo — reuses the channel-strip solo idiom. Lights when any channel is soloed;
+  // tap clears ALL solos (returns the full mix). Dim when nothing is soloed (tap is a no-op).
+  const vhSoloBtn=document.getElementById("vhSoloBtn");
+  function syncMasterSolo(){ if(vhSoloBtn) vhSoloBtn.classList.toggle("soloon", _anySolo()); }
+  if(vhSoloBtn) vhSoloBtn.onclick=(e)=>{ e.stopPropagation();
+    if(!_anySolo()) return;                 // nothing soloed → no-op
+    VOICES.forEach(v=>v.solo=false);        // clear all solos
+    syncMasterSolo(); buildMixer(); draw(); };
+  syncMasterSolo();
 
   // ---- RAVE: aspect toggle (16:9 / 9:16) + canvas video recorder ----
   const aspectBtn=document.getElementById("aspectBtn");
@@ -2565,7 +2584,7 @@
     const apply=()=>{
       setBars(nb);
       generate();
-      document.getElementById("patLen").textContent=BARS+" bars · 16 steps/bar";
+      document.getElementById("patLen").textContent=BARS+" bars";
       msgState("bars", BARS);
     };
     // LENGTH: not a beat-quantized restart — let the current loop play out, switch at its end.
@@ -2606,12 +2625,16 @@
     });
     el.addEventListener("focus", ()=>el.classList.add("active"));
     el.addEventListener("blur",  ()=>el.classList.remove("active"));
-    // vertical drag
-    let dragging=false, lastY=0, acc=0;
-    el.addEventListener("pointerdown", e=>{ dragging=true; lastY=e.clientY; acc=0;
+    // drag: MOUSE keeps vertical (up=+, unchanged); TOUCH uses horizontal (right=+),
+    // because a vertical touch-drag is the browser's page-scroll gesture and gets hijacked.
+    let dragging=false, lastY=0, lastX=0, acc=0, isTouch=false;
+    el.addEventListener("pointerdown", e=>{ dragging=true; isTouch=(e.pointerType==="touch");
+      lastY=e.clientY; lastX=e.clientX; acc=0;
       el.classList.add("active"); el.setPointerCapture(e.pointerId); el.focus(); });
     el.addEventListener("pointermove", e=>{ if(!dragging) return;
-      acc += (lastY - e.clientY); lastY=e.clientY;
+      if(isTouch){ acc += (e.clientX - lastX); }   // touch: right = increase
+      else       { acc += (lastY - e.clientY); }   // mouse: up = increase (unchanged)
+      lastY=e.clientY; lastX=e.clientX;
       while(acc>=4){ set(get()+step); acc-=4; }
       while(acc<=-4){ set(get()-step); acc+=4; }
     });
@@ -2770,34 +2793,65 @@
   // Works no matter how you got in (tab, click, or cold): first WASD press with nothing in the
   // grid focused lands on the top-left of Controls (the generate button). Arrow keys still adjust
   // the focused control's value (see bindUctl/bindWheel).
+  // ============================================================
+  //  WASD GRID — the editable-field navigation matrix (single source of truth)
+  // ------------------------------------------------------------
+  //  ONE authored descriptor of every keyboard-navigable field, by area, in visual
+  //  (left→right / top→bottom) order. The mover reads THIS — nothing else defines the grid.
+  //  To add a control to WASD nav in future: add its hook to the right area row here. Do not
+  //  scatter querySelectors elsewhere. Area names are the canonical MUSIC-tab areas (BLOG0036).
+  //
+  //  Rows (top→bottom), fields (left→right):
+  //    TRANSPORT+SELECTA : play · generate · selecta · genre · timeSlot · bars · tempo · swing
+  //    VOICES            : per voice module, in DOM order: [ voiceSelect · dice ] × N (interleaved)
+  //    MIXER (master)    : audioEffects · fxAmount · masterSolo · masterMute
+  //    MIXER (channels)  : per channel, in DOM order: [ level · solo · kill ] × N (interleaved)
+  //
+  //  Interleaved rows are collected by walking the module containers in DOM order, so a field
+  //  added inside a module (e.g. a new per-channel control) is picked up automatically.
+  //  This same matrix is the source for the keyboard-shortcut table in the User Guide (E doc).
   function navRows(){
-    // Controls row, left→right, real focus targets only (the quantize readout is display-only).
-    const controls=["playBtn","genBtn","genreSel","lenSel","bpmSel","swingSel","djSel","vibeSel"]
-      .map(id=>document.getElementById(id)).filter(Boolean);
-    // Voices row: the 7 voice-type selects, in DOM order.
-    const voices=Array.from(document.querySelectorAll('.devstrip [data-sel]'));
-    const mutes=Array.from(document.querySelectorAll('.devstrip [data-mute]'));
-    const rands=Array.from(document.querySelectorAll('.devstrip [data-rand]'));
-    const master=Array.from(document.querySelectorAll('#mixerHdr [data-mfx], #mixerHdr [data-mfxamt]'));
-    return [controls, voices, rands, mutes, master];
+    const byId  = ids => ids.map(id=>document.getElementById(id)).filter(Boolean);
+    const inDom = (root,sel) => root ? Array.from(root.querySelectorAll(sel)) : [];
+
+    // TRANSPORT + SELECTA — one visual row, shipped left→right order.
+    const transportSelecta = byId(
+      ["playBtn","genBtn","djSel","genreSel","vibeSel","lenSel","bpmSel","swingSel"]);
+
+    // VOICES — each module is a .dm-row of [ select, dice ]; querySelectorAll returns them
+    // interleaved in DOM order automatically.
+    const voices = inDom(document.getElementById("devStrip"), "[data-sel],[data-rand]");
+
+    // MIXER master (header) — fx · amount · master-solo · master-mute, visual order.
+    const mixerMaster = byId(["vhSoloBtn","vhKillBtn"]);
+    const hdr = document.getElementById("mixerHdr");
+    const fx  = hdr ? Array.from(hdr.querySelectorAll("[data-mfx],[data-mfxamt]")) : [];
+    const masterRow = [...fx, ...mixerMaster];
+
+    // MIXER channels — each channel is a .dm-row of [ level, solo, kill ]; interleaved in DOM order.
+    const mixerChannels = inDom(document.getElementById("mixStrip"), "[data-lvl],[data-solo],[data-mute]");
+
+    return [transportSelecta, voices, masterRow, mixerChannels];
   }
   function wasdMove(key){
-    const [controls, voices]=navRows();
-    const rows=[controls, voices];
+    // Reads the centralized navRows() descriptor — the single source of grid truth.
+    // Empty rows (a strip not built yet) are filtered so traversal never lands on nothing.
+    const rows=navRows().filter(row=>row.length);
+    const firstRow=rows[0];
     const active=document.activeElement;
     // locate active element in the grid
     let r=-1, c=-1;
     for(let ri=0; ri<rows.length; ri++){ const ci=rows[ri].indexOf(active); if(ci>=0){ r=ri; c=ci; break; } }
-    if(r<0){ // nothing in the grid focused → land on top-left of Controls
-      if(controls[0]) controls[0].focus();
+    if(r<0){ // nothing in the grid focused → land on top-left (first field of the first row)
+      if(firstRow && firstRow[0]) firstRow[0].focus();
       return;
     }
     if(key==="w"||key==="s"){
-      // up/down: jump to the other row, starting at its left
+      // up/down: jump to the adjacent row, starting at its left
       r = (key==="s") ? (r+1)%rows.length : (r-1+rows.length)%rows.length;
       c = 0;
     } else {
-      // left/right: one continuous ring across BOTH rows.
+      // left/right: one continuous ring across ALL rows.
       // flatten to a single index, step with wraparound, map back to row+col.
       const flat=[]; rows.forEach((row,ri)=>row.forEach((el,ci)=>flat.push([ri,ci])));
       let fi=flat.findIndex(([ri,ci])=>ri===r&&ci===c);
@@ -2873,6 +2927,7 @@
       sourceBox:  "Sound source — the hardware Chippy's synthesis is modeled after",
       // mixer header
       vhKillBtn:  "Mute — silence the whole mix without stopping playback",
+      vhSoloBtn:  "Master solo — clear all soloed channels (return the full mix)",
       // matrix
       chartWrap:  "MATRIX — live piano roll; top strip is the whole-loop overview with Chippy",
       // dynamic per-voice + master-FX buttons ([data-*])
@@ -2930,7 +2985,7 @@
   });
   document.getElementById("patName").textContent=makeTitle();
   { const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE.house.name; }
-  document.getElementById("patSrc").textContent="generated · "+GENRE.house.name+" · seed 1337";
+  document.getElementById("patSrc").textContent="1337";
   resize();
   resizeFace();
   document.getElementById("logoMark").src=YOBOT_SRC;   // header logo mark
