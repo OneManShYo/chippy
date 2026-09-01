@@ -1,6 +1,40 @@
-# OMS Chippy [Beta V1_10_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_11_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.11.0 — The performance mixer
+
+This release turns the mixer into a real performance instrument. The headline is a **master audio-effects
+rack** — four live effects sitting across the mixer header, each a labelled button and a simple 0–10 dial:
+
+- **Reverb** — space on the whole mix (drums stay dry). On by default, light — just enough to know the
+  effects are there.
+- **Echo** — a tempo-synced repeat that trails a phrase off for transitions, with the bass rolled out of
+  the repeats so it stays clean.
+- **Filter** — the classic DJ sweep. Turn it down for that muffled, underwater drop; turn it up to pull the
+  bass out and build tension. The button punches it in and out while keeping your setting.
+- **Backspin** — a tape-stop brake. Press and hold (mouse, finger, or the Enter key) and the whole mix
+  spins and pitches down like slowing a record; let go and you're right back on the beat, no time lost.
+
+After the effects sits a slim **master processing** chain for setting your tone once and leaving it: a
+three-band **EQ** (high/mid/low), a **compressor** to glue and thicken, a **limiter** as a peak ceiling so
+nothing clips, and the **master volume** at the very end. It's built from the same DSP recipe as OMS Dojo,
+trimmed down for performing rather than mastering — everything starts flat and transparent until you dial
+it in.
+
+There's also a **master solo** move: solo a few elements down over a phrase, then hit one button to release
+them all and slam the full mix back in on the drop.
+
+Under the hood, the whole app got more keyboard-first — every control now lights the message bar when you
+tab or arrow onto it, not just on mouse hover, which also sets up external controllers down the road. The
+internal naming was cleaned up so \"FX\" always means the FX *sound* (in the matrix) and never the audio
+*effects* (the processing) — no more crossed wires. And a headless boot-check now guards every change, so
+the effects rack shipped without a single broken build.
+
+A couple of housekeeping notes: the About panel now spells out that the icons, music, and MIDI are
+proprietary (the GPL-3.0 covers the source code only), and the auto-DJ (YoConditioning) no longer applies
+audio effects automatically — that waits until the new effects are better understood. It still handles the
+arrangement moves that make a set breathe.
 
 ## V1.10.0 — The Message System, the Monitor, and a proper UI pass
 

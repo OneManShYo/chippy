@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_10_18  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_11_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_10_18]</title>
+<title>OMS Chippy [Beta V1_11_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -265,13 +265,16 @@
   #mixerHdr .vh-audioeffects svg { display:block; }
   #mixerHdr .vh-audioeffects:hover { color:#00e08a; border-color:#00e08a; }
   #mixerHdr .vh-audioeffects.audioEffectsOn { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
-  #mixerHdr .vh-audioeffects-amt { height:20px; padding:0 8px; min-width:34px; touch-action:pan-y; }
+  #mixerHdr .vh-audioeffects-amt { height:20px; padding:0 4px; min-width:22px; touch-action:pan-y; }
   #mixerHdr .vh-mkill { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; }
   #mixerHdr .vh-mkill:hover { color:#fff; border-color:#555; }
   #mixerHdr .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
   #mixerHdr .vh-msolo { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; transition:all .12s; margin-left:2px; font-weight:700; font-family:'Courier New',monospace; }
   #mixerHdr .vh-msolo:hover { color:#ffcc00; border-color:#ffcc00; }
   #mixerHdr .vh-msolo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; box-shadow:0 0 8px rgba(255,204,0,.5); }
+  /* MASTER PROCESSING — each processor a self-contained .mproc wrapper (future slide-out anchor). */
+  #mixerHdr .mproc { display:inline-flex; align-items:center; gap:3px; }
+  #mixerHdr .mproc-sep { display:inline-block; width:1px; height:20px; background:#333; margin:0 6px; vertical-align:middle; }
   /* the MATRIX header holds the taller counter box; trim its vertical margin so the row spacing
      matches the other section headers (the box height was expanding the gaps above/below). */
   /* MATRIX header uses the standard section-header margin (same as CONTROLS/VOICES) so all three
@@ -292,7 +295,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_10_18]</span>
+      <span class="ver">[Beta&nbsp;V1_11_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -379,7 +382,7 @@
     <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox" title="sound source — the hardware Chippy's synthesis is modeled after (variable-duty pulse + triangle + LFSR noise = Ricoh 2A03, the NES / Famicom sound chip)">Ricoh 2A03</span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">AUDIO EFFECTS</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">30</span></span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">50</span></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn" title="master solo — clear all soloed channels (return the full mix)">S</button><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn" title="mute — silence the whole mix without stopping playback">⏻</button></div>
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">COMP</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-amt="1"><span class="wv" id="mastercomp-amt-v" style="color:#bbb">4</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">LIMIT</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button></span><span class="mproc-sep"></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></div>
     <div class="devstrip" id="mixStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><span class="rule"></span></div>
@@ -577,8 +580,11 @@
     const spec=[
       ["kickCut","drums",  M.kickCut],
       ["bassEqOut","bass", M.bassEqOut],
-      ["leadDrop","lead",  M.leadDrop],
-      ["reverbThrow","__rev",M.reverbThrow]
+      ["leadDrop","lead",  M.leadDrop]
+      // reverbThrow (audio-effect move) NULLED V1.10.25: auto-applying audio effects is parked until the
+      // effects are better understood. The now-full effects rack (echo/filter/backspin/EQ/comp/limiter)
+      // means blind auto-application is risky. Composition/arrangement moves (kickCut/bassEqOut/leadDrop)
+      // stay. Re-enable by restoring: ["reverbThrow","__rev",M.reverbThrow]
     ];
     for(let bar=4; bar<BARS; bar+=4){
       const o=bar*G;
@@ -757,11 +763,22 @@
   let echoDelay=null, echoFeedback=null, echoWet=null, echoHiPass=null;   // ECHO (audio effect): master-bus tempo-synced delay w/ low-cut feedback
   let filterLP=null, filterHP=null;   // FILTER (audio effect): master-bus insert — bipolar DJ filter (50=off, <50 low-pass sweep, >50 high-pass sweep)
   let brakeLowpass=null, brakeGain=null, brakePitch=null;   // BACKSPIN/TAPE-STOP: pitch-drop delay + lowpass + gain sag on hold
+  // MASTER PROCESSING (session config, end of master bus, before volume+kill). Each processor is a
+  // self-contained, namespaced module so any one can be rebuilt/retuned — or later expanded into a
+  // slide-out config panel (Dojo dspPanelOpen pattern) — without touching the others.
+  let eqLow=null, eqMid=null, eqHigh=null;                  // master EQ3: lowshelf 250 / peaking 1k / highshelf 2500
+  let masterComp=null;                                      // compressor (DynamicsCompressorNode)
+  let masterLimit=null;                                     // limiter (DynamicsCompressorNode, limiter preset)
+  let masterVolGain=null;                                   // master volume (final GainNode, live control)
+  let masterEqLow=0, masterEqMid=0, masterEqHigh=0;         // EQ band gains in dB (0 = flat), ±12
+  let masterCompOn=false, masterCompAmt=40;                 // compressor on/off + macro amount 0..100 (gentle..aggressive)
+  let masterLimitOn=false;                                  // limiter on/off (fixed ceiling preset)
+  let masterVolume=100;                                     // master output volume 0..100 (100 = unity within master*0.5)
   let airDest=null, airEl=null, airBridge=false;   // audio routes through an <audio> element (routable)
   let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
   let audioEffectsReverbOn=true, audioEffectsReverbAmt=0.10;   // master effects bus ON by default at 10% (dialed-in house)
   let audioEffectsEchoOn=false, audioEffectsEchoAmt=0.30;      // ECHO off by default; wheel = wet/feedback amount
-  let audioEffectsFilterPos=50, audioEffectsFilterOn=true;   // FILTER position 0..100 (50=neutral). On/off is a BYPASS toggle — position is remembered when off.
+  let audioEffectsFilterPos=50, audioEffectsFilterOn=false;   // FILTER position 0..100 (50=neutral). On/off is a BYPASS toggle — position is remembered when off.
   let audioEffectsBrakeLen=50, audioEffectsBrakeHeld=false;   // BACKSPIN duration 0..100 → 16th note (fast snap) .. 1 bar (long sag); held = momentary engage
   const pulseWaves={};   // duty -> PeriodicWave cache
 
@@ -796,7 +813,24 @@
     // (transparent). Chain: filterLP → brakePitch → brakeLowpass → brakeGain → out.
     brakePitch=actx.createDelay(1.5); brakePitch.delayTime.value=0;
     filterLP.connect(brakePitch); brakePitch.connect(brakeLowpass); brakeLowpass.connect(brakeGain);
-    const outBus=brakeGain;   // post-brake master output — route this to the OS bridge / destination
+    // MASTER PROCESSING chain (end of the master bus, before output). Each node defaults transparent:
+    // EQ bands at 0dB, comp/limiter bypassed via wide-open thresholds, volume at unity. So inserting the
+    // whole chain changes NOTHING audible until a control is moved.
+    // EQ3 (Ableton EQ3 recipe): lowshelf 250 · peaking 1k · highshelf 2500. gain 0 = flat.
+    eqLow =actx.createBiquadFilter(); eqLow.type ="lowshelf";  eqLow.frequency.value =250;  eqLow.gain.value =0;
+    eqMid =actx.createBiquadFilter(); eqMid.type ="peaking";   eqMid.frequency.value =1000; eqMid.Q.value=0.9; eqMid.gain.value=0;
+    eqHigh=actx.createBiquadFilter(); eqHigh.type="highshelf"; eqHigh.frequency.value=2500; eqHigh.gain.value=0;
+    // COMPRESSOR — bypassed by default (threshold 0 = no compression until turned on).
+    masterComp=actx.createDynamicsCompressor();
+    masterComp.threshold.value=0; masterComp.ratio.value=1; masterComp.knee.value=10; masterComp.attack.value=0.003; masterComp.release.value=0.25;
+    // LIMITER — a DynamicsCompressor at limiter settings; bypassed by default (threshold 0).
+    masterLimit=actx.createDynamicsCompressor();
+    masterLimit.threshold.value=0; masterLimit.ratio.value=20; masterLimit.knee.value=0; masterLimit.attack.value=0.001; masterLimit.release.value=0.1;
+    // VOLUME — final master gain (live control), unity by default.
+    masterVolGain=actx.createGain(); masterVolGain.gain.value=1;
+    brakeGain.connect(eqLow); eqLow.connect(eqMid); eqMid.connect(eqHigh);
+    eqHigh.connect(masterComp); masterComp.connect(masterLimit); masterLimit.connect(masterVolGain);
+    const outBus=masterVolGain;   // final master output — route this to the OS bridge / destination
     // AUDIO OUTPUT — route through an <audio> element (via MediaStream), NOT straight to
     // actx.destination. Web Audio's destination is invisible to the OS audio router (AirPlay/HomePod/
     // Bluetooth all fail). An <audio> element IS routable media (same as how YouTube's audio routes).
@@ -2213,12 +2247,12 @@
     const mAmt=document.querySelector('#mixerHdr [data-audioeffects-reverb-amt]');
     if(!mBtn) return;
     mBtn.classList.toggle("audioEffectsOn", audioEffectsReverbOn);
-    document.getElementById("audioeffects-reverb-amt-v").textContent=Math.round(audioEffectsReverbAmt*100);
+    document.getElementById("audioeffects-reverb-amt-v").textContent=Math.round(audioEffectsReverbAmt*10);
     mBtn.onclick=(e)=>{ e.stopPropagation(); audioEffectsReverbOn=!audioEffectsReverbOn; mBtn.classList.toggle("audioEffectsOn",audioEffectsReverbOn);
       msgState("audioEffectsReverb", audioEffectsReverbOn); };
     bindWheel(mAmt,
-      ()=>Math.round(audioEffectsReverbAmt*100),
-      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsReverbAmt=p/100; document.getElementById("audioeffects-reverb-amt-v").textContent=p; },
+      ()=>Math.round(audioEffectsReverbAmt*10),
+      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); audioEffectsReverbAmt=p/10; document.getElementById("audioeffects-reverb-amt-v").textContent=p; },
       1);
   })();
 
@@ -2238,13 +2272,13 @@
     const eAmt=document.querySelector('#mixerHdr [data-audioeffects-echo-amt]');
     if(!eBtn) return;
     eBtn.classList.toggle("audioEffectsOn", audioEffectsEchoOn);
-    document.getElementById("audioeffects-echo-amt-v").textContent=Math.round(audioEffectsEchoAmt*100);
+    document.getElementById("audioeffects-echo-amt-v").textContent=Math.round(audioEffectsEchoAmt*10);
     eBtn.onclick=(e)=>{ e.stopPropagation(); audioEffectsEchoOn=!audioEffectsEchoOn;
       eBtn.classList.toggle("audioEffectsOn",audioEffectsEchoOn); applyEcho();
       msgState("audioEffectsEcho", audioEffectsEchoOn); };
     bindWheel(eAmt,
-      ()=>Math.round(audioEffectsEchoAmt*100),
-      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsEchoAmt=p/100;
+      ()=>Math.round(audioEffectsEchoAmt*10),
+      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); audioEffectsEchoAmt=p/10;
         document.getElementById("audioeffects-echo-amt-v").textContent=p; applyEcho(); },
       1);
   })();
@@ -2280,7 +2314,7 @@
     const fBtn=document.querySelector('#mixerHdr [data-audioeffects-filter]');
     const fAmt=document.querySelector('#mixerHdr [data-audioeffects-filter-amt]');
     if(!fAmt) return;
-    document.getElementById("audioeffects-filter-amt-v").textContent=Math.round(audioEffectsFilterPos);
+    document.getElementById("audioeffects-filter-amt-v").textContent=Math.round(audioEffectsFilterPos/10);
     if(fBtn){
       fBtn.classList.toggle("audioEffectsOn", audioEffectsFilterOn);
       fBtn.onclick=(e)=>{ e.stopPropagation();   // BYPASS toggle — flips filter in/out; wheel value is kept
@@ -2289,10 +2323,10 @@
         applyFilter(); msgState("audioEffectsFilter", audioEffectsFilterOn?audioEffectsFilterPos:-1); };
     }
     bindWheel(fAmt,
-      ()=>Math.round(audioEffectsFilterPos),
-      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsFilterPos=p;
+      ()=>Math.round(audioEffectsFilterPos/10),
+      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); audioEffectsFilterPos=p*10;
         document.getElementById("audioeffects-filter-amt-v").textContent=p; applyFilter();
-        msgState("audioEffectsFilter", audioEffectsFilterOn?p:-1); },
+        msgState("audioEffectsFilter", audioEffectsFilterOn?audioEffectsFilterPos:-1); },
       1);
   })();
 
@@ -2333,11 +2367,37 @@
     brakeGain.gain.setValueAtTime(brakeGain.gain.value, t);
     brakeGain.gain.setTargetAtTime(1, t, 0.02);                   // snap back to full
   }
+
+  // MASTER PROCESSING apply functions — each processor self-contained.
+  function applyMasterEq(){
+    if(!eqLow||!actx) return; const t=actx.currentTime;
+    eqLow.gain.setTargetAtTime(masterEqLow, t, 0.02);
+    eqMid.gain.setTargetAtTime(masterEqMid, t, 0.02);
+    eqHigh.gain.setTargetAtTime(masterEqHigh, t, 0.02);
+  }
+  function applyMasterComp(){
+    if(!masterComp||!actx) return; const t=actx.currentTime;
+    if(!masterCompOn){ masterComp.threshold.setTargetAtTime(0, t, 0.02); masterComp.ratio.setTargetAtTime(1, t, 0.02); return; }
+    // macro amt 0..100 sweeps gentle(-12,2:1,knee20) -> aggressive(-24,8:1,knee6)
+    const f=masterCompAmt/100;
+    masterComp.threshold.setTargetAtTime(-12 + f*(-12), t, 0.02);  // -12 .. -24
+    masterComp.ratio.setTargetAtTime(2 + f*6, t, 0.02);           // 2 .. 8
+    masterComp.knee.setTargetAtTime(20 - f*14, t, 0.02);          // 20 .. 6
+  }
+  function applyMasterLimit(){
+    if(!masterLimit||!actx) return; const t=actx.currentTime;
+    // limiter preset when on (-3 ceiling, 20:1); bypass (threshold 0) when off
+    masterLimit.threshold.setTargetAtTime(masterLimitOn ? -3 : 0, t, 0.02);
+  }
+  function applyMasterVolume(){
+    if(!masterVolGain||!actx) return;
+    masterVolGain.gain.setTargetAtTime(masterVolume/100, actx.currentTime, 0.02);
+  }
   (function(){
     const bBtn=document.querySelector('#mixerHdr [data-audioeffects-backspin]');
     const bAmt=document.querySelector('#mixerHdr [data-audioeffects-backspin-amt]');
     if(!bBtn) return;
-    document.getElementById("audioeffects-backspin-amt-v").textContent=Math.round(audioEffectsBrakeLen);
+    document.getElementById("audioeffects-backspin-amt-v").textContent=Math.round(audioEffectsBrakeLen/10);
     // momentary: pointerdown engages, pointerup/leave/cancel releases. Lit while held.
     const down=(e)=>{ e.preventDefault(); e.stopPropagation(); ensureAudio();
       bBtn.classList.add("audioEffectsOn"); brakeEngage(); msgState("audioEffectsBackspin", true); };
@@ -2347,10 +2407,65 @@
     bBtn.addEventListener("pointerup", up);
     bBtn.addEventListener("pointerleave", (e)=>{ if(audioEffectsBrakeHeld) up(e); });
     bBtn.addEventListener("pointercancel", up);
+    // keyboard hold (keyboard-first): hold Enter/Space while focused = brake; release = restore.
+    // e.repeat guard so the OS key-repeat doesn't re-fire engage while held.
+    bBtn.addEventListener("keydown", (e)=>{ if(e.key!=="Enter"&&e.key!==" ") return; e.preventDefault();
+      if(e.repeat) return; down(e); });
+    bBtn.addEventListener("keyup", (e)=>{ if(e.key!=="Enter"&&e.key!==" ") return; e.preventDefault(); up(e); });
+    bBtn.addEventListener("blur", (e)=>{ if(audioEffectsBrakeHeld) up(e); });   // safety: focus lost while held
     bindWheel(bAmt,
-      ()=>Math.round(audioEffectsBrakeLen),
-      val=>{ const p=Math.max(0,Math.min(100,Math.round(val))); audioEffectsBrakeLen=p;
+      ()=>Math.round(audioEffectsBrakeLen/10),
+      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); audioEffectsBrakeLen=p*10;
         document.getElementById("audioeffects-backspin-amt-v").textContent=p; },
+      1);
+  })();
+
+  // MASTER PROCESSING controls — EQ3 (low/mid/high) · compressor (btn+amt) · limiter (btn) · volume (wheel).
+  // EQ wheels are bipolar dB (-12..+12, 0=flat); shown as the dB value. All self-contained per processor.
+  (function(){   // EQ
+    const bands=[["low","mastereq-low",()=>masterEqLow,v=>masterEqLow=v],
+                 ["mid","mastereq-mid",()=>masterEqMid,v=>masterEqMid=v],
+                 ["high","mastereq-high",()=>masterEqHigh,v=>masterEqHigh=v]];
+    bands.forEach(([name,attr,get,set])=>{
+      const el=document.querySelector('#mixerHdr [data-'+attr+']'); if(!el) return;
+      const readout=document.getElementById(attr+"-v");
+      bindWheel(el,
+        ()=>Math.round(get()),                              // natural dB (±12)
+        val=>{ const d=Math.max(-12,Math.min(12,Math.round(val))); set(d);
+          readout.textContent=d; applyMasterEq(); msgState("masterEq", name, d); },
+        1);
+    });
+  })();
+  (function(){   // COMPRESSOR
+    const cBtn=document.querySelector('#mixerHdr [data-mastercomp]');
+    const cAmt=document.querySelector('#mixerHdr [data-mastercomp-amt]');
+    if(!cBtn) return;
+    cBtn.classList.toggle("audioEffectsOn", masterCompOn);
+    document.getElementById("mastercomp-amt-v").textContent=Math.round(masterCompAmt/10);
+    cBtn.onclick=(e)=>{ e.stopPropagation(); masterCompOn=!masterCompOn;
+      cBtn.classList.toggle("audioEffectsOn",masterCompOn); applyMasterComp(); msgState("masterComp", masterCompOn); };
+    bindWheel(cAmt,
+      ()=>Math.round(masterCompAmt/10),
+      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); masterCompAmt=p*10;
+        document.getElementById("mastercomp-amt-v").textContent=p; applyMasterComp();
+        msgState("masterCompRatio", (2+masterCompAmt/100*6).toFixed(1)); },
+      1);
+  })();
+  (function(){   // LIMITER
+    const lBtn=document.querySelector('#mixerHdr [data-masterlimit]');
+    if(!lBtn) return;
+    lBtn.classList.toggle("audioEffectsOn", masterLimitOn);
+    lBtn.onclick=(e)=>{ e.stopPropagation(); masterLimitOn=!masterLimitOn;
+      lBtn.classList.toggle("audioEffectsOn",masterLimitOn); applyMasterLimit(); msgState("masterLimit", masterLimitOn); };
+  })();
+  (function(){   // VOLUME (live master output level)
+    const vEl=document.querySelector('#mixerHdr [data-mastervol-amt]');
+    if(!vEl) return;
+    document.getElementById("mastervol-amt-v").textContent=Math.round(masterVolume/10);
+    bindWheel(vEl,
+      ()=>Math.round(masterVolume/10),
+      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); masterVolume=p*10;
+        document.getElementById("mastervol-amt-v").textContent=p; applyMasterVolume(); msgState("masterVol", p); },
       1);
   })();
 
@@ -2998,11 +3113,11 @@
     // interleaved in DOM order automatically.
     const voices = inDom(document.getElementById("devStrip"), "[data-sel],[data-rand]");
 
-    // MIXER master (header) — reverb · amount · master-solo · master-mute, visual order.
-    const mixerMaster = byId(["vhSoloBtn","vhKillBtn"]);
+    // MIXER master (header) — collected in DOM order so WASD matches the visual layout regardless of
+    // how the row is arranged: FX rack wheels/buttons, master solo, EQ/comp/limit/vol, master mute.
     const hdr = document.getElementById("mixerHdr");
-    const audioEffectsButtons  = hdr ? Array.from(hdr.querySelectorAll("[data-audioeffects-reverb],[data-audioeffects-reverb-amt],[data-audioeffects-echo],[data-audioeffects-echo-amt],[data-audioeffects-filter],[data-audioeffects-filter-amt],[data-audioeffects-backspin],[data-audioeffects-backspin-amt]")) : [];
-    const masterRow = [...audioEffectsButtons, ...mixerMaster];
+    const masterRow = hdr ? Array.from(hdr.querySelectorAll(
+      "[data-audioeffects-reverb],[data-audioeffects-reverb-amt],[data-audioeffects-echo],[data-audioeffects-echo-amt],[data-audioeffects-filter],[data-audioeffects-filter-amt],[data-audioeffects-backspin],[data-audioeffects-backspin-amt],#vhSoloBtn,[data-mastereq-high],[data-mastereq-mid],[data-mastereq-low],[data-mastercomp],[data-mastercomp-amt],[data-masterlimit],[data-mastervol-amt],#vhKillBtn")) : [];
 
     // MIXER channels — each channel is a .dm-row of [ level, solo, kill ]; interleaved in DOM order.
     const mixerChannels = inDom(document.getElementById("mixStrip"), "[data-lvl],[data-solo],[data-mute]");
@@ -3119,7 +3234,14 @@
       "data-audioeffects-filter":   "Audio effects — filter on/off (bypass; keeps your sweep setting)",
       "data-audioeffects-filter-amt":"Filter sweep — 50 neutral · down = muffle · up = bass out",
       "data-audioeffects-backspin": "Audio effects — backspin/tape-stop (press & hold to brake)",
-      "data-audioeffects-backspin-amt":"Brake length — 16th note (snap) up to a full bar (long sag)"
+      "data-audioeffects-backspin-amt":"Brake length — 16th note (snap) up to a full bar (long sag)",
+      "data-mastereq-low":  "Master EQ — Low (lowshelf 250Hz), 0 = flat, ±12 dB",
+      "data-mastereq-mid":  "Master EQ — Mid (peaking 1kHz), 0 = flat, ±12 dB",
+      "data-mastereq-high": "Master EQ — High (highshelf 2.5kHz), 0 = flat, ±12 dB",
+      "data-mastercomp":    "Master compressor on/off",
+      "data-mastercomp-amt":"Compressor ratio — gentle (2:1) → hard (8:1)",
+      "data-masterlimit":   "Master limiter on/off (peak ceiling, protects the output)",
+      "data-mastervol-amt": "Master volume — final output level"
     },
     // ── phase-2 CHANGE messages (state / orange) — functions of the new value ──
     state: {
@@ -3138,6 +3260,11 @@
       audioEffectsEcho:on => "Echo "+(on?"on":"off"),
       audioEffectsFilter:pos => pos===-1 ? "Filter off (bypass)" : (pos===50 ? "Filter neutral" : (pos<50 ? "Filter — low-pass "+pos : "Filter — high-pass "+pos)),
       audioEffectsBackspin:held => held ? "Backspin — braking" : "Backspin released",
+      masterEq:(band,v) => "EQ "+band+" "+(v>0?"+":"")+v+" dB",
+      masterComp:on => "Compressor "+(on?"on":"off"),
+      masterCompRatio:r => "Compressor ratio "+r+":1",
+      masterLimit:on => "Limiter "+(on?"on":"off"),
+      masterVol:v => "Master volume "+v,
       persistence:on => "Persistence "+(on?"on":"off"),
       orientation:v => v,
       glover:  v => "Glover "+v,

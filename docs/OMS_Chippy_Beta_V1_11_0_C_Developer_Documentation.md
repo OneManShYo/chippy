@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_10_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_11_0] — DEVELOPER DOCUMENTATION
 
-**Run date:** 2026-08-31  
-**Current Unix Epoch:** 1788134400  
-**App Version:** Chippy Beta V1_10_0  
+**Run date:** 2026-09-01  
+**Current Unix Epoch:** 1788281198  
+**App Version:** Chippy Beta V1_11_0  
 **License:** GPL-3.0  
 
 **Purpose:** The explanatory technical spec for OMS Chippy — how each system works and why. Modeled on
@@ -198,8 +198,10 @@ The layer that turns scheduled events into audible sound. All sound is synthesiz
 - **FX synths** — `playSweep` (resonant low-pass noise sweep), `playGlitch` (gated stutter), `playHorn`
   (detuned-saw foghorn). See §4.3 for the FX voice.
 - **Reverb bus** — a `ConvolverNode` (`reverbBus`) fed by a generated decaying-noise impulse; wet return
-  via `reverbWet`. Voices route in per-voice (the module reverb button) and/or via the Master FX bus
-  (§4.4). Drums are excluded from the master reverb bus by design (dry kicks).
+  via `reverbWet`. Every voice EXCEPT drums routes through it when the master **reverb** (part of the
+  audio-effects rack, §4.4) is on. Drums are excluded by design (dry kicks). NOTE: the reverb is one of
+  four master audio effects (reverb·echo·filter·backspin); the whole rack is named `audioEffects*`, never
+  "fx" (which is the FX voice, a sound).
 - **`curDest`** — per-fire output routing: a voice's play function connects to `curDest`, which is
   `master` (dry) or a tap that also feeds `reverbBus` (wet), set at the top of `fireVoice`.
 
@@ -256,7 +258,11 @@ within the DNA's biases.
   Authored by Wes. Under `profile.mixing`: `maxBpmJump`, `approach` / `approachBars` (tempo-approach
   before a hard-cut change — Chippy does not overlap/blend), and `moves:{}` (`kickCut`, `bassEqOut`,
   `leadDrop`, `reverbThrow` — each `{on, chance, minLen, maxLen}`, fired at musical boundaries with a
-  probability so they're alive, not mechanical).
+  probability so they're alive, not mechanical). **As of V1.11.0, `reverbThrow` — the one audio-EFFECT
+  move — is NULLED** (removed from the `buildMoves` spec, `forceRev` path left dormant). Auto-applying
+  audio effects is parked until the now-full effects rack is better understood; only the composition/
+  arrangement moves (kickCut/bassEqOut/leadDrop) fire. Re-enable = restore the `["reverbThrow","__rev",…]`
+  spec row (BLOG0066).
 
 **Wired to audio (as of V1.8.0):**
 - `mode` (app-wide minor lock) and `swing` (per-loop groove offset).
@@ -312,8 +318,19 @@ it's for. It reflects the control under the cursor (hover) and the value you jus
   messages as functions of the new value), `MSG.error` (failures). Nothing elsewhere holds a message
   string — to change any message, change `MSG`. Helpers `msgHint(key)` / `msgState(key,...vals)` /
   `msgError(key)` fire from the registry. Hover wiring: controls carry `data-hint="<key>"` (section
-  labels) or are id/`data-*`-keyed; one boot-end pass attaches `mouseenter → info` for every entry.
+  labels) or are id/`data-*`-keyed; `wireAllHints()` attaches BOTH `mouseenter` AND `focus` for every
+  entry, so **keyboard/WASD/controller navigation lights the bar exactly like mouse hover** (BLOG0053) —
+  Chippy is keyboard-first. `wireAllHints()` is idempotent and re-runs after `buildStrip`/`buildMixer`
+  rebuilds so freshly-built strip controls keep both hover + focus feedback. A `var _hintsReady` gate
+  prevents it touching `MSG` before `MSG` is initialized at boot (TDZ safety — see the boot-check note).
   The full field/label table (C §12) is generated from `MSG` and mirrors it exactly.
+
+> **BOOT-CHECK DISCIPLINE (adopted this line).** `node --check` catches syntax only, NOT runtime
+> temporal-dead-zone (TDZ) `ReferenceError`s (a `const` accessed before init at boot). Those halt boot
+> partway → blank strips / empty MATRIX. Every UI-halting change is now **jsdom boot-checked** before
+> ship: load the single HTML with `runScripts:"dangerously"`, filter canvas/`getContext` noise from
+> `jsdomError`, and assert `bpmSel.options.length>0`, `devStrip.children.length===8`,
+> `mixStrip.children.length===8`. (BLOG0039 / BLOG0053 / BLOG0059.)
 
 **Why Cortex:** every part of the UI depends on it for feedback; changing it cascades to all user
 communication; it enables future logging / i18n / message history.
@@ -363,26 +380,94 @@ immediately. `stopSet()` (selecta → None) stops the set.
 synth, accents, fills, **fx**. `V{}` is the id→voice lookup. The DRUMS lane is special (dedicated kick
 synth); voice 8 (**fx**) is the effects voice.
 
-## 4.2 Module UI (`buildStrip`)
-Each voice renders as a `.devmod` box with two rows:
-- **Row 1** — the voice-type **selector** (dropdown; `OSC_OPTS`, or `KICK_OPTS` for drums, or `FX_OPTS` for
-  fx) + a **level** value (scroll/drag wheel via `bindWheel`).
-- **Row 2** — three buttons: **random** (dice — re-rolls the voice type), **reverb** (concentric rings —
-  per-voice reverb send, `v.fxRev`), **kill** (power — mutes the lane, solid red when engaged).
+## 4.2 Module UI (`buildStrip` / `buildMixer`)
+The voices render in TWO strips:
+- **VOICES strip** (`buildStrip` → `#devStrip`) — each voice a `.devmod` box: the voice-type **selector**
+  (dropdown; `OSC_OPTS`, or `KICK_OPTS` for drums, or `FX_OPTS` for fx) + a **dice** button (`data-rand`,
+  re-rolls the voice type).
+- **MIXER strip** (`buildMixer` → `#mixStrip`) — each channel a `.dm-row` of three controls, left→right:
+  **level** (scroll/drag wheel via `bindWheel`, `data-lvl`), **solo** (`data-solo`, yellow when engaged),
+  **kill** (power, `data-mute`, solid red when engaged). NOTE: the per-channel **reverb** send was replaced
+  by **SOLO** (BLOG0032); the additive solo model + the master-solo release live here (see §4.5).
 
 ## 4.3 FX voice (voice 8)
 `FX_OPTS`: **Riser Up / Riser Down** (smooth resonant low-pass sweeps), **Glitch Up / Glitch Down**
 (chopped gated stutter — the "d-d-d" via `playGlitch`), **Impact** (short punchy stab), **Sweep** (broad
 riser), **Ship Horn** (detuned-saw foghorn "BWAAAM" via `playHorn`, pitched to the track root). All
 white-noise/synth generated; fires at phrase boundaries (risers into drops). Level is heavily attenuated
-internally (FX is hot at full scale) and defaults dialed low. Per-voice reverb defaults **OFF** for the fx
-voice (V1.9.03).
+internally (FX is hot at full scale) and defaults dialed low. The fx voice **defaults to Glitch Down**
+(`osc:"glitchDn"`, BLOG0052). **FX is a SOUND (a voice), not an effect** — do not confuse it with the
+audio-effects processing in §4.4 (which is deliberately named `audioEffects*`, never "fx").
+NOTE: a vestigial **"Sweep FX"** entry was removed from `OSC_OPTS` (the tonal-voice source list) — it made
+no sense on melodic voices and duplicated the real FX-voice Sweep (BLOG0051).
 
-## 4.4 Master FX (VOICES header)
-A master effects bus control in the VOICES header (right-aligned): a **toggle** (`masterFxOn`) + a
-**strength** value (`masterFxAmt`, scroll/drag wheel). When on, every voice EXCEPT drums routes through the
-reverb bus at the chosen strength (drums stay dry — no washy kicks). Defaults ON at ~10% for the house
-signature. Keyboard-reachable via the WASD grid.
+## 4.4 Master AUDIO EFFECTS (MIXER header) — the effects rack
+A master audio-effects rack in the MIXER header (right-aligned), **left→right: reverb · echo · filter ·
+backspin**, each button + wheel mirroring the last, no text labels (message-bar only). The whole family is
+named **`audioEffects*` / `reverb*` — NEVER "fx"** (BLOG0055): "fx" belongs to the FX voice (a sound); this
+is processing. Master output chain: `master → filterHP → filterLP → brakePitch → brakeLowpass → brakeGain →
+out`.
+
+- **Reverb** (`audioEffectsReverbOn` / `audioEffectsReverbAmt`, `data-audioeffects-reverb[-amt]`) — a
+  send: every voice EXCEPT drums routes through the convolver reverb bus at the chosen strength (drums stay
+  dry). Defaults **ON at ~10%** for the house signature. Button toggles, wheel = strength.
+- **Echo** (`audioEffectsEchoOn` / `audioEffectsEchoAmt`, BLOG0056) — a master-bus `DelayNode` tapping the
+  whole mix with a **300Hz high-pass in the feedback loop** (DJ low-cut echo — repeats don't muddy the low
+  end). Wet returns in **parallel** to the output (never back into master → no runaway). **Tempo-synced
+  3/16** (dotted-eighth), locked to BPM on play via `setEchoTime()`. Off by default, 30%. Wheel scales wet
+  + feedback (feedback capped 0.85 so it always decays). `applyEcho()`.
+- **Filter** (`audioEffectsFilterPos` / `audioEffectsFilterOn`, BLOG0057) — a bipolar single-knob DJ
+  filter: two biquads (HP + LP) in series on the master bus. **Wheel: 50 = neutral** (both wide open,
+  transparent); **<50 sweeps the lowpass DOWN** (muffle/underwater); **>50 sweeps the highpass UP**
+  (thin/bass-out); log-frequency. **Button = bypass toggle** (keeps the wheel value — punch out to full,
+  punch back to the exact sweep). `applyFilter()`.
+- **Backspin / tape-stop** (`audioEffectsBrakeLen` / `audioEffectsBrakeHeld`, BLOG0058) — a **momentary
+  HOLD** brake stage after the filter: `brakePitch` (a `DelayNode` whose delay time RISES on hold →
+  Dopplers the mix DOWNWARD, the "vviuuup" spin-down), `brakeLowpass` (sweeps down), `brakeGain` (sags to
+  silence). Press+hold engages (`brakeEngage`), release snaps back (`brakeRelease`). **The transport clock
+  is untouched — only the audio is braked, so release resumes exactly on the live grid, no time lost.**
+  Wheel = brake duration (~0.15s snap .. 1 bar sag, log, `brakeDurSec()`). Momentary via pointerdown/up.
+
+All four are keyboard-reachable via the WASD grid (§9) and speak to the message bar on hover + focus.
+
+## 4.5 Master SOLO + additive solo (MIXER header)
+Per-channel solo is **additive** (click/click/click builds a solo group; touch-friendly, no modifier). The
+**master solo** button (`vhSoloBtn`, BLOG0044) sits in the MIXER header: dim when nothing is soloed, lights
+when ≥1 channel is soloed (via `_anySolo()`), and one tap **clears all solos** (returns the full mix). It's
+a performance *release* gesture for subtractive mixing — solo elements down over a phrase, then slam the
+whole mix back on the drop. The master **mute** (`vhKillBtn`) sits beside it.
+
+## 4.6 Master channel processing (MIXER header) — EQ · comp · limiter · volume
+The end of the master bus, after the audio-effects rack + master solo, before the kill switch (BLOG0061-64,
+ported from the Dojo `V5_3_38d` DSP recipe). Each processor is a self-contained, labeled `.mproc` wrapper
+(`data-mproc="eq|comp|limit|vol"`) — namespaced so any one can be retuned or later expanded into a slide-out
+config panel (Dojo `dspPanelOpen` pattern) without touching the others. Labels via `.vh-mlabel` (same style
+as the effect labels). **Naming is `master*`/`audioEffects*`, never "fx".** Full master output chain:
+
+`master → [FX rack: filterHP/LP → brakePitch/LP/gain] → eqLow → eqMid → eqHigh → masterComp → masterLimit → masterVolGain → out`
+
+- **EQ3** (`masterEqLow/Mid/High`, `applyMasterEq()`) — three biquads: `eqLow` lowshelf 250 / `eqMid` peaking
+  1k / `eqHigh` highshelf 2500 (the "Ableton EQ3" recipe). Displayed **High·Mid·Low** left→right, natural
+  **±12 dB** (0 = flat).
+- **Compressor** (`masterCompOn`, `masterCompAmt`, `applyMasterComp()`) — one `DynamicsCompressorNode`.
+  Button on/off; the macro wheel reports **ratio** (2:1 gentle → 8:1 hard) and sweeps threshold/ratio/knee
+  across the gentle→aggressive presets. Bypassed (threshold 0, ratio 1) when off.
+- **Limiter** (`masterLimitOn`, `applyMasterLimit()`) — a second `DynamicsCompressorNode` at the limiter
+  preset (−3 dBFS ceiling, 20:1). Button on/off only. Dead-last in processing (catches the effects).
+- **Volume** (`masterVolume`, `applyMasterVolume()`) — the final `masterVolGain` GainNode; a **live**
+  control (not processing), at the chain end before kill.
+
+All display values are on a normalized **0–10** scale (effects/comp/vol) mapped to the real DSP ranges;
+EQ is the exception (natural dB). Everything defaults transparent, so the chain is inaudible until dialed.
+Keyboard-reachable via the WASD grid, message bar on hover + focus. The **master solo** sits just left of
+**VOL** (V1.10.24). Backspin engages on **pointerdown or keydown (Enter/Space)** and releases on up — so it
+holds with a mouse, a finger, or a held key, and a future mapped controller uses the same path.
+
+> **Web Audio note (compressor/limiter loudness):** `DynamicsCompressorNode` applies its own internal
+> makeup — so turning COMP or LIMIT on makes the mix *louder/fatter*, not quieter. This is the node's
+> default behavior, not an authored makeup-gain stage. For gain-matched processing later, add a
+> compensating gain after each (or rebalance with master VOL). For a performance feel, "hit comp = it
+> slams" is acceptable as-is.
 
 ---
 
@@ -446,13 +531,13 @@ it shows no UI header):
 | Area | UI header? | Code handle | What it is |
 |---|---|---|---|
 | Summary row | — | `#summaryRow` | the top row holding INFO / MONITOR / FACE |
-| **INFO** | yes | `#infoBox` | static track description: name, genre, source/seed, key, length |
+| **INFO** | yes | `#infoBox` | static track description: name, genre, **seed**, key, length |
 | **MONITOR** | no | `#monitorBox` | live performance readout: master clock, loop clock, tempo |
 | **FACE** | no | `#faceBox` | Chippy's reactive face canvas |
 | **TRANSPORT** | yes | `.ctrl-col-transport` | play/pause + generate |
 | **SELECTA** | yes | `.ctrl-col-selecta` | name · genre · time slot · bars · tempo · swing · q |
 | **VOICES** | yes | `#devStrip` (+ SOURCE readout) | 8 voice-type selectors + dice |
-| **MIXER** | yes | `#mixStrip` (+ AUDIO EFFECTS / MUTE) | per-channel level/solo/kill; master FX bus |
+| **MIXER** | yes | `#mixStrip` (+ AUDIO EFFECTS rack / SOLO / MUTE) | per-channel level/solo/kill; master audio-effects rack (reverb·echo·filter·backspin) + master solo/mute |
 | **MATRIX** | yes | `#chartWrap` | overview strip (Chippy rider) + scrolling piano roll |
 | **message bar** | — | `#messageBar` | the Message System's feedback bar (§2.5) |
 
@@ -470,13 +555,22 @@ two peer sections sharing one header row (V1.9.11).
 silences the mix without stopping transport). (The old ⏭ next button was removed — redundant with
 generate, since there's no playlist.)
 
-**Keyboard / WASD grid navigation:** WASD navigates the control grid (rows: Controls, Voice selectors,
-Voice randoms, Voice kills, plus Master FX). A/D move within a row (wrapping across rows as one ring); W/S
-jump between rows (land at the left). Arrow keys change the focused control's value. Tab is untouched.
-Space = play, G / N = generate.
+**Keyboard / WASD grid navigation:** WASD navigates the control grid, defined by ONE centralized,
+self-documenting descriptor — `navRows()` is the single source of grid truth (BLOG0048), reaching **every**
+editable field in visual order. Rows: **TRANSPORT+SELECTA** (play·generate·selecta·genre·time-slot·bars·
+tempo·swing) · **VOICES** (interleaved select·dice per module, DOM order) · **MIXER master** (reverb·echo·
+filter·backspin buttons+wheels, then EQ H/M/L · comp · limiter · **master solo** · volume) · **MIXER
+channels** (interleaved level·solo·kill per channel). The master row is now collected in **DOM order** (via
+one querySelectorAll including `#vhSoloBtn`/`#vhKillBtn`), so WASD follows the visual layout exactly no
+matter how the row is rearranged (V1.10.24). A/D move within/across as one ring; W/S jump between rows (land at the left); arrow keys change the focused
+control's value (untouched — separate handlers). Tab untouched. Space = play, G / N = generate.
+Interleaved rows are collected by walking the module containers, so a new per-module control is picked up
+automatically. Every field speaks to the message bar on focus (keyboard-first, §2.5).
 
-**Other leaves:** persistence (∞), orientation (16:9 / 9:16 for Glover recording), record, per-voice
-reverb, master FX strength, quantize readout (Q ♩), selecta/time-slot selectors.
+**Other leaves:** persistence (∞), orientation (16:9 / 9:16 for Glover recording), record, the master
+**audio-effects rack** (reverb / echo / filter / backspin — §4.4), **master solo** + mute (§4.5), quantize
+readout (Q ♩), selecta/time-slot selectors. Value wheels take **horizontal touch-drag** (vertical is the
+browser's scroll gesture; mouse keeps vertical drag — BLOG0046).
 
 ---
 
@@ -584,7 +678,15 @@ This is the one place to look up or change what any control says.
 | `mute` | `on => on?"Muted (still playing)":"Unmuted"` |
 | `solo` | `(name,on) => name+(on?" solo on":" solo off")` |
 | `kill` | `(name,on) => name+(on?" killed":" on")` |
-| `masterFx` | `on => "Audio effects "+(on?"on":"off")` |
+| `audioEffectsReverb` | `on => "Audio effects "+(on?"on":"off")` |
+| `audioEffectsEcho` | `on => "Echo "+(on?"on":"off")` |
+| `audioEffectsFilter` | `pos => pos===-1?"Filter off (bypass)":pos===50?"Filter neutral":pos<50?"Filter low-pass "+pos:"Filter high-pass "+pos` |
+| `audioEffectsBackspin` | `held => held?"Backspin braking":"Backspin released"` |
+| `masterEq` | `(band,v) => "EQ "+band+" "+(v>0?"+":"")+v+" dB"` |
+| `masterCompRatio` | `r => "Compressor ratio "+r+":1"` |
+| `masterComp` | `on => "Compressor "+(on?"on":"off")` |
+| `masterLimit` | `on => "Limiter "+(on?"on":"off")` |
+| `masterVol` | `v => "Master volume "+v` |
 | `persistence` | `on => "Persistence "+(on?"on":"off")` |
 | `orientation` | `v => v` |
 | `glover` | `v => "Glover "+v` |

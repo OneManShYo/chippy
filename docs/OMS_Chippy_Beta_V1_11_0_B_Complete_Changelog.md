@@ -1,5 +1,55 @@
 # OMS Chippy — Changelog
 
+## V1_11_0 — The performance mixer: audio-effects rack + master processing (2026-09-01)
+Rolled up from iterations V1_10_03…V1_10_26 (the mixer/performance line following the V1.10.0 UI ship).
+Live at chippy.onemanshyo.com.
+### Added
+- **Master audio-effects rack** (MIXER header) — four live performance effects on the whole mix, each a
+  labeled button + 0–10 wheel: **Reverb** (send; drums stay dry; on by default, light), **Echo**
+  (tempo-synced 3/16 delay with a low-cut feedback loop; wet returns in parallel — no runaway), **Filter**
+  (bipolar DJ sweep — down = low-pass/underwater, up = high-pass/bass-out, 5 = neutral; button is a bypass
+  toggle that keeps the sweep setting), **Backspin** (tape-stop brake — a rising-delay Doppler pitch-drop +
+  lowpass + gain sag; momentary hold via pointer OR Enter/Space; the transport clock is untouched so
+  release resumes on the live grid) (BLOG0044, 0056–0058).
+- **Master channel processing** (MIXER header, end of the master bus) — set-and-forget session tone, each
+  processor a self-contained `.mproc` module (future slide-out anchor): **EQ3** (High/Mid/Low, ±12 dB,
+  lowshelf 250 / peaking 1k / highshelf 2500), **Compressor** (button + ratio macro 2:1→8:1),
+  **Limiter** (button, −3 dBFS/20:1 peak ceiling), **Master Volume** (final live output level). Ported
+  from the Dojo V5_3_38d DSP recipe. Everything defaults transparent (BLOG0061–0064).
+- **Master Solo** (MIXER header) — a performance *release*: lights when any channel is soloed, one tap
+  clears all solos (subtractive-build → slam back on the drop). Sits left of master volume (BLOG0044, 0065).
+- **Keyboard message-bar parity** — the footer bar now updates on keyboard/controller **focus**, not just
+  mouse hover; re-wired to survive strip rebuilds (BLOG0053).
+- **jsdom boot-check discipline** — every UI-halting change is headless-boot-verified before ship
+  (`node --check` catches syntax only, not runtime TDZ) (BLOG0053/0059).
+### Changed
+- **Audio-effects family renamed** — every `fx`/`mfx`/`Fx` token in the master-effects code replaced with
+  spelled-out `audioEffects*`/`master*`. **FX** (capital) is reserved for the FX *voice* (a sound in the
+  matrix); audio effects are *processing*. No `fx` anywhere near the processing family (BLOG0055).
+- **WASD grid centralized** — one authored `navRows()` descriptor is the single source of grid truth,
+  reaching every editable field in visual (DOM) order; adding a control needs one edit in one place
+  (BLOG0047/0048). Value wheels take horizontal touch-drag (mouse keeps vertical) (BLOG0046).
+- **Mixer row layout** — per-control labels (REVERB·ECHO·FILTER·BACKSPIN·EQ·COMP·LIMIT·VOL) replacing the
+  single AUDIO EFFECTS label; all wheels normalized to a 0–10 scale (EQ in dB); compact value boxes; EQ
+  ordered High·Mid·Low (BLOG0064).
+- **INFO block dedupe** — `source` row → `seed` (bare hex); `length` drops the fixed `steps/bar` (BLOG0045).
+- **FX voice default → Glitch Down** (was Riser Up); vestigial **"Sweep FX"** removed from the tonal-voice
+  source dropdown (it duplicated the real FX-voice Sweep and made no sense on melodic voices) (BLOG0051/0052).
+- **About panel** — PLUR centered on the page with a divider; new **ASSETS** section carving the
+  Squint/Wowzer icons, music, and MIDI (Juice Recordings LLC) out from the GPL-3.0 (source-code-only)
+  (BLOG0049).
+- **YoConditioning — audio effects nulled** — the `reverbThrow` move (the one auto-applied audio effect)
+  is parked; composition moves (kickCut/bassEqOut/leadDrop) stay. Auto-driving the now-full effects rack
+  waits until the effects are better understood (BLOG0066).
+### Fixed
+- **Boot-crash (TDZ)** — the keyboard-parity work first crashed boot (a `const MSG` accessed before init →
+  empty mixer/blank matrix); fixed with a boot-ready gate. Same class as the V1.9.x HINTS crash (BLOG0053/0039).
+- **Touch wheels** — value wheels were unusable on touch (vertical drag hijacked by page scroll); fixed
+  with horizontal drag + `touch-action` (BLOG0046).
+- **EQ dead controls** — the EQ wheels didn't bind (a missing `data-` prefix in the selector) (BLOG0063).
+- **Filter default** — no longer armed/lit at boot (BLOG0066).
+
+
 ## V1_10_0 — Message System, Monitor, and UI structure pass (2026-09-01)
 Rolled up from iterations V1_9_01…V1_9_24 (the UI/feedback line following the V1.9.0 selecta ship).
 ### Added

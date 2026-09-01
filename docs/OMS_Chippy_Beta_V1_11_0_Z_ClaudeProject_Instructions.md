@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_10_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_11_0] — CLAUDE PROJECT INSTRUCTIONS
 
 How an AI (or dev) should work in the Chippy project. Read this first. These rules were learned the
 hard way; follow them.
@@ -91,7 +91,10 @@ placement is not (MIDI-DNA layer). See C-doc §9 and Y-doc AMU seam.
 - **Selecta** — the DJ/style (record crate). **Time slot** — the club-night arc (Opener…Closer).
 - **Party grid** — the automation constraint matrix. **Profile** — a selecta's Yo DNA.
 - **Glover** — the light-show tab (from "gloving"). **Voices/modules** — the 8 lanes.
-- **FX (voice 8)** = the risers/glitches/horn effects voice. **Master FX** = the reverb bus.
+- **FX (voice 8)** = the risers/glitches/horn effects voice (a SOUND, in the matrix). **Audio effects** =
+  the master mixer processing (reverb/echo/filter/backspin + EQ/comp/limiter/volume). NEVER call the audio
+  effects "FX" — FX is the voice; audio effects are processing. Internal naming is `audioEffects*`/`master*`,
+  never `fx`.
 
 ## WELL-KNOWN GOTCHAS (from real incidents)
 - Beat-quantize must anchor to a fixed origin (playOriginCtx), or targets recede past the horizon.
