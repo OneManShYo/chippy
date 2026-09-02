@@ -1,4 +1,4 @@
-# OMS CHIPPY [Beta V1_11_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_12_0] — DEVELOPER DOCUMENTATION
 
 **Run date:** 2026-09-01  
 **Current Unix Epoch:** 1788281198  
@@ -286,6 +286,335 @@ means drove the wired values (drumDensity 0.654, bassDensity 0.447, melodicDensi
 ~-9.8 LUFS, bpm 124–128). See §12 for the pipeline that produces this DNA.
 
 *(Name note: "YoConditioner" is a working/beta placeholder for this system and may change.)*
+
+---
+
+---
+
+## 2.4bis STRUCTURE DNA — the fourth role (expanded, V1.11.x exploration)
+
+The two roles above (Composition / Mixing) are joined by a THIRD authored role — **STRUCTURE DNA: what the
+producer BUILT** (arrangement, form, energy arc, section grammar) — plus AMU's single **harmonic** field.
+Four roles total:
+
+| Role | Describes | Authored by | Source | Wired? |
+|------|-----------|-------------|--------|--------|
+| **COMPOSITION DNA** | what the music IS (mode, density, swing, bpm) | machine | AMU-on-tracks | partly (§2.4) |
+| **STRUCTURE DNA** | what the producer BUILT (form, sections, energy arc) | hybrid (L0–L3 below) | commentary + template + session + AMU | NOT yet |
+| **MIXING DNA** | what the DJ DOES (live performance moves) | Wes | authored | partly (§2.4) |
+| *(harmonic anchor)* | key/mode | machine | AMU `key` (one field) | no |
+
+STRUCTURE DNA draws on FOUR source-layers, ranked by AUTHORITY — and the ranking is INVERTED from how a
+machine would weight it: **the producer is the top, the machine the bottom.**
+- **L0 — PRODUCER COMMENTARY** (§2.4bis.0) — intent/reference/lineage. Never machine-capturable.
+- **L1 — AUTHORED TEMPLATE** (§2.4bis.1) — the JNO marker grammar Wes + Paulie designed.
+- **L2 — SESSION** (§2.4bis.2) — the .als ground truth: locators + clip map.
+- **L3 — MEASURED** (§2.4bis.2) — AMU. Corroboration + density texture only. Never primary.
+
+**Why the sources are kept in SEPARATE tables (design rationale).** Coverage VARIES per track and this is
+expected: some projects are MIDI-rich (transplantable notes), some all-audio (AMU density only); some carry
+deep producer commentary, some none; some have full session locators, some are works-in-progress. A track's
+DNA is STRONGER in some areas, WEAKER in others. Separate per-source tables mean **each track contributes
+its strengths without being forced into a uniform shape** — a MIDI-rich/comment-poor track and a
+comment-rich/MIDI-poor track both contribute cleanly. Then you **correlate ACROSS** the tables where the
+signal overlaps (e.g. the AintNoTrick sub playing E1 confirms L0 commentary + AMU key + AMU half-time + the
+MIDI, all at once). Do NOT collapse the sources into one table: the whole point is that each is a different
+kind of truth with different coverage, and the cross-correlation is where the fingerprint sharpens. It is,
+as Wes put it, "mixing but with AI" — every source on its own channel, brought up or down by ear.
+
+### 2.4bis.0 STRUCTURE DNA — Producer Commentary (L0, the top layer)
+
+**The Song Exploder layer — the person who made the file.** Highest authority in all of Yo DNA. This is
+Wes breaking down his own track the way an artist does on *Song Exploder* (Hrishikesh Hirway's show:
+artists provide stems and narrate why each part exists). It is **intent, reference, and sound-design
+lineage** — the *why* behind the notes. **No AI, no Apple Music Understanding, no analysis will ever
+capture this**, because it is not in the audio: it is in the head of the person who built it and played it
+a hundred times.
+
+**Authority hierarchy (inverted from how a machine would rank it — the producer is the TOP, the machine
+the BOTTOM):**
+- **L0 — PRODUCER COMMENTARY** — intent/reference/lineage. Wes. Never machine-capturable. *(this section)*
+- **L1 — AUTHORED TEMPLATE** — the JNO marker grammar Wes + Paulie designed. (§2.4bis.1)
+- **L2 — SESSION** — the .als ground truth: locators + clip map. (§2.4bis.2)
+- **L3 — MEASURED** — AMU. Corroboration + density texture only. Never primary. (§2.4bis.2)
+
+**Capture philosophy: record everything, mix later.** Commentary is captured thorough and un-enumerated —
+part structured (fields that can eventually *bias* Chippy: bass character, energy, references), part free
+prose (the full story). Not every track fills every field; that's fine. The model is **"mixing, but with
+AI"** (Wes) — get every signal onto the board, then bring layers up or down by EAR: keep what makes Chippy
+sound like Wes, pull down what muddies it or breaks the app. You can't know which enriches vs. which breaks
+until you hear it, so keep it all available and sort by ear.
+
+#### AINT NO TRICK — Producer Commentary (Wes)
+
+| Field | Commentary | → possible Chippy bias |
+|-------|-----------|------------------------|
+| **Energy** | Intense, hyped — high-energy throughout, not subtle. | overall density/pace high; time-slot Headliner-leaning |
+| **Hook** | Vocal hook "ain't no trick my DJ can't do" — a **half-time vocal flip**. | corroborates the half-time feel (BASSLINE stem read 90 vs 128) |
+| **Breakdown** | **Old-school house bells** in the breakdown — deliberate classic-house reference. | breakdown = melodic/bell-tone element, not just a filter sweep |
+| **Bass** | A **rumble bass** — intentionally mimicking the techno rumble-bass technique (distorted, reverb-fed sustained sub that "rumbles"). "Came out fucking awesome." | BASS voice on JNO tracks should lean **sustained / driving / gritty**, NOT plucky |
+| **Lineage** | Built on the JNO template Wes + Paulie developed after ~a year studying house. | ties the track to the L1 authored template |
+
+**Why this layer is load-bearing for Chippy:** "rumble bass" is a *production intent* that translates
+directly into a *generation instruction* — Chippy's BASS lane, when JNO-conditioned, should render sustained
+and gritty because that is what the reference IS, and that is knowable ONLY from the producer. AMU can
+measure the rumble bass's spectrum; it can never know it was chased on purpose. That gap — intent — is the
+whole reason Yo DNA is *Yo* DNA and not generic corpus analysis.
+
+*(Free-prose commentary, references to specific techniques like "rumble bass," and the story of how a
+template or sound came about are all welcome here verbatim — enumeration is not required. Capture thorough;
+mix later.)*
+### 2.4bis.1 STRUCTURE DNA — The JNO Authored Template (L1)
+
+**Origin: authored by Wes + Paulie, a deliberate house-arrangement template applied across the ~30-35-track
+Juice Night Out catalog.** Durations vary per song by design ("same lengths would be boring") - the MARKER
+SEQUENCE is the constant, the LENGTHS are stochastic. You do NOT need all 30 tracks to know the template:
+one well-mapped session gives the marker vocabulary; **probability + swing supply the variation.**
+
+**The full marker sequence** (from the AintNoTrick session, JNO-SR021 - real locators, exact bars):
+
+*(Source: **Sozo Sidecar** parse of the `.als` project file — not a screenshot, not memory. Ableton stores
+every locator with exact beat/bar/second position, and Sozo extracts them directly. REPEATABLE across the
+whole catalog: point Sozo at any JNO `.als`, get the locator sequence + exact bars in seconds. So Sozo is
+BOTH the L3 tool (AMU listeners on the WAV stems) AND the L2 tool (the `.als` locator/structure parse) —
+tool, not interpreter: Sozo extracts, Wes + Chippy interpret. That is the automated STRUCTURE DNA (L2) pipeline — 30-35 sessions -> the full arrangement-grammar corpus, machine-extracted from source,
+no manual mapping. AintNoTrick confirmed: 128 BPM, 14 locators, clean 8/16-bar phrase blocks, boundaries on
+exact beats 0/64/128/192/224/256/320/384/416/448/512/576/640/704.)*
+
+| # | Marker | Bar | Bars | Role | Keep for Chippy? |
+|---|--------|-----|------|------|------------------|
+| 1 | **INTRO** | 1 | 16 | DJ mix-in bed | drop (mixing infra) |
+| 2 | **BASS IN** | 17 | 16 | bass enters, energy starts | keep |
+| 3 | **HOOK** | 33 | 16 | first hook statement | keep |
+| 4 | **HP** | 49 | 8 | high-pass filtered transition | keep (transition) |
+| 5 | **BUILD** | 57 | 8 | build into the main | keep (transition) |
+| 6 | **MAIN** | 65 | 16 | Section A - full kick-driven groove | keep |
+| 7 | **LIFTER** | 81 | 16 | tension lift into the breakdown | keep |
+| 8 | **STRIPPED** | 97 | 8 | breakdown pt.1 - elements strip OUT | keep |
+| 9 | **ATMO** | 105 | 8 | breakdown pt.2 - atmospheric bed (the old-school house BELLS live here) | keep |
+| 10 | **BUILD** | 113 | 16 | rebuild out of the breakdown | keep (transition) |
+| 11 | **MAIN** | 129 | 16 | Section B - the peak drive | keep |
+| 12 | **LIFTER** | 145 | 16 | second lift | keep |
+| 13 | **HOOK OUT** | 161 | 16 | final hook | keep |
+| 14 | **OUTTRO** | 177 | 16+ | DJ mix-out bed | drop (mixing infra) |
+
+**The breakdown is a THREE-move anatomy, not a generic "drop":** LIFTER (lift tension) -> **STRIPPED**
+(pull the elements out) -> **ATMO** (atmospheric bed - this is where the old-school house bells sit, per L0
+commentary) -> BUILD (rebuild) -> MAIN (peak). That strip -> atmosphere -> build sequence IS the JNO
+breakdown grammar. Corrected from an earlier guess of a single "DROP" marker - the real session has the
+two-part STRIPPED/ATMO move.
+
+**Phrase math:** sections are clean 16-bar (content: INTRO/BASS IN/HOOK/MAIN/LIFTER/HOOK OUT) and 8-bar
+(transitions: HP/BUILD/STRIPPED/ATMO) blocks - exactly the disciplined structure of a studied template.
+The 8-bar blocks are the *moves*; the 16-bar blocks are the *content*.
+
+**Length variation = existing machinery.** The per-section bar count is rolled stochastically within a range
+(a 16-bar section might land 8/16/32; the big STRIPPED/ATMO breakdown varies most). This reuses the exact
+`chance`/`minLen`/`maxLen` + swing mechanism Chippy already applies to mixing moves - re-pointed at SECTION
+lengths. One session gives the sequence; probability gives the variation; no need for all 30 tracks.
+
+**How Chippy uses it (the payoff):** Chippy does not INFER house structure from analysis - it GENERATES
+along this authored sequence. Walk BASS IN -> HOOK -> HP -> BUILD -> MAIN -> LIFTER -> STRIPPED -> ATMO ->
+BUILD -> MAIN -> LIFTER -> HOOK OUT (INTRO/OUTTRO dropped - Chippy loops, it doesn't beatmatch), each
+section's length rolled within range, each section's element activation biased by the session clip map. That
+replaces flat loop-forever with generation in Wes's actual compositional language. (Directly wires the
+currently-captured-but-unwired `structure` / `breakdowns` / `dynamics` fields.)
+
+### 2.4bis.1b MIDI DNA — the literal notes (from the .als, via Sozo)
+
+**The surprise layer, and the strongest for composition.** Sozo parses not just the `.als` locators (L2
+structure) but the **MIDI clips** — the actual programmed note events per instrument: `pitch`, `beat`,
+`dur`, `vel`. AMU has no note-level pitch listener, so we assumed note transplant was impossible. **It is
+not — the MIDI has the notes directly.** This is BETTER than any audio analysis for composition: it is not
+measured-from-audio, it IS what Wes programmed.
+
+**AintNoTrick MIDI (8 MIDI tracks, machine-extracted):**
+
+| MIDI track | What the notes ARE | Chippy piano-roll use |
+|------------|--------------------|-----------------------|
+| **Kick (M)** | notes on beats 0,1,2,3,4… vel 112 = **four-on-the-floor**, verbatim | DRUMS lane pattern — direct transplant |
+| **Clap 1/2 (M)** | placed hits (beat 33, dur 0.25) | PERC/accent lane |
+| **Open Hat (M)** | beat 96.5 (the **offbeat** .5) | HAT lane — the swung placement |
+| **Intro Sub (M)** | 96 notes, pitch 28 = **E1**, walking to 31 = G1 | BASS lane — the actual bassline, on the root |
+| **STRING** | pitch 88, dur 28.0 = sustained 28-beat pad | SYNTH/pad lane — held chord tone |
+| **Ghost Kick (M)** | pitch 60, sparse | sub-kick texture |
+
+**The four-layer cross-confirmation (why this proves the whole architecture):** the Intro Sub MIDI plays
+**E1 — the root of E minor** — which independently confirms FOUR sources at once: L0 producer commentary
+("rumble bass" = root-driven sustained sub) + L3 AMU (BASSLINE read half-time) + L3 AMU (key = E minor) +
+the MIDI itself (literally E1). Producer intent, machine measurement, and the actual notes all agree. That
+convergence is the architecture working as designed — every layer pointing at the same truth from a
+different angle.
+
+**MIDI DNA is directly transplantable into Chippy's piano roll** — quantize the note beats against the
+128 grid and you have Wes's actual kick pattern, bassline, hat groove, per lane. Unlike everything measured
+from audio, this needs no inference: it is the note events. (Note: not all instruments are MIDI — the audio
+stems cover the rest; MIDI DNA is richest where Wes programmed rather than recorded.)
+
+#### 2.4bis.1b-impl — MIDI DNA, IMPLEMENTED (V1.11.01–04)
+
+The stub above is the concept; this is the shipped mechanism. Five lanes were extracted from the AintNoTrick
+MIDI JSON, folded from absolute song-beats to within-bar figures, and wired into `house()` as
+**optional-with-fallback** reads off the active selecta's profile.
+
+**Home — `profile.midi.*` (source-nested).** MIDI DNA lives under `profile.midi`, kept SEPARATE from the
+flat AMU-measured composition fields (`drumDensity`…) and from `profile.mixing`. This mirrors §2.4bis's
+"keep the tables separate per source; correlate across." A pattern is a *sequence* (the actual hit
+positions), not a scalar bias — so it wants its own namespace, not a seat next to a density float.
+
+```
+profile.midi = {
+  kick: { pattern:[0,1,2,3],           vel:112 },              // beats — four-on-floor
+  hats: { pattern:[0.5,1.5,2.5,3.5],   vel:92, rigid:true },   // beats — offbeat, dead-straight
+  bass: { pattern:[0,3,6,8,11,14],     oct:-1, vel:94 },       // STEPS — E1 root rumble + 16th pushes
+  clap: { pattern:[1,3],               vel:102 }               // beats — backbeat on 2 & 4
+}
+```
+
+**Pattern unit is per-lane, by design.** kick/hats/clap store **beats** (their hits land on clean beat
+divisions); bass stores **STEPS** (its 16th "a"-pushes on steps 3 & 11 don't fall on clean beats). The
+grid mapping (`beat*4` → 16th step) lives in `house()`, so the DNA field stays in the source's own unit and
+needn't know Chippy's 16-step grid. This is a deliberate per-lane choice, not a schema inconsistency.
+
+**Read path — optional-with-fallback (the coverage-varies principle).** Each lane read is
+`selecta()?.profile?.midi?.<lane>`. Present ⇒ seed the lane from it. Absent (None selecta, or a MIDI-poor
+track) ⇒ the original stock generation runs unchanged. The code MUST work whether a profile has `midi` or
+not — some tracks are MIDI-rich, some aren't.
+
+**The audible-vs-plumbing distinction (a real finding).** Chippy's stock house skeleton ALREADY equals
+AintNoTrick's drum grammar, so two of the four lanes are position-identical to stock:
+
+| Lane (iter) | Folded pattern | vs stock generation | Audible change | Character |
+|---|---|---|---|---|
+| kick (V1.11.01) | `[0,1,2,3]` beats → steps 0,4,8,12 | **identical** to stock four-on-floor | none | **plumbing proof** — identical output isolates "does the read/seed/fallback path work" from "does it sound different." Verified by generated-array inspection, not ear. |
+| hats (V1.11.02) | `[.5,1.5,2.5,3.5]` → steps 2,6,10,14 | same POSITIONS, but stock adds a stochastic ghost (step 7) | **yes — feel** | Wes's hat is rigid/no-ghost; `rigid:true` suppresses the stock ghost roll. The signature is machine-tightness, not a new position. |
+| bass (V1.11.03) | `[0,3,6,8,11,14]` steps, deg 0 oct −1 = E1 | stock is offbeat walk `[2,6,10,14]` on degrees | **yes — position** | Root-driven E1 rumble, on-beat + 16th pushes. Monophonic root 84% (a rumble, not a melodic line). The lane where Wes's signature is loudest. |
+| clap (V1.11.04) | `[1,3]` beats → steps 4,12 | **identical** to stock snare backbeat | none | **plumbing-class** (like kick). Clap 1 == Clap 2 (layered for thickness, one pattern). Only real diff: voice identity (`clap:true` vs stock `snare`). |
+
+**Design consequence for the docs/roadmap:** the MIDI DNA's audible contribution is concentrated in
+**feel** (hat rigidity) and **the sub bassline** (genuinely different positions) — the drum skeleton merely
+*confirms* what stock already generates. This is not a shortfall; it's the DNA telling us Chippy's
+music-theory house engine was already right about the drum grammar.
+
+**Parked: FILL DNA (not yet a lane).** Off-grid / section-boundary events do NOT belong in the base loop
+pattern and are deliberately held for a future section-boundary iteration: (1) the second Kick track carries
+**54 off-grid 16th-note kicks** (steps 1,2,3,5,6,7,9,10,11,13,14,15) clustered at bar turnarounds — kick
+double-ups/rolls, not base pattern; (2) the sub-bass **melodic turnarounds** (E1→D2→A1→G1 descending lick)
+at section boundaries; (3) the **STRING** one-shot (a single held note, a section-entry marker, not a loop
+figure). All three are *section-event DNA*, tied to arrangement position — they hook onto the section engine
+(§2.4bis.3), not the per-bar generator.
+
+### 2.4bis.2 STRUCTURE DNA — Ain't No Trick (session instance, L2 + L3)
+
+**Source: JNO-SR021 session (.als locators + clip map) — ground truth.** 181 bars, 6:03, 128 BPM, E minor.
+
+**Section spine (L2 session locators) + energy corroboration (L3 AMU `pace`):**
+
+| Session marker (bar) | AMU pace (energy) | Notes |
+|----------------------|-------------------|-------|
+| INTRO (1) | 16 (low) | DJ mix-in |
+| BASS IN (17) / HOOK (33) | 32 (high) | drive begins |
+| HP (~49) | dip | filtered mini-break |
+| MAIN (65) | 32 (high) | Section A |
+| LIFTER (81) | 32→ | tension lift |
+| STRIPPED (97) → ATMO (105) | 16 (low) | **the big breakdown** — strip out, then the atmospheric bell bed — widest waveform dip |
+| BUILD (113) | 21 (rebuild) | rollout |
+| MAIN (129) | 32 (high) | Section B — peak drive |
+| LIFTER (145) / HOOK OUT (161) | 32 (high, sustained) | sustained peak |
+| OUTTRO (177) | 16 (low) | DJ mix-out |
+
+*Three independent sources agree — session locators, AMU pace, and the raw waveform envelope all show:
+low intro → drive → mini-break → drive → BIG breakdown → rollout → sustained peak → low outro.*
+
+**Per-lane density fingerprint (L3 — AMU per-stem bpm vs true 128):** Kick_M 128 (four-floor) · Clap 128 ·
+Hat_Loop 128 (16ths) · BASSLINE 90 (half-time feel) · GHOST_KICK 40 (sparse) · 70s_Disco_Riff 90.
+
+**Element activation by section (L2 — from the session clip map):** e.g. DROP BASS enters only at the
+DROP/breakdown; the 4 VOX phrases (WATCH OUT / MAKE YA GET DOWN / BRING THAT BEAT / AINT NO) land at hooks;
+FX risers/reverses cluster at every section boundary (transition tools). *(Full per-section activation
+matrix TBD as more sessions are mapped.)*
+
+### 2.4bis.3 THE SECTION ENGINE — arrangement DNA → song shape (V1.11.05)
+
+The lane transplants (§2.4bis.1b-impl) decide *what plays inside a bar*. The section engine decides *the
+shape of the whole song* — where the intro sits, where the kick drops for a breakdown, how long the drop
+runs. It is the fifth DNA input, and it comes with two hard rulings that govern the entire Yo DNA system.
+
+**The arrangement is per-song DATA; the formula is the constant.** The `arrangement` block on a profile is
+THIS song's section map — derived from the .als clip spans (which tracks enter/exit each 8-bar phrase). A
+different song drops in its OWN `arrangement`. There is NO global template: if every song came out shaped
+like AintNoTrick, that's one song wearing twelve costumes. The **formula** (`planSections()`) is what's
+reusable; the **map** it reads is per-song.
+
+```
+profile.midi.arrangement = {
+  contPlay: 0.25,                                  // continuous-play factor (see below)
+  sections: [
+    { role:'dj_util', kind:'intro',     bar:0,   len:8  },
+    { role:'floor',   kind:'build',     bar:8,   len:8  },
+    { role:'floor',   kind:'verse',     bar:16,  len:32 },
+    { role:'floor',   kind:'breakdown', bar:48,  len:16 },
+    { role:'floor',   kind:'verse',     bar:64,  len:64 },
+    { role:'floor',   kind:'drop',      bar:128, len:32 },
+    { role:'dj_util', kind:'outro',     bar:160, len:32 }
+  ]
+}
+```
+
+**THE FORMULA — two independent stages (`planSections(arrangement, BARS)`):**
+
+- **Stage 1 — CONTINUOUS-PLAY FACTOR (fixed, structural, applied first).** Intro and outro (role
+  `dj_util`) are cut to `contPlay` (~25%) of their real length, *regardless of budget*. Reason: a track's
+  intro/outro are long only to give a **mixing DJ headroom** to blend over. Chippy plays **continuously —
+  it never mixes** — so that headroom is dead air. A 32-bar outro is *inherently* ~8 bars in Chippy because
+  24 of those bars only existed as mix runway. This is a correction for the non-mixing context, not a
+  compression-to-fit — it happens before any budget math, independent of song length.
+
+- **Stage 2 — BUDGET SQUEEZE (proportional, applied to the remainder).** After intro/outro are
+  right-sized, the **floor sections** (build/verse/breakdown/drop — the song body) compress
+  *proportionally* to fit whatever's left of the `BARS` loop-length budget. `BARS` is Chippy's existing
+  loop-length setting (the `lenSel` dropdown) — re-purposed as the budget, no new control.
+
+```
+util'  = Σ dj_util.len × contPlay          // Stage 1: fixed trim
+floorBudget = BARS − util'
+scale  = floorBudget / Σ floor.len          // Stage 2: proportional
+each floor.len' = round(floor.len × scale)  // (rounding drift reconciled onto the largest floor section)
+```
+
+Verified output (AintNoTrick's 192 real bars into three budgets):
+
+| Budget | intro | build | verse | breakdown | verse | drop | outro | total |
+|--------|-------|-------|-------|-----------|-------|------|-------|-------|
+| 32  | 2 | 1 | 5  | 2  | 9  | 5  | 8 | 32  |
+| 64  | 2 | 3 | 11 | 6  | 23 | 11 | 8 | 64  |
+| 128 | 2 | 6 | 25 | 12 | 50 | 25 | 8 | 128 |
+
+Intro (real 8 → 2) and outro (real 32 → 8) hold at the fixed 25% across every budget; the floor sections
+breathe more as the budget grows; every plan lands exactly on the budget. At a bigger budget the drop gets
+25 bars and the main verse 50 — the body has room; the intro still just *states itself* and moves on.
+
+**RULING 1 — DNA is INFLUENCE, never a TEMPLATE.** The section plan BIASES the still-running generator; it
+does not script it. Collapsing a generative engine into one memorized song is *lazy* and defeats the point
+— you'd have a one-song sample library that supersedes the music-theory seed gen, and everything would
+sound identical. So the section engine is the **lightest possible touch**:
+- `yoArrange(P, plan)` thins probabilistically (`R() < mul`), it does NOT hard-drop voices. (The older
+  manual-mode `arrange()` DOES hard-drop — deliberately NOT reused for Yo mode; too rigid by this ruling.)
+- `sectionBias(kind)` returns per-section MULTIPLIERS on the existing `gk()`/`dGate()` weights — a
+  breakdown *lowers* kick probability toward (but never to) zero; a drop *raises* density. The dice still
+  roll; they just roll loaded.
+- **Same song, two generations = same SHAPE, different DETAIL.** The DNA is the skeleton; the seed gen is
+  still the flesh.
+
+**RULING 2 — the section engine is ONE of several inputs.** It sits alongside the composition lanes, mixing
+moves, density arc, fills, and key/mode. No single DNA input dominates. If the section engine ever starts
+making everything sound the same, it is overweighted and wrong. It decides song *shape*; the other DNA
+decides what plays *inside* each section; the generator decides the *actual notes*.
+
+**Wiring:** Yo mode only, `BARS>=16` (sections need room to be meaningful). Manual mode keeps the old
+`arrange()`. If the active selecta has no `arrangement` block, no section shaping runs — the per-bar
+generator + lane DNA carry it, exactly as before.
+
 
 ---
 

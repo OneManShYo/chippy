@@ -1,6 +1,29 @@
-# OMS Chippy [Beta V1_11_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_12_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.12.0 — Yo DNA, the section engine, and a vertical roll
+
+This release is the first real payoff of the YoConditioner: Chippy now generates with **Wes's own musical
+DNA** baked in. Selecting the Juice Night Out selecta pulls in the actual programmed patterns from a real
+track — the four-on-the-floor kick, the dead-straight offbeat hats, the E-minor sub-bass rumble, the
+backbeat clap — folded out of the original session and used to bias the generator. It doesn't replay the
+song; it leans the endless generation toward that feel. You can hear the difference the moment you switch
+from None to JNO.
+
+Underneath that sits the **section engine**: Chippy can now shape a whole arrangement — intro, build,
+verse, breakdown, drop, outro — instead of looping one flat idea. Because Chippy plays continuously and
+never mixes, the long intros and outros that only exist to give a DJ headroom get trimmed automatically,
+and the meat of the track breathes into whatever loop length you've set. It's a bias on top of the live
+generator, never a fixed script — two passes of the same shape still differ in the detail.
+
+On the interface side, the piano roll can now run **vertical** — time flowing bottom to top with the eight
+voices as columns lined up under their mixer channels, like a channel grid. A toggle in the MATRIX header
+flips between that and the classic horizontal view. The loop counter also now shows how long the current
+loop is (e.g. `9 . 1 . 1 / 64 . 4 . 4`), so you always know where you are in the cycle.
+
+This release also fixes two timing issues around switching into a conditioned set, so the roll stays locked
+to the audio through the change.
 
 ## V1.11.0 — The performance mixer
 

@@ -1,5 +1,34 @@
 # OMS Chippy — Changelog
 
+## V1_12_0 — Yo DNA transplant + the section engine + the vertical channel-grid roll (2026-09-02)
+Rolled up from iterations V1_11_01…V1_11_11 (the MIDI-DNA / section-engine / roll-orientation line
+following the V1.11.0 mixer release). Live at chippy.onemanshyo.com.
+### Added
+- **MIDI DNA transplant (YoConditioner, L2b)** — the JNO selecta's `profile.midi.*` now carries Wes's
+  actual programmed patterns, folded from the Ain't No Trick `.als` and seeded into the generator with
+  optional-with-fallback reads: **kick** four-on-floor `[0,1,2,3]` (BLOG0045), **open hat** dead-straight
+  offbeat, ghost suppressed (BLOG0046), **sub bass** E1 root rumble on `[0,3,6,8,11,14]` (BLOG0047),
+  **clap** backbeat (BLOG0048). Source-nested under `profile.midi` to keep note DNA separate from the flat
+  AMU-measured fields and from `profile.mixing` (BLOG0044).
+- **The section engine (arrangement DNA → song shape)** — `profile.midi.arrangement` carries a per-song
+  section map; `planSections(arrangement, BARS)` is the constant formula: a fixed *continuous-play factor*
+  trims intro/outro (they only exist as mix headroom; Chippy never mixes), then the floor sections squeeze
+  proportionally into the `BARS` budget. `yoArrange` applies the plan as probabilistic bias over the
+  still-running generator — never a template, one of several DNA inputs (BLOG0051–0053, 0058).
+- **Vertical channel-grid piano roll** — MATRIX roll toggles between horizontal (original) and a vertical
+  orientation (time bottom→top, the 8 voices as columns aligned under the VOICES/MIXER grid). Toggle in the
+  MATRIX header, GLOVER-style; default vertical. Overview strip + Chippy stay horizontal (BLOG0061).
+- **Loop counter shows total** — the loop readout now reads current-over-total (e.g. `9 . 1 . 1 / 64 . 4 . 4`)
+  so loop length is visible at a glance without hunting the bars field (BLOG0056).
+### Fixed
+- **yoArrange RNG scope crash** — selecting JNO blanked the whole matrix: `yoArrange` used the seeded RNG
+  `R` out of scope; passing `R` in fixes it. None mode was unaffected, so it only surfaced on the JNO switch
+  at ≥16 bars (BLOG0055).
+- **None→JNO master-clock desync** — a length-changing selecta swap re-based `loopStartCtx` but not
+  `playOriginCtx`, so the continuous clock (playhead + scroll) drifted from the audio by the swap offset. Fix:
+  a swap is a re-origin — reset both anchors equal at the swap (as at play), restoring the documented
+  single-clock two-view model (BLOG0057–0059). See CODEX0002.
+
 ## V1_11_0 — The performance mixer: audio-effects rack + master processing (2026-09-01)
 Rolled up from iterations V1_10_03…V1_10_26 (the mixer/performance line following the V1.10.0 UI ship).
 Live at chippy.onemanshyo.com.

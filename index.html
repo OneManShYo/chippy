@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_11_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_12_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_11_0]</title>
+<title>OMS Chippy [Beta V1_12_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -83,6 +83,14 @@
   #aspectBtn.vert .ori-v { opacity:1; }
   #aspectBtn { color:#00d4ff; border-color:#1e4a55; position:relative; }
   #aspectBtn:hover { color:#5ce0ff; border-color:#00d4ff; }
+  /* MATRIX roll-orientation toggle — same ori-h/ori-v mark family as #aspectBtn */
+  #rollOriBtn { width:26px; height:22px; margin-left:8px; color:#00d4ff; border-color:#1e4a55; position:relative; flex:0 0 auto; }
+  #rollOriBtn:hover { color:#5ce0ff; border-color:#00d4ff; }
+  #rollOriBtn .ori-h, #rollOriBtn .ori-v { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:1.5px solid currentColor; border-radius:1.5px; transition:opacity .15s; }
+  #rollOriBtn .ori-h { width:15px; height:10px; opacity:1; }      /* horizontal (lanes) */
+  #rollOriBtn .ori-v { width:10px; height:15px; opacity:.35; }    /* vertical (columns), overlapped */
+  #rollOriBtn.vert .ori-h { opacity:.35; }
+  #rollOriBtn.vert .ori-v { opacity:1; }
   #recBtn { color:#ff2d6f; border-color:#5a1730; font-size:18px; }
   #recBtn:hover { color:#ff5e93; border-color:#ff006e; }
   #recBtn.recording { color:#ff2d6f; border-color:#ff006e; background:rgba(255,0,110,.12); animation:recpulse .9s infinite; }
@@ -295,7 +303,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_11_0]</span>
+      <span class="ver">[Beta&nbsp;V1_12_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -332,7 +340,7 @@
       <div id="monitorBox" style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
         <div class="summary-grid console-grid">
           <span class="k">master</span><span class="mono" id="timeSess" title="master (session) position — continuous bar . beat . 16th since play started">1 . 1 . 1</span>
-          <span class="k">loop</span><span class="mono" id="timeLoop" title="loop position — bar . beat . 16th of the current loop (blinks on the last bar before it changes)">1 . 1 . 1</span>
+          <span class="k">loop</span><span class="mono" id="timeLoop" title="loop position — bar . beat . 16th of the current loop, over the loop total (e.g. 9.1.1 / 64.4.4 = bar 9 of a 64-bar loop). Blinks on the last bar before it changes.">1 . 1 . 1 / 4 . 4 . 4</span>
           <span class="k">tempo</span><span class="mono" id="tempoRead">124 bpm</span>
         </div>
       </div>
@@ -385,7 +393,7 @@
     <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">COMP</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-amt="1"><span class="wv" id="mastercomp-amt-v" style="color:#bbb">4</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">LIMIT</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button></span><span class="mproc-sep"></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></div>
     <div class="devstrip" id="mixStrip"></div>
 
-    <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><span class="rule"></span></div>
+    <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><button class="bgtoggle vert" id="rollOriBtn" title="piano-roll orientation — vertical (columns, time flows up) / horizontal (lanes, time flows left)"><span class="ori-h"></span><span class="ori-v"></span></button><span class="rule"></span></div>
     <div id="chartWrap" title="MATRIX — the live piano roll. Top strip = whole-loop overview with Chippy; below = the 7 voice lanes scrolling past the playhead."><canvas id="tl"></canvas></div>
 
    </div><!-- /panelGen -->
@@ -482,6 +490,7 @@
   let TOTAL_STEPS = STEPS_PER_BAR*BARS;      // derived
   const setBars = n => { BARS=n; TOTAL_STEPS=STEPS_PER_BAR*BARS; };
   const VISIBLE_BARS = 4;                     // bars shown at once in the scrolling roll
+  let rollVertical = true;                    // MATRIX roll orientation — true = vertical (columns, time up); false = horizontal (lanes, time left). Default vertical.
   let BPM = 128;
   let SWING = 0;                             // 0..0.6 fraction of a 16th applied to odd steps
   const secPerBeat = () => 60/BPM;
@@ -621,17 +630,51 @@
 
   // ---- HOUSE — 4-on-floor, clap 2&4, offbeat hats, OFFBEAT bass (ducks the kick), groovy stabs
   function house(P,R){
+    // KICK — MIDI DNA transplant (L2b) when the active profile carries one; else stock four-on-floor.
+    //  The profile pattern is in within-bar BEATS (0..3); beat*4 maps to the 16th-note step grid.
+    //  Optional-with-fallback: no profile.midi.kick ⇒ identical stock generation (coverage varies).
+    //  NOTE (V1.11.01): AintNoTrick's kick folds to [0,1,2,3] — byte-for-byte the stock pattern below —
+    //  so this iteration is a PLUMBING PROOF: identical audible output isolates "does the read/seed/
+    //  fallback path work" from "does it sound different" (the latter is iter 2, the offbeat hat).
+    const _mk = (typeof selecta==="function" && selecta() && selecta().profile
+                 && selecta().profile.midi && selecta().profile.midi.kick) || null;
     eachBar((b,o)=>{
-      for(let s=0;s<G;s+=4) P.drums.push({step:o+s,dur:1,note:null,accent:(s===0)});
-      P.perc.push({step:o+4,dur:1,note:null,snare:true});
-      P.perc.push({step:o+12,dur:1,note:null,snare:true});
-      for(let s=2;s<G;s+=4) P.perc.push({step:o+s,dur:1,note:null}); // offbeat hats
-      if(R()<0.5) P.perc.push({step:o+7,dur:1,note:null}); // ghost hat swing
+      if(_mk && _mk.pattern){ _mk.pattern.forEach(beat=>{ const s=beat*4; P.drums.push({step:o+s,dur:1,note:null,accent:(s===0)}); }); }
+      else { for(let s=0;s<G;s+=4) P.drums.push({step:o+s,dur:1,note:null,accent:(s===0)}); }
+      // BACKBEAT — MIDI DNA clap transplant (L2b) when present; else stock snare on 2 & 4.
+      //  AintNoTrick clap = beats 1 & 3 (steps 4,12), vel 102 — POSITION-IDENTICAL to the stock snare
+      //  backbeat, so this is a PLUMBING-class transplant (like the kick): the DNA records the clap VOICE
+      //  and vel, but the positions match stock. Clap 1 & Clap 2 tracks are identical (layered for
+      //  thickness) → one pattern. Beats unit. clap:true marks it a clap, not a snare (V1.11.04).
+      const _mc = (typeof selecta==="function" && selecta() && selecta().profile
+                   && selecta().profile.midi && selecta().profile.midi.clap) || null;
+      if(_mc && _mc.pattern){ _mc.pattern.forEach(beat=>{ P.perc.push({step:o+beat*4,dur:1,note:null,snare:true,clap:true}); }); }
+      else { P.perc.push({step:o+4,dur:1,note:null,snare:true}); P.perc.push({step:o+12,dur:1,note:null,snare:true}); }
+      // OPEN HAT — MIDI DNA transplant (L2b) when present; else stock offbeat hats + stochastic ghost.
+      //  AintNoTrick open hat is DEAD-STRAIGHT offbeat (beats .5/1.5/2.5/3.5 → steps 2,6,10,14), vel 92,
+      //  NO ghost/swing note — Wes programmed it rigid. `rigid:true` ⇒ suppress the stock ghost-hat roll,
+      //  so the audible signature is machine-tight vs stock's humanized ghost. Positions match stock; the
+      //  RIGIDITY is what differs (V1.11.02 — the audible thesis proof: MIDI DNA changes the FEEL).
+      const _mh = (typeof selecta==="function" && selecta() && selecta().profile
+                   && selecta().profile.midi && selecta().profile.midi.hats) || null;
+      if(_mh && _mh.pattern){ _mh.pattern.forEach(beat=>{ P.perc.push({step:o+beat*4,dur:1,note:null}); });
+        if(!_mh.rigid && R()<0.5) P.perc.push({step:o+7,dur:1,note:null}); }
+      else { for(let s=2;s<G;s+=4) P.perc.push({step:o+s,dur:1,note:null}); // offbeat hats
+        if(R()<0.5) P.perc.push({step:o+7,dur:1,note:null}); } // ghost hat swing
     });
-    // OFFBEAT BASS — plays the 'and's (steps 2,6,10,14), ducking the kick — the house groove
+    // OFFBEAT BASS — MIDI DNA transplant (L2b) when present; else stock offbeat root-walk (house groove).
+    //  AintNoTrick sub is an E1 ROOT RUMBLE on steps [0,3,6,8,11,14] — on-beat + 16th pushes (steps 3,11
+    //  are the .765 "a" push), NOT the stock offbeat [2,6,10,14] walk. Monophonic root (deg 0) 84% of the
+    //  time — a rumble, not a melodic line (the melodic fills are parked as fill DNA). NOTE: bass pattern
+    //  is in STEPS (the 16th pushes don't land on clean beats), unlike kick/hat which are in beats.
+    //  This is the audibly-distinct lane — different POSITIONS from stock, not just different feel (V1.11.03).
     const walk=[0,0,3,5];
+    const _mb = (typeof selecta==="function" && selecta() && selecta().profile
+                 && selecta().profile.midi && selecta().profile.midi.bass) || null;
     eachBar((b,o)=>{ const base=walk[b%4];
-      for(let s=2;s<G;s+=4){ if(R()<gk('bass',1)){ const d = R()<0.3? base+2 : base; P.bass.push({step:o+s,dur:1,note:deg(d,-1)}); } }
+      if(_mb && _mb.pattern){ const oc = (_mb.oct==null? -1 : _mb.oct);
+        _mb.pattern.forEach(s=>{ if(R()<gk('bass',1)) P.bass.push({step:o+s,dur:1,note:deg(0,oc)}); }); }
+      else { for(let s=2;s<G;s+=4){ if(R()<gk('bass',1)){ const d = R()<0.3? base+2 : base; P.bass.push({step:o+s,dur:1,note:deg(d,-1)}); } } }
     });
     // SYNTH — short off-beat organ/chord stabs, not sustained
     eachBar((b,o)=>{ const base=walk[b%4];
@@ -670,6 +713,13 @@
     }
     phraseAccents(P,R);                    // reliably place accents+fills by phrase position
     if(BARS>=16 && !yoOn) arrange(P);   // long-song arc for manual mode; party keeps the full vibe
+    // Yo mode: if the active selecta carries arrangement DNA, shape the song via the section engine —
+    // probabilistic bias only (yoArrange), so the generator still generates. One of several DNA inputs,
+    // never a template. Requires enough bars for sections to be meaningful.
+    if(yoOn && BARS>=16){
+      const sp = selecta() && selecta().profile && selecta().profile.midi && selecta().profile.midi.arrangement;
+      if(sp){ const plan = planSections(sp, BARS); yoArrange(P, plan, R); }
+    }
     return P;
   }
 
@@ -709,6 +759,79 @@
         if(R()<0.4) P.accent.push({step:o+G-1,dur:1,note:stab(),accent:true});
       }
     }
+  }
+
+  // ── SECTION ENGINE (V1.11.05) — the CONSTANT FORMULA that interprets any song's arrangement DNA ──
+  //  Two independent stages, per Wes's ruling:
+  //   Stage 1 CONTINUOUS-PLAY FACTOR (fixed): intro/outro (role 'dj_util') exist only as mix headroom.
+  //           Chippy plays continuously (never mixes), so that headroom is dead air → trim to contPlay
+  //           (~0.25) of real length. Applied FIRST, independent of song/budget length.
+  //   Stage 2 BUDGET SQUEEZE (proportional): whatever floor sections remain compress proportionally to
+  //           fit the leftover BARS budget (Chippy's loop-length setting).
+  //  Output = per-section spans scaled into BARS, each carrying its role/kind. This is song-AGNOSTIC:
+  //  the formula is constant; the arrangement it reads is per-song. It BIASES the generator (yoArrange),
+  //  it does NOT template it — the seed gen + R()-gated lanes still decide every actual note.
+  function planSections(arr, budgetBars){
+    if(!arr || !arr.sections || !arr.sections.length) return null;
+    const cp = (arr.contPlay==null? 0.25 : arr.contPlay);
+    // Stage 1: fixed trim on dj_util; floor untouched (yet)
+    const staged = arr.sections.map(s=>({
+      role:s.role, kind:s.kind,
+      real: s.len,
+      want: (s.role==='dj_util') ? Math.max(1, Math.round(s.len*cp)) : s.len
+    }));
+    const utilBars  = staged.filter(s=>s.role==='dj_util').reduce((a,s)=>a+s.want,0);
+    const floorReal = staged.filter(s=>s.role==='floor').reduce((a,s)=>a+s.real,0);
+    // Stage 2: floor sections share the remaining budget proportionally
+    const floorBudget = Math.max(0, budgetBars - utilBars);
+    const scale = floorReal>0 ? floorBudget/floorReal : 0;
+    let cursor=0; const plan=[];
+    staged.forEach(s=>{
+      let len = (s.role==='dj_util') ? s.want : Math.max(1, Math.round(s.real*scale));
+      plan.push({ role:s.role, kind:s.kind, bar:cursor, len });
+      cursor += len;
+    });
+    // reconcile rounding drift to land exactly on budgetBars (adjust the largest floor section)
+    let drift = budgetBars - cursor;
+    if(drift!==0 && plan.length){
+      const big = plan.filter(p=>p.role==='floor').sort((a,b)=>b.len-a.len)[0] || plan[plan.length-1];
+      big.len = Math.max(1, big.len+drift);
+      // re-lay bar offsets after the adjustment
+      let c=0; plan.forEach(p=>{ p.bar=c; c+=p.len; });
+    }
+    return plan;
+  }
+  // per-section BIAS profile — nudges probabilities, never hard-drops. kickMul/densMul multiply the
+  // existing gk()/dGate() weights so the generator still generates; the section just loads the dice.
+  function sectionBias(kind){
+    switch(kind){
+      case 'intro':     return { kickMul:0.55, densMul:0.45 };  // sparse, stating itself
+      case 'build':     return { kickMul:1.0,  densMul:0.8  };
+      case 'verse':     return { kickMul:1.0,  densMul:1.0  };
+      case 'breakdown': return { kickMul:0.15, densMul:0.5  };  // kick way down (not zero — still may fire)
+      case 'drop':      return { kickMul:1.0,  densMul:1.25 };  // heaviest
+      case 'outro':     return { kickMul:0.7,  densMul:0.5  };
+      default:          return { kickMul:1.0,  densMul:1.0  };
+    }
+  }
+  // yoArrange — apply the section plan as PROBABILISTIC thinning over the generated pattern. Unlike
+  // arrange()'s hard voice-drop, this rolls R() per event weighted by the section's densMul, so two
+  // passes of the same plan diverge in detail. The DNA gives the SHAPE; the gen keeps the flesh.
+  function yoArrange(P, plan, R){
+    if(!plan) return;
+    const secLen = STEPS_PER_BAR; // bar-indexed lookup
+    const barSection = bar => { for(const p of plan){ if(bar>=p.bar && bar<p.bar+p.len) return p; } return plan[plan.length-1]; };
+    VOICES.forEach(v=>{
+      P[v.id]=(P[v.id]||[]).filter(ev=>{
+        const bar = Math.floor(ev.step/STEPS_PER_BAR);
+        const sec = barSection(bar); if(!sec) return true;
+        const b = sectionBias(sec.kind);
+        // kick (drums) uses kickMul; everything else uses densMul. Keep = R() under the multiplier.
+        const mul = (v.id==='drums') ? b.kickMul : b.densMul;
+        if(mul>=1) return true;            // no thinning when at/above full
+        return R() < mul;                  // probabilistic keep — never a hard drop
+      });
+    });
   }
 
   // section-based arrangement for long (party) songs: drop voices per 8-bar section
@@ -1351,6 +1474,7 @@
           const q=pendingQuant.slice(); pendingQuant.length=0;
           q.forEach(fn=>{ try{ fn(); }catch(e){} });
           loopStartCtx = quantTargetCtx; schedIdx = 0;   // new loop starts at its top, on the beat
+          playOriginCtx = loopStartCtx;                  // re-origin so continuous clock (playhead+scroll) stays aligned
           quantTargetCtx = 0;
           L=loopLen();
           if(loopStartCtx>horizon) break;
@@ -1366,6 +1490,11 @@
         const nextBarCtx = loopStartCtx + nextBarT;
         if(nextBarCtx <= horizon){
           loopStartCtx = nextBarCtx; schedIdx = 0; skipArmed=false;
+          playOriginCtx = loopStartCtx;   // CORTEX: a selecta swap is a RE-ORIGIN — both anchors reset
+                                          // equal (as at play, §2.1.1) so the continuous clock (playhead +
+                                          // scroll) re-aligns to the new loop top. Without this, a
+                                          // length-changing swap (None 4→JNO 64) leaves playOriginCtx on the
+                                          // old grid and the visual drifts by the swap offset vs the audio.
           applyPendingSwap();
           L=loopLen();
           if(loopStartCtx>horizon) break;
@@ -1378,8 +1507,8 @@
         // reached a loop boundary
         loopStartCtx+=L; schedIdx=0;
         if(yoOn) loopStartAudio=loopStartCtx;   // party clock tracks current loop
-        if(pendingYo){ applyPendingSwap(); L=loopLen(); }
-        if(pendingLen){ pendingLen(); pendingLen=null; L=loopLen(); }   // length change applies at loop end
+        if(pendingYo){ applyPendingSwap(); L=loopLen(); playOriginCtx=loopStartCtx; }   // re-origin: swap = new loop top
+        if(pendingLen){ pendingLen(); pendingLen=null; L=loopLen(); playOriginCtx=loopStartCtx; }   // length change re-origins too
         if(loopStartCtx>horizon) break;      // next loop still beyond horizon
       }
       const ev=events[schedIdx];
@@ -1526,7 +1655,10 @@
       drawSmiley(sx, oy+ohBar/2, rad, onBar);
     }
 
-    // ---------- SONG ROLL (fixed size, scrolling) ----------
+    // ---------- SONG ROLL (fixed size, scrolling) — orientation branch ----------
+    if(rollVertical){ drawRollVertical(off, wrapShifts, cycledOnce); }
+    else {
+    // ---------- horizontal roll (original) ----------
     const top=laneTop(), lh=laneH(), inner=rollInner();
     // framed roll — matching border so it reads as its own module
     ctx.fillStyle="#080808"; ctx.strokeStyle="#3a3a3a"; ctx.lineWidth=1.5;
@@ -1609,6 +1741,91 @@
       rr(bx, by, bw, bh, 3); ctx.stroke();
       ctx.fillStyle=v.on? v.color : "#555";
       ctx.fillText(label, bx+5, by+bh/2+3);
+    });
+    } // end horizontal-roll branch
+  }
+  // ---------- VERTICAL ROLL (Iter 1 scaffold) ----------
+  // Time flows BOTTOM→TOP; the 8 voice lanes are COLUMNS aligned across the roll width so each column
+  // sits under its VOICES/MIXER column. Playhead is a horizontal line dead-center. This pass draws the
+  // frame, lane columns, the horizontal time-grid, column labels, notes, and the centered playhead —
+  // mirroring the horizontal roll's coordinate system with X/Y swapped (Yr instead of Xr).
+  function drawRollVertical(off, wrapShifts, cycledOnce){
+    const rt=rollTop(), rh=ROLLH;
+    const x0=PAD, x1=W-PAD, innerW=x1-x0;
+    const nLanes=VOICES.length;
+    const colW=(innerW-4)/nLanes;                 // per-lane column width
+    const colX = i => x0+2 + i*colW;              // left x of lane i's column
+    // usable vertical time area (inside frame padding)
+    const tTop=rt+RPAD, tBot=rt+rh-RPAD, tH=tBot-tTop;
+    const winSteps=VISIBLE_BARS*STEPS_PER_BAR;
+    const pxPerStepV=tH/winSteps;
+    // step -> y, time flowing UP (larger step = higher on screen = smaller y)
+    const Yr=(s)=> tBot - (s-off)*pxPerStepV;
+    // frame
+    ctx.fillStyle="#080808"; ctx.strokeStyle="#3a3a3a"; ctx.lineWidth=1.5;
+    rr(PAD, rt, W-PAD*2, rh, 5); ctx.fill(); ctx.stroke();
+    // lane column backgrounds
+    VOICES.forEach((v,i)=>{
+      const x=colX(i);
+      ctx.fillStyle = i%2? "#0a0a0a" : "#0d0d0d";
+      ctx.fillRect(x, tTop, colW-1, tH);
+    });
+    // clip to time area
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x0, tTop, innerW, tH); ctx.clip();
+    // horizontal time-grid (bar / beat / 16th lines running across)
+    const firstStep=Math.floor(off), lastStep=Math.ceil(off+winSteps);
+    for(let s=firstStep;s<=lastStep;s++){
+      if(!cycledOnce && s<0) continue;
+      const sm=((s%TOTAL_STEPS)+TOTAL_STEPS)%TOTAL_STEPS;
+      const y=Yr(s);
+      if(sm%STEPS_PER_BAR===0){ ctx.strokeStyle="#333"; ctx.lineWidth=1.4; }
+      else if(sm%4===0){ ctx.strokeStyle="#222"; ctx.lineWidth=1; }
+      else { ctx.strokeStyle="#161616"; ctx.lineWidth=1; }
+      ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+    }
+    // notes — one column per lane; a note spans its column width, height = its duration in steps
+    VOICES.forEach((v,i)=>{
+      const cx=colX(i), band=colW-4;
+      const nw=Math.max(5, Math.round(band*0.80));
+      const nx=Math.round(cx + (colW-nw)/2);
+      (pattern[v.id]||[]).forEach(ev=>{
+        for(const shift of wrapShifts){
+          const step=ev.step+shift;
+          const yTop=Yr(step+ev.dur), yBot=Yr(step);       // higher step = higher up
+          const h=Math.max(3, yBot-yTop-1.5);
+          if(yBot<tTop || yTop>tBot) continue;
+          ctx.fillStyle = v.on? v.color : "#3a3a3a";
+          ctx.globalAlpha = v.on? 0.92 : 0.5;
+          rr(nx, yTop+0.5, nw, h, 2); ctx.fill();
+          ctx.globalAlpha=1;
+        }
+      });
+    });
+    // playhead — horizontal line, dead-center (continuous session step, matches scroll frame)
+    {
+      const sc=sessionClock();
+      const s=(playing && actx && playOriginCtx) ? sc.esF : 0;
+      const y=Yr(s);
+      ctx.strokeStyle=MAG; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x0,y); ctx.lineTo(x1,y); ctx.stroke();
+      ctx.fillStyle=MAG; ctx.beginPath();
+      ctx.moveTo(x0,y-4); ctx.lineTo(x0,y+4); ctx.lineTo(x0+6,y); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    // column labels — pinned at the top of each column, on a dark chip
+    ctx.font="bold 9px 'Courier New',monospace";
+    const bh=16;
+    VOICES.forEach((v,i)=>{
+      const cx=colX(i), label=v.name.toUpperCase();
+      const tw=ctx.measureText(label).width;
+      const bw=Math.min(colW-4, tw+8);
+      const bx=Math.round(cx+(colW-bw)/2), by=tTop+2;
+      ctx.fillStyle="rgba(20,20,20,0.9)"; rr(bx,by,bw,bh,3); ctx.fill();
+      ctx.strokeStyle="#333"; ctx.lineWidth=1; rr(bx,by,bw,bh,3); ctx.stroke();
+      ctx.fillStyle=v.on? v.color : "#555";
+      ctx.save(); ctx.beginPath(); ctx.rect(bx,by,bw,bh); ctx.clip();
+      ctx.fillText(label, bx+4, by+bh/2+3); ctx.restore();
     });
   }
   function rr(x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath();
@@ -2131,7 +2348,7 @@
     // Two clocks only (per spec): loop-relative bar.beat.six  |  Ableton-style session bar.beat.six.
     // The LOOP readout blinks during its last bar so you get a heads-up the pattern is about to change.
     // Blink now agrees with Chippy (same master clock) — both fire on the true last bar, not early.
-    timeLoop.textContent=bar+" . "+beat+" . "+six;
+    timeLoop.textContent=bar+" . "+beat+" . "+six+" / "+BARS+" . 4 . 4";
     timeSess.textContent=sBar+" . "+sBeat+" . "+sSix;
     timeLoop.classList.toggle("finishing", playing && bar===BARS);
     { const tr=document.getElementById("tempoRead"); if(tr) tr.textContent=BPM+" bpm"; }
@@ -2604,6 +2821,39 @@
                     leadDrop: { on:true, chance:0.25, minLen:1, maxLen:16 },  // pull lead quieter 1 note‥1 bar
                     reverbThrow:{ on:true, chance:0.25, minLen:1, maxLen:16 } // reverb throw 1 note‥1 bar
                   }
+                },
+                // ── MIDI DNA (L2b — the actual programmed notes, via Sozo parse of the .als) ──
+                //  Source-nested under `midi` to keep note-transplant DNA separate from the flat
+                //  AMU-measured composition fields and from mixing DNA (§2.4bis: sources stay separate).
+                //  Values are WITHIN-BAR BEAT positions (0..3 in 4/4) — the MIDI's own unit; the grid
+                //  mapping (beat*4 → 16th step) lives in house(), so the DNA needn't know Chippy's grid.
+                //  Optional-with-fallback: a selecta without `midi` (or None) generates stock (coverage
+                //  varies per track by design). AintNoTrick kick = four-on-floor, folded from abs beats
+                //  64,65,66,67… → [0,1,2,3]; vel 112 verbatim from the .als.
+                midi:{
+                  kick:{ pattern:[0,1,2,3], vel:112 },          // four-on-the-floor (V1.11.01)
+                  hats:{ pattern:[0.5,1.5,2.5,3.5], vel:92, rigid:true },  // open hat, dead-straight offbeat (V1.11.02)
+                  bass:{ pattern:[0,3,6,8,11,14], oct:-1, vel:94 },  // sub rumble, E1 root-driven w/16th pushes (V1.11.03)
+                  clap:{ pattern:[1,3], vel:102 },  // backbeat clap on 2 & 4 — pos-identical to stock snare (V1.11.04)
+                  // ── ARRANGEMENT DNA (L1/L2 — this song's SECTION MAP, per-song data) ──
+                  //  The real Ain't No Trick structure, coarse role blocks (bar, len). This is PER-SONG
+                  //  data — song #2 drops in its OWN arrangement block. NOT a global template. It is ONE
+                  //  influence among several; planSections() reads it through the constant formula, and the
+                  //  result only BIASES the still-running generator (never hard-drops, never replays). role:
+                  //  'dj_util' = intro/outro (exist as mix headroom → continuous-play factor trims them);
+                  //  'floor' = the song body (proportional squeeze into the BARS budget). (V1.11.05)
+                  arrangement:{
+                    contPlay:0.25,   // continuous-play factor: dj_util sections → 25% (we don't mix, so no headroom needed)
+                    sections:[
+                      { role:'dj_util', kind:'intro',     bar:0,   len:8  },
+                      { role:'floor',   kind:'build',     bar:8,   len:8  },
+                      { role:'floor',   kind:'verse',     bar:16,  len:32 },
+                      { role:'floor',   kind:'breakdown', bar:48,  len:16 },
+                      { role:'floor',   kind:'verse',     bar:64,  len:64 },
+                      { role:'floor',   kind:'drop',      bar:128, len:32 },
+                      { role:'dj_util', kind:'outro',     bar:160, len:32 }
+                    ]
+                  }
                 } } }
   ];
   let selectaIdx=0;   // default = None (index 0): raw play, no conditioning. JNO is index 1.
@@ -2791,6 +3041,17 @@
     resizeRave();
     msgState("orientation", raveVertical ? "Vertical 9:16" : "Landscape 16:9");
   };
+  // ROLL ORIENTATION TOGGLE (MATRIX) — vertical (default) / horizontal
+  const rollOriBtn=document.getElementById("rollOriBtn");
+  if(rollOriBtn){
+    rollOriBtn.classList.toggle("vert", rollVertical);   // reflect default (vertical) on load
+    rollOriBtn.onclick=()=>{
+      rollVertical=!rollVertical;
+      rollOriBtn.classList.toggle("vert", rollVertical);
+      msgState("orientation", rollVertical ? "Vertical roll" : "Horizontal roll");
+      draw();
+    };
+  }
 
   const recBtn=document.getElementById("recBtn"), recTimeEl=document.getElementById("recTime");
   let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recExt="webm", recAudioDest=null;

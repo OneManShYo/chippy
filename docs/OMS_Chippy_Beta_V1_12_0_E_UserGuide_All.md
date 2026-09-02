@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_11_0] — USER GUIDE
+# OMS Chippy [Beta V1_12_0] — USER GUIDE
 
 Chippy is a browser instrument. Open the file, press play, and it makes music. No install, no account,
 no files. Here's everything you can do.
@@ -11,8 +11,14 @@ no files. Here's everything you can do.
 ## The message bar + monitor
 - **Message bar** (bottom of the app) — hover any control and it tells you what it does; change a value
   and it shows the new value. Cyan = help, orange = a value you changed, magenta = an error.
-- **Monitor** (top row, center) — the live readout: master clock, loop clock, tempo. The loop clock
-  blinks through its last bar so you can see a change coming.
+- **Monitor** (top row, center) — the live readout: master clock, loop clock, tempo. The loop clock shows
+  your position over the loop total (e.g. `9 . 1 . 1 / 64 . 4 . 4`) and blinks through its last bar so you
+  can see a change coming.
+- **MATRIX orientation** — the button by the MATRIX label flips the piano roll between vertical (default:
+  time flows up, voices as columns under their mixer channels) and horizontal (time flows left). The
+  overview strip with Chippy stays put and shows your position in the whole loop either way.
+- **Selecta DNA** — picking a selecta (e.g. Juice Night Out) conditions the generator with real musical DNA;
+  None plays raw. A conditioned set shapes sections and leans the patterns toward that artist's feel.
 
 ## Making music (MUSIC)
 - **Play (▶)** — start/stop.
