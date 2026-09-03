@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_13_03  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_13_04  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_13_03]</title>
+<title>OMS Chippy [Beta V1_13_04]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -429,7 +429,7 @@
   <div class="pr-header">
     <div class="pr-brandwrap">
       <span class="pr-brand">ONEMANSHYO</span>
-      <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_03]</span></span>
+      <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_04]</span></span>
     </div>
   </div>
   <div class="pr-tabbar">
@@ -458,7 +458,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_13_03]</span>
+      <span class="ver">[Beta&nbsp;V1_13_04]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -1571,11 +1571,35 @@
     if(!quantTargetCtx) quantTargetCtx=nextBeatCtx();
   }
 
+  // ── BLOG0105 — Screen Wake Lock ────────────────────────────────────────────
+  // iOS sleeps the screen on the auto-lock timeout; when it does, Web Audio is
+  // suspended and Chippy stops. The Wake Lock API keeps the screen awake WHILE
+  // PLAYING so the lock never fires. Released on stop (battery). Re-acquired when
+  // the tab becomes visible again (iOS drops the lock on tab-away). Supported iOS
+  // 16.4+ / Chromium; a no-op where unsupported (graceful).
+  let _wakeLock=null;
+  async function prWakeLockOn(){
+    try{
+      if("wakeLock" in navigator && !_wakeLock){
+        _wakeLock = await navigator.wakeLock.request("screen");
+        _wakeLock.addEventListener("release", ()=>{ _wakeLock=null; });
+      }
+    }catch(e){ /* denied/unsupported — graceful */ }
+  }
+  function prWakeLockOff(){
+    try{ if(_wakeLock){ _wakeLock.release(); _wakeLock=null; } }catch(e){}
+  }
+  // iOS releases the lock when you leave the tab; re-grab it on return if still playing
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="visible" && playing){ prWakeLockOn(); }
+  });
+
   function startTransport(){
     ensureAudio();
     if(actx.state==="suspended"){ actx.resume(); }
     if(airEl && airEl.paused){ airEl.play().catch(()=>{}); }   // start the routable output element (user gesture)
     playing=true;
+    prWakeLockOn();   // BLOG0105: keep the screen awake while playing (iOS sleeps → audio stops otherwise)
     sessionStart=performance.now();          // session timer: elapsed since play (resets on stop)
     // Origin offset: audio + playhead both anchor to loopStartCtx, so they stay locked together.
     // Cold start (first play after audio creation) needs a longer lead for the MediaStream <audio>
@@ -1592,6 +1616,7 @@
   }
   function stopTransport(){
     playing=false;
+    prWakeLockOff();   // BLOG0105: allow the screen to sleep again once stopped (saves battery)
     if(window._luStop) window._luStop();   // BLOG0097: a full stop ends any running lineup (+ clears its pink indicators)
     sessionStart=0;                          // reset session timer
     // True stop: clear the transport/clock anchors so the readout + playhead return to
