@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_13_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_13_02  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_13_0]</title>
+<title>OMS Chippy [Beta V1_13_02]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -362,14 +362,98 @@
     padding:11px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px; text-transform:uppercase; }
   .lu-play:hover { background:rgba(0,212,255,.18); }
   .lu-note { color:#555; font-size:10px; margin-top:8px; line-height:1.4; text-align:center; }
+/* ── BLOG0102 — Pocket Rave portrait mobile surface ──────────────────────────
+   Shown only in portrait; the desktop app (.app) is hidden then (NOT reflowed —
+   dodges the old narrow-width black-screen). Two independent surfaces. */
+#pocketRave{ display:none; }
+@media (orientation:portrait){
+  .app{ display:none !important; }
+  #pocketRave{ display:flex; position:fixed; inset:0; flex-direction:column; background:#0d0d0d;
+    font-family:'Courier New',monospace; z-index:100; -webkit-user-select:none; user-select:none; }
+}
+.pr-header{ height:50px; background:linear-gradient(180deg,#2a2a2a,#222); border-bottom:1px solid #444;
+  box-shadow:0 2px 10px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; padding:0 16px; flex-shrink:0; }
+.pr-brandwrap{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.pr-brand{ font-size:19px; font-weight:700; line-height:1.05;
+  background:linear-gradient(45deg,#00d4ff,#ff006e); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.pr-line2{ margin-top:1px; }
+.pr-sub{ font-size:11px; color:#ffa500; }
+.pr-ver{ font-size:10px; color:#888; margin-left:6px; }
+.pr-tabbar{ height:38px; background:linear-gradient(180deg,#252525,#1e1e1e); border-bottom:1px solid #333;
+  display:flex; align-items:center; justify-content:center; padding:0 16px; gap:18px; flex-shrink:0; }
+.pr-tab{ padding:8px 13px; font-size:12px; font-weight:600; letter-spacing:.4px; color:#888;
+  border-bottom:2px solid transparent; cursor:pointer; transition:all .18s; }
+.pr-tab.active{ color:#00d4ff; border-bottom:2px solid #00d4ff; }
+.pr-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
+#prMusic{ justify-content:center; gap:18px; padding:18px 0; }
+#prGlover{ position:relative; background:#000; display:none; }
+#prGloverCv{ position:absolute; inset:0; width:100%; height:100%; }
+.pr-hero{ display:flex; align-items:center; justify-content:center; }
+.pr-facewrap{ width:calc(100% - 68px); height:300px; border-radius:10px; cursor:pointer; background:#0a0a0a; border:2px solid #2a2a2a;
+  display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 30px rgba(0,0,0,.5); transition:border-color .2s; }
+.pr-facewrap.playing{ border-color:#ff006e; animation:prGlow 1.6s ease-in-out infinite; }
+@keyframes prGlow{ 0%,100%{ border-color:#ff006e; box-shadow:0 0 18px rgba(255,0,110,.35), inset 0 0 30px rgba(0,0,0,.5);}
+  50%{ border-color:#ff6aa6; box-shadow:0 0 32px rgba(255,0,110,.75), inset 0 0 30px rgba(0,0,0,.5);} }
+#prFace{ width:260px; height:260px; pointer-events:none; }
+.pr-tron{ margin:0 34px; padding:8px 4px; border-radius:10px;
+  background:radial-gradient(ellipse at 50% 50%, rgba(0,180,255,.06), rgba(0,0,0,0) 70%), #060a0d; border:2px solid #00d4ff;
+  box-shadow:0 0 6px rgba(0,212,255,.7),0 0 14px rgba(0,212,255,.45),inset 0 0 10px rgba(0,212,255,.35);
+  animation:prTron 2.4s ease-in-out infinite; }
+@keyframes prTron{ 0%,100%{ box-shadow:0 0 6px rgba(0,212,255,.6),0 0 14px rgba(0,212,255,.35),inset 0 0 10px rgba(0,212,255,.28); border-color:#00d4ff;}
+  50%{ box-shadow:0 0 10px rgba(0,212,255,.9),0 0 22px rgba(0,212,255,.6),inset 0 0 14px rgba(0,212,255,.4); border-color:#5ce0ff;} }
+.pr-tline{ overflow:hidden; white-space:nowrap; padding:3px 12px; }
+.pr-tline .pr-scroll{ display:inline-block; padding-left:100%; }
+.pr-tline.info .pr-scroll{ color:#fff; font-size:11px; animation:prScroll 16s linear infinite; text-shadow:0 0 4px rgba(255,255,255,.3); }
+.pr-tline.mon .pr-scroll{ color:#00d4ff; font-size:12px; animation:prScroll 13s linear infinite; text-shadow:0 0 6px rgba(0,212,255,.6); }
+.pr-tline.mon .pr-sep{ color:#c77dff; padding:0 10px; }
+.pr-tline.mon .pr-next{ color:#ffd23f; text-shadow:0 0 6px rgba(255,210,63,.6); }
+@keyframes prScroll{ 0%{transform:translateX(0);} 100%{transform:translateX(-100%);} }
+.pr-bottom{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+.pr-dot{ width:9px; height:9px; border-radius:50%; background:#ff006e; box-shadow:0 0 8px rgba(255,0,110,.8); opacity:0; transition:opacity .2s; }
+.pr-dot.on{ opacity:1; animation:prBlink 1s ease-in-out infinite; }
+@keyframes prBlink{ 0%,100%{opacity:1;} 50%{opacity:.12;} }
+.pr-link{ line-height:0; } .pr-link img{ height:34px; width:auto; display:block; filter:drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
+.pr-divline{ width:120px; height:1px; background:#2a2a2a; }
+.pr-plur{ color:#c77dff; font-size:16px; font-weight:700; letter-spacing:6px; text-align:center; font-family:'Courier New',monospace; }
+/* ── end BLOG0102 ── */
 </style>
 </head>
 <body>
+<!-- BLOG0102 — Pocket Rave portrait surface (shown only in portrait; .app hidden then) -->
+<div id="pocketRave">
+  <div class="pr-header">
+    <div class="pr-brandwrap">
+      <span class="pr-brand">ONEMANSHYO</span>
+      <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_02]</span></span>
+    </div>
+  </div>
+  <div class="pr-tabbar">
+    <div class="pr-tab active" id="prTabMusic" onclick="prTab('music')">MUSIC</div>
+    <div class="pr-tab" id="prTabGlover" onclick="prTab('glover')">GLOVER</div>
+  </div>
+  <div class="pr-panel" id="prMusic">
+    <div class="pr-hero">
+      <div class="pr-facewrap" id="prPlay" onclick="prToggle()"><canvas id="prFace" width="260" height="260"></canvas></div>
+    </div>
+    <div class="pr-tron">
+      <div class="pr-tline info"><span class="pr-scroll" id="prInfo">Chippy &middot; House &middot; 124 bpm</span></div>
+      <div class="pr-tline mon"><span class="pr-scroll" id="prMon">None &middot; raw play</span></div>
+    </div>
+    <div class="pr-bottom">
+      <div class="pr-dot" id="prDot"></div>
+      <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
+      <div class="pr-divline"></div>
+      <div class="pr-plur">PLUR</div>
+    </div>
+  </div>
+  <div class="pr-panel" id="prGlover"><canvas id="prGloverCv"></canvas></div>
+</div>
+
 <div class="app">
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_13_0]</span>
+      <span class="ver">[Beta&nbsp;V1_13_02]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -3852,9 +3936,91 @@
     });
     // expose for stage 2 wiring
     window._lineup = { get slots(){ return slots; } };
+    // BLOG0102: mobile Pocket Rave — let the portrait surface run/stop the default lineup on Chippy-tap.
+    window._playLineup = function(){
+      if(!slots.length) return;
+      luActive=true;
+      if(!playing){ startSet(); }
+      luEngageSlot(0);
+    };
+    window._stopLineup = function(){ if(window._luStop) window._luStop(); if(typeof stopTransport==="function") stopTransport(); };
+    window._isPlaying = function(){ return !!playing; };
   })();
 
   setMsg("Ready · "+GENRE.house.name+" · press play", CY);
+
+  // ── BLOG0102 — Pocket Rave portrait surface wiring ──────────────────────────
+  (function initPocketRave(){
+    const face=document.getElementById("prFace"); if(!face) return;
+    document.getElementById("prSquint").src = YOBOT_SRC;   // full-version mark
+
+    // Chippy face — reuse the same drift-eye look as the app's drawFace
+    const fx=face.getContext("2d");
+    function prDrawFace(){
+      const W=face.width,H=face.height,cx=W/2,cy=H/2,r=Math.min(W,H)*0.34;
+      fx.clearRect(0,0,W,H);
+      fx.beginPath(); fx.arc(cx,cy,r,0,Math.PI*2); fx.fillStyle="#ffd23f"; fx.fill();
+      fx.lineWidth=2.2; fx.strokeStyle="#000"; fx.stroke();
+      const cyc=7700, ph=(performance.now()%cyc)/cyc;
+      const dx=Math.sin(ph*Math.PI*2)*r*0.10, dy=Math.sin(ph*Math.PI*2*0.5)*r*0.06;
+      const ex=r*0.40, ey=-r*0.10, eyeR=r*0.12;
+      fx.fillStyle="#000";
+      [[-ex,ey],[ex,ey]].forEach(([bx,by])=>{ fx.beginPath(); fx.arc(cx+bx+dx,cy+by+dy,eyeR,0,Math.PI*2); fx.fill(); });
+      fx.strokeStyle="#000"; fx.lineWidth=r*0.07; fx.lineCap="round";
+      fx.beginPath(); fx.moveTo(cx-r*0.34,cy+r*0.30+dy*0.4); fx.quadraticCurveTo(cx,cy+r*0.48+dy*0.4,cx+r*0.34,cy+r*0.30+dy*0.4); fx.stroke();
+      requestAnimationFrame(prDrawFace);
+    }
+    prDrawFace();
+
+    // tap Chippy → play/stop the DEFAULT LINEUP
+    window.prToggle=function(){
+      const playingNow = window._isPlaying && window._isPlaying();
+      if(playingNow){ if(window._stopLineup) window._stopLineup(); }
+      else { if(window._playLineup) window._playLineup(); }
+    };
+
+    // live tickers — read the real now/next state each second
+    function prUpdate(){
+      const pl = window._isPlaying && window._isPlaying();
+      document.getElementById("prPlay").classList.toggle("playing", !!pl);
+      document.getElementById("prDot").classList.toggle("on", !!pl);
+      // info line: name · genre · key · bpm  (from the live INFO fields if present)
+      const nm=(document.querySelector('.summary-title')||{}).textContent||"Chippy";
+      const info = nm+"  ·  "+(GENRE[genre]?GENRE[genre].name:"House")+"  ·  "+BPM+" bpm";
+      document.getElementById("prInfo").textContent=info;
+      // monitor line: reuse the app's now/next banner text
+      const nn=document.getElementById("nowNextScroll");
+      document.getElementById("prMon").innerHTML = nn ? nn.innerHTML : "None · raw play";
+      setTimeout(prUpdate, 700);
+    }
+    prUpdate();
+
+    // tabs
+    window.prTab=function(w){
+      const m=document.getElementById("prMusic"), g=document.getElementById("prGlover");
+      const tm=document.getElementById("prTabMusic"), tg=document.getElementById("prTabGlover");
+      if(w==="glover"){ m.style.display="none"; g.style.display="block"; tm.classList.remove("active"); tg.classList.add("active");
+        prSizeGlover(); if(!prGloverOn){ prGloverOn=true; prDrawGlover(); } }
+      else { g.style.display="none"; m.style.display="flex"; tg.classList.remove("active"); tm.classList.add("active"); }
+    };
+
+    // Glover — simple beat-reactive rings (stage-1 stand-in)
+    const gcv=document.getElementById("prGloverCv"), gx=gcv.getContext("2d"); let prGloverOn=false, gT=0;
+    function prSizeGlover(){ gcv.width=gcv.clientWidth; gcv.height=gcv.clientHeight; }
+    window.addEventListener("resize", ()=>{ if(document.getElementById("prGlover").style.display!=="none") prSizeGlover(); });
+    function prDrawGlover(){
+      if(document.getElementById("prGlover").style.display==="none"){ prGloverOn=false; return; }
+      const W=gcv.width,H=gcv.height,cx=W/2,cy=H/2, pl=window._isPlaying&&window._isPlaying();
+      gT += pl?0.045:0.008;
+      gx.fillStyle="rgba(0,0,0,0.16)"; gx.fillRect(0,0,W,H);
+      const beat = pl ? (0.5+0.5*Math.sin(gT*4)) : 0.15;
+      for(let i=0;i<9;i++){ const f=i/9, rad=(Math.min(W,H)*0.08)+f*Math.min(W,H)*0.42+beat*40*(1-f), hue=(gT*40+i*24)%360;
+        gx.beginPath(); gx.arc(cx,cy,rad,0,Math.PI*2); gx.strokeStyle="hsla("+hue+",90%,"+(55+beat*20)+"%,"+(0.5*(1-f)+0.15)+")"; gx.lineWidth=2+beat*3*(1-f); gx.stroke(); }
+      gx.beginPath(); gx.arc(cx,cy,10+beat*22,0,Math.PI*2); gx.fillStyle="rgba(255,0,110,"+(0.4+beat*0.5)+")"; gx.fill();
+      requestAnimationFrame(prDrawGlover);
+    }
+  })();
+  // ── end BLOG0102 ──
 
 })();
 </script>
