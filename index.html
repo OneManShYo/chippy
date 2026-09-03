@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_13_04  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_13_05  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_13_04]</title>
+<title>OMS Chippy [Beta V1_13_05]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -392,7 +392,9 @@
   border-bottom:2px solid transparent; cursor:pointer; transition:all .18s; }
 .pr-tab.active{ color:#00d4ff; border-bottom:2px solid #00d4ff; }
 .pr-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
-#prMusic{ justify-content:center; gap:18px; padding:18px 0; }
+#prMusic{ justify-content:center; gap:18px; padding:18px 0; position:relative; }
+#prRollBg{ position:absolute; inset:0; width:100%; height:100%; z-index:0; opacity:0.35; pointer-events:none; }
+#prMusic > .pr-hero, #prMusic > .pr-tron, #prMusic > .pr-bottom{ position:relative; z-index:1; }
 #prGlover{ position:relative; background:#000; display:none; }
 .pr-hero{ display:flex; align-items:center; justify-content:center; }
 .pr-facewrap{ width:calc(100% - 68px); height:300px; border-radius:10px; cursor:pointer; background:#0a0a0a; border:2px solid #00d4ff;
@@ -407,13 +409,14 @@
   background:radial-gradient(ellipse at 50% 50%, rgba(0,180,255,.06), rgba(0,0,0,0) 70%), #060a0d; border:2px solid #00d4ff;
   box-shadow:0 0 6px rgba(0,212,255,.7),0 0 14px rgba(0,212,255,.45),inset 0 0 10px rgba(0,212,255,.35); }
 .pr-tline{ overflow:hidden; white-space:nowrap; padding:3px 12px; }
-.pr-tline .pr-scroll{ display:inline-block; padding-left:100%; }
+.pr-tline .pr-scroll{ display:inline-block; }
 .pr-tline.info{ text-align:center; }
 .pr-tline.info .pr-scroll{ color:#fff; font-size:11px; padding-left:0; text-shadow:0 0 4px rgba(255,255,255,.3); }
-.pr-tline.mon .pr-scroll{ color:#00d4ff; font-size:12px; animation:prScroll 13s linear infinite; text-shadow:0 0 6px rgba(0,212,255,.6); }
+.pr-tline.mon{ position:relative; }
+.pr-tline.mon .pr-scroll{ color:#00d4ff; font-size:12px; animation:prScroll 14s linear infinite; text-shadow:0 0 6px rgba(0,212,255,.6); white-space:nowrap; will-change:transform; }
 .pr-tline.mon .pr-sep{ color:#c77dff; padding:0 10px; }
 .pr-tline.mon .pr-next{ color:#ffd23f; text-shadow:0 0 6px rgba(255,210,63,.6); }
-@keyframes prScroll{ 0%{transform:translateX(0);} 100%{transform:translateX(-100%);} }
+@keyframes prScroll{ from{ transform:translateX(100%);} to{ transform:translateX(-100%);} }
 .pr-bottom{ display:flex; flex-direction:column; align-items:center; gap:18px; }
 .pr-link{ line-height:0; } .pr-link img{ height:34px; width:auto; display:block; filter:drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
 .pr-divline{ width:120px; height:1px; background:#2a2a2a; }
@@ -426,17 +429,12 @@
 <body>
 <!-- BLOG0102 — Pocket Rave portrait surface (shown only in portrait; .app hidden then) -->
 <div id="pocketRave">
-  <div class="pr-header">
-    <div class="pr-brandwrap">
-      <span class="pr-brand">ONEMANSHYO</span>
-      <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_04]</span></span>
-    </div>
-  </div>
   <div class="pr-tabbar">
     <div class="pr-tab active" id="prTabMusic" onclick="prTab('music')">MUSIC</div>
     <div class="pr-tab" id="prTabGlover" onclick="prTab('glover')">GLOVER</div>
   </div>
   <div class="pr-panel" id="prMusic">
+    <canvas id="prRollBg"></canvas>
     <div class="pr-hero">
       <div class="pr-facewrap" id="prPlay" onclick="prToggle()"><canvas id="prFace" width="260" height="260"></canvas></div>
     </div>
@@ -445,10 +443,14 @@
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">None &middot; raw play</span></div>
     </div>
     <div class="pr-bottom">
-      <a class="pr-link" href="https://chippy.onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — chippy.onemanshyo.com"><img id="prSquint" alt="full version"></a>
+      <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
       <div class="pr-divline"></div>
       <div class="pr-plur">PLUR</div>
       <div class="pr-dot" id="prDot"></div>
+      <div class="pr-brandwrap">
+        <span class="pr-brand">ONEMANSHYO</span>
+        <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_05]</span></span>
+      </div>
     </div>
   </div>
   <div class="pr-panel" id="prGlover"></div>
@@ -458,7 +460,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_13_04]</span>
+      <span class="ver">[Beta&nbsp;V1_13_05]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -4013,6 +4015,46 @@
       requestAnimationFrame(prDrawFace);
     }
     prDrawFace();
+
+    // ── background vertical piano-roll — dim scrolling note-blocks behind the boxes (ambient texture) ──
+    const bg=document.getElementById("prRollBg"), bx=bg && bg.getContext("2d");
+    function prSizeBg(){ if(!bg) return; bg.width=bg.clientWidth; bg.height=bg.clientHeight; }
+    function prDrawBg(){
+      if(!bg||!bx){ return; }
+      // only render while the MUSIC panel is visible
+      if(document.getElementById("prMusic").style.display==="none"){ requestAnimationFrame(prDrawBg); return; }
+      if(bg.width!==bg.clientWidth||bg.height!==bg.clientHeight) prSizeBg();
+      const W=bg.width, H=bg.height;
+      bx.clearRect(0,0,W,H);
+      try{
+        const nLanes=VOICES.length, colW=W/nLanes;
+        const winBars=8, winSteps=winBars*STEPS_PER_BAR;
+        const pxPerStep=H/winSteps;
+        // continuous scroll position (matches the app's session clock); time flows UP
+        const sc=(typeof sessionClock==="function")?sessionClock():{esF:0};
+        const off=(playing && actx && playOriginCtx)? sc.esF : 0;
+        const Yr=(st)=> H - (st-off)*pxPerStep;
+        VOICES.forEach((v,i)=>{
+          const notes=(pattern && pattern[v.id])||[];
+          const x=i*colW;
+          bx.fillStyle=v.color;
+          notes.forEach(ev=>{
+            // draw this note across a few loop-lengths so the column keeps flowing
+            for(let rep=-1; rep<=Math.ceil(winSteps/TOTAL_STEPS)+1; rep++){
+              const st=ev.step + rep*TOTAL_STEPS;
+              const y1=Yr(st+ (ev.dur||1)), y2=Yr(st);
+              if(y2<0||y1>H) continue;
+              bx.globalAlpha = v.on?0.9:0.25;
+              bx.fillRect(x+2, y1, colW-4, Math.max(2,y2-y1));
+            }
+          });
+        });
+        bx.globalAlpha=1;
+      }catch(e){ /* pattern not ready yet */ }
+      requestAnimationFrame(prDrawBg);
+    }
+    window.addEventListener("resize", prSizeBg);
+    prSizeBg(); prDrawBg();
 
     // tap Chippy → play/stop the DEFAULT LINEUP
     window.prToggle=function(){
