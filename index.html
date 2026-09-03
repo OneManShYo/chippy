@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_13_06  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_13_09  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -9,8 +9,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_13_06]</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OMS Chippy [Beta V1_13_09]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -326,6 +326,7 @@
   #lineupBtn { color:#00d4ff; border-color:#1e4a55; }
   #lineupBtn:hover { color:#5ce0ff; border-color:#00d4ff; }
   #lineupBtn.active { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.10); box-shadow:0 0 8px rgba(0,212,255,.25); }
+  #sourceBox{ min-width:104px; }
   #lineupScrim { position:fixed; inset:0; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:60; }
   #lineupScrim.open { opacity:1; pointer-events:auto; }
   #lineupPanel { position:fixed; top:0; right:0; height:100%; width:340px; max-width:90vw; background:#0d0d0d;
@@ -366,17 +367,30 @@
    Shown only in portrait; the desktop app (.app) is hidden then (NOT reflowed —
    dodges the old narrow-width black-screen). Two independent surfaces. */
 #pocketRave{ display:none; }
+#prSafeTop{ position:fixed; top:0; left:18px; right:18px; height:calc(env(safe-area-inset-top) + 26px); background:#0a0a0a; z-index:120; display:none; box-shadow:inset 0 -3px 6px rgba(0,0,0,.85); }
+  .pr-jacks{ position:absolute; left:38%; right:14px; bottom:3px; display:flex; justify-content:space-between; }
+  .pr-jack{ width:32px; height:11px; border-radius:3px;
+    background:linear-gradient(180deg,#3a3a3a,#151515);
+    border:1px solid #000; box-shadow:0 1px 1px rgba(0,0,0,.8), inset 0 1px 1px rgba(255,255,255,.12);
+    position:relative; }
+  .pr-jack::after{ content:""; position:absolute; inset:3px 10px; border-radius:2px;
+    background:radial-gradient(circle at 50% 40%, #4a4a4a, #0c0c0c); }
+  .pr-pwr{ position:absolute; left:12px; bottom:3px; width:22px; height:12px; border-radius:2px;
+    background:linear-gradient(180deg,#5a0f16,#2a0508); border:1px solid #000;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.08), 0 1px 1px rgba(0,0,0,.7); }
 @media (orientation:portrait){
   .app{ display:none !important; }
+  #prSafeTop{ display:block; }
   #pocketRave{ display:flex; position:fixed; inset:0; flex-direction:column; background:linear-gradient(135deg,#0c0c0c,#1a1a1a);
     font-family:'Courier New',monospace; z-index:100; -webkit-user-select:none; user-select:none; overflow:hidden;
+    padding-top:calc(env(safe-area-inset-top) + 26px);
     /* Moog/Buchla walnut end-cheeks (from the app; slightly narrower for phone) */
     border-left:14px solid transparent; border-right:14px solid transparent;
     border-image:linear-gradient(180deg,#3d2817 0%,#5a3a22 8%,#4a2f1b 22%,#6b4428 45%,#4a2f1b 68%,#5a3a22 85%,#3a2515 100%) 1; }
   /* brushed-metal rail between wood cheek and the face — same as the app */
-  #pocketRave::before, #pocketRave::after{ content:""; position:absolute; top:0; bottom:0; width:2px; z-index:110; pointer-events:none;
+  #pocketRave::before, #pocketRave::after{ content:""; position:fixed; top:0; bottom:0; width:2px; z-index:140; pointer-events:none;
     background:linear-gradient(90deg,#2a2a2a 0%,#8a8d90 25%,#c8ccce 50%,#6f7276 75%,#242424 100%); box-shadow:0 0 1px rgba(0,0,0,.6); }
-  #pocketRave::before{ left:0; } #pocketRave::after{ right:0; }
+  #pocketRave::before{ left:14px; } #pocketRave::after{ right:14px; }
 }
 .pr-header{ height:62px; background:linear-gradient(180deg,#2a2a2a,#222); border-bottom:1px solid #444;
   box-shadow:0 2px 10px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; padding:0 16px; flex-shrink:0; }
@@ -392,7 +406,7 @@
   border-bottom:2px solid transparent; cursor:pointer; transition:all .18s; }
 .pr-tab.active{ color:#00d4ff; border-bottom:2px solid #00d4ff; }
 .pr-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
-#prMusic{ justify-content:center; gap:18px; padding:70px 0 24px; position:relative; }
+#prMusic{ justify-content:center; gap:16px; padding:70px 0 40px; position:relative; }
 #prRollBg{ position:absolute; inset:0; width:100%; height:100%; z-index:0; opacity:0.35; pointer-events:none; }
 #prMusic > .pr-hero, #prMusic > .pr-tron, #prMusic > .pr-bottom, #prMusic > .pr-ver{ position:relative; z-index:1; }
 #prGlover{ position:relative; background:#000; display:none; }
@@ -428,6 +442,13 @@
 </head>
 <body>
 <!-- BLOG0102 — Pocket Rave portrait surface (shown only in portrait; .app hidden then) -->
+<div id="prSafeTop">
+  <span class="pr-pwr"></span>
+  <div class="pr-jacks">
+    <span class="pr-jack"></span><span class="pr-jack"></span><span class="pr-jack"></span>
+    <span class="pr-jack"></span><span class="pr-jack"></span>
+  </div>
+</div>
 <div id="pocketRave">
   <div class="pr-header">
     <div class="pr-brandwrap">
@@ -447,7 +468,7 @@
       <div class="pr-tline info"><span class="pr-scroll" id="prInfo">Chippy &middot; House &middot; 124 bpm</span></div>
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">press chippy to play</span></div>
     </div>
-    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_13_06]</div>
+    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_13_09]</div>
     <div class="pr-bottom">
       <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
       <div class="pr-divline"></div>
@@ -462,7 +483,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_13_06]</span>
+      <span class="ver">[Beta&nbsp;V1_13_09]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -548,7 +569,7 @@
       </div>
     </div>
 
-    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox">Ricoh 2A03</span></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><select id="sourceBox" class="sel" data-hint="sourceBox"><option value="2a03">Ricoh 2A03</option><option value="sid">SID 6581</option></select></div>
     <div class="devstrip" id="devStrip"></div>
 
     <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">COMP</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-amt="1"><span class="wv" id="mastercomp-amt-v" style="color:#bbb">4</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">LIMIT</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button></span><span class="mproc-sep"></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></div>
@@ -1060,6 +1081,16 @@
   let masterVolume=100;                                     // master output volume 0..100 (100 = unity within master*0.5)
   let airDest=null, airEl=null, airBridge=false;   // audio routes through an <audio> element (routable)
   let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
+  // ── BLOG0107 — SID 6581 chip mode (voice-model family #2) ──────────────────
+  // Stage 1: flipping SOURCE 2A03 -> SID inserts the SID's signature multimode
+  // FILTER (BiquadFilter LP + resonance) into the voice path. The filter is ~90%
+  // of "the C64 sound" — the 2A03 has nothing like it. Voices route g -> sidFilter
+  // -> master when SID is active (vs g -> curDest for 2A03). Stage 2/3 add ring-mod
+  // + hard-sync + PWM/saw voice shapes.
+  let chipMode="2a03";                 // "2a03" | "sid"
+  let prChipRandom=false;              // mobile PocketRave: roll a random chip per new song (BLOG0107)
+  let sidFilter=null;                  // the SID multimode filter (BiquadFilter)
+  let sidFilterCutoff=1400, sidFilterQ=8;   // squelchy default: mid cutoff, high resonance
   let audioEffectsReverbOn=true, audioEffectsReverbAmt=0.10;   // master effects bus ON by default at 10% (dialed-in house)
   let audioEffectsEchoOn=false, audioEffectsEchoAmt=0.30;      // ECHO off by default; wheel = wet/feedback amount
   let audioEffectsFilterPos=50, audioEffectsFilterOn=false;   // FILTER position 0..100 (50=neutral). On/off is a BYPASS toggle — position is remembered when off.
@@ -1078,6 +1109,12 @@
     audioColdStart=true;   // first transport start after creation gets extra warm-up lead (bridge spin-up)
     actx=new (window.AudioContext||window.webkitAudioContext)();
     master=actx.createGain(); master.gain.value=0.5;
+    // BLOG0107: SID multimode filter — sits before master; voices route through it in SID mode.
+    sidFilter=actx.createBiquadFilter();
+    sidFilter.type="lowpass";
+    sidFilter.frequency.value=sidFilterCutoff;
+    sidFilter.Q.value=sidFilterQ;
+    sidFilter.connect(master);
     // FILTER (audio effect) — bipolar DJ filter inserted on the master bus: master → HP → LP → output.
     // At neutral (pos 50) HP sits at ~20Hz and LP at ~20kHz = fully transparent. Sweeping the wheel
     // moves ONE of them: pos<50 pulls the LP cutoff down (muffle/underwater), pos>50 pushes the HP
@@ -1211,21 +1248,25 @@
     setInterval(()=>{ if(bgPumpEnabled && playing && document.hidden){ if(actx.state==="suspended") actx.resume(); tick(); } }, 100);
   }
 
+  // BLOG0107: in SID mode voices go through the SID filter; in 2A03 mode straight to curDest.
+  function voiceOut(){ return (chipMode==="sid" && sidFilter) ? sidFilter : curDest; }
+
   function playPulse(duty, hz, dur, level, when){
     const o=actx.createOscillator(), g=actx.createGain();
     o.setPeriodicWave(pulseWaves[duty]); o.frequency.setValueAtTime(hz, when);
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
-    o.connect(g); g.connect(curDest); o.start(when); o.stop(when+dur+0.02);
+    o.connect(g); g.connect(voiceOut()); o.start(when); o.stop(when+dur+0.02);
   }
   function playTri(hz, dur, level, when){
     const o=actx.createOscillator(), g=actx.createGain();
-    o.type="triangle"; o.frequency.setValueAtTime(hz, when);
+    // SID's bass character leans saw; 2A03 uses triangle. Swap the shape in SID mode.
+    o.type=(chipMode==="sid")?"sawtooth":"triangle"; o.frequency.setValueAtTime(hz, when);
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
-    o.connect(g); g.connect(curDest); o.start(when); o.stop(when+dur+0.02);
+    o.connect(g); g.connect(voiceOut()); o.start(when); o.stop(when+dur+0.02);
   }
   function playNoise(lo, hi, dur, level, when){
     const src=actx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
@@ -1235,7 +1276,7 @@
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.002);
     g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
-    src.connect(bp); bp.connect(g); g.connect(curDest);
+    src.connect(bp); bp.connect(g); g.connect(voiceOut());
     src.start(when); src.stop(when+dur+0.02);
   }
   // FX SWEEP — a noise riser/faller. Takes a noise buffer (white/pink/brown). UP = start silent+low,
@@ -2932,6 +2973,13 @@
   let genN=0;
   function generate(){
     genN++;
+    // BLOG0107: on mobile (PocketRave), roll a random chip engine per NEW SONG — so a full tune
+    // plays out in its chosen chip (2A03 or SID) before the next generate re-rolls. Desktop keeps
+    // the explicit SOURCE dropdown (prChipRandom stays false there).
+    if(prChipRandom){
+      chipMode = (Math.random()<0.5) ? "2a03" : "sid";
+      const sb=document.getElementById("sourceBox"); if(sb) sb.value=chipMode;
+    }
     const seed=(Date.now() ^ (genN*2654435761))>>>0;
     // random transpose within a musical range
     transpose = [ -5,-3,0,0,2,3,5,7 ][Math.floor(mkRnd(seed)()*8)];
@@ -3573,6 +3621,16 @@
     msgState("persistence", bgPumpEnabled);
   };
 
+  // BLOG0107: SOURCE dropdown selects the chip voice-model (2A03 / SID 6581).
+  (function(){
+    const sb=document.getElementById("sourceBox");
+    if(!sb) return;
+    sb.onchange=()=>{
+      chipMode = sb.value;   // "2a03" | "sid"
+      if(typeof msgState==="function") msgState("selecta", (chipMode==="sid") ? "SID 6581 — filtered C64 synth" : "Ricoh 2A03 — NES");
+    };
+  })();
+
   // tabs
   document.querySelectorAll(".glovbtn").forEach(b=>{
     b.onclick=()=>{
@@ -4062,7 +4120,10 @@
     window.prToggle=function(){
       const playingNow = window._isPlaying && window._isPlaying();
       if(playingNow){ if(window._stopLineup) window._stopLineup(); }
-      else { if(window._playLineup) window._playLineup(); }
+      else {
+        prChipRandom = true;   // BLOG0107: mobile rolls a random chip per new song
+        if(window._playLineup) window._playLineup();
+      }
     };
 
     // live tickers — read the real now/next state each second
