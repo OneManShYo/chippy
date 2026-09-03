@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_13_02  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_13_03  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_13_02]</title>
+<title>OMS Chippy [Beta V1_13_03]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -75,7 +75,7 @@
   }
   .bgtoggle:hover { border-color:#555; color:#ccc; }
   .bgtoggle.on { border-color:#00e08a; color:#00e08a; background:rgba(0,224,138,.10); box-shadow:0 0 8px rgba(0,224,138,.25); }
-  /* rave controls (persistence, orientation, record, readout) are always visible — recording/persistence run regardless of tab */
+  /* glover controls (persistence, orientation, record, readout) are always visible — recording/persistence run regardless of tab */
   #aspectBtn .ori-h, #aspectBtn .ori-v { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); border:1.5px solid currentColor; border-radius:1.5px; transition:opacity .15s; }
   #aspectBtn .ori-h { width:15px; height:10px; opacity:1; }      /* landscape mark */
   #aspectBtn .ori-v { width:10px; height:15px; opacity:.35; }    /* portrait mark, overlapped */
@@ -100,13 +100,13 @@
   .rectime.recording { color:#ff2d6f; border-color:#ff006e; background:rgba(255,0,110,.10); box-shadow:0 0 8px rgba(255,0,110,.22); }
 
   /* RAVE ON */
-  #raveWrap { position:relative; width:100%; aspect-ratio:16/9; max-height:78vh; background:#000; border:1px solid #2a2a2a; border-radius:6px; overflow:hidden; }
+  #gloverWrap { position:relative; width:100%; aspect-ratio:16/9; max-height:78vh; background:#000; border:1px solid #2a2a2a; border-radius:6px; overflow:hidden; }
   #gloverTricks { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
   .glovbtn { flex:1; min-width:80px; padding:9px 8px; border-radius:5px; cursor:pointer; background:#0a0a0a; border:1px solid #2a2a2a; color:#888; font-family:'Courier New',monospace; font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; transition:all .12s; }
   .glovbtn:hover { color:#ccc; border-color:#444; }
   .glovbtn.active { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.10); box-shadow:0 0 8px rgba(0,212,255,.25); }
-  #raveWrap.vertical { aspect-ratio:9/16; max-height:82vh; width:auto; margin:0 auto; }
-  #rave { display:block; width:100%; height:100%; }
+  #gloverWrap.vertical { aspect-ratio:9/16; max-height:82vh; width:auto; margin:0 auto; }
+  #glover { display:block; width:100%; height:100%; }
   .tab {
     padding:8px 13px; font-size:12px; font-weight:600; letter-spacing:.4px;
     color:#888; border-bottom:2px solid transparent; cursor:pointer; transition:all .18s;
@@ -368,15 +368,22 @@
 #pocketRave{ display:none; }
 @media (orientation:portrait){
   .app{ display:none !important; }
-  #pocketRave{ display:flex; position:fixed; inset:0; flex-direction:column; background:#0d0d0d;
-    font-family:'Courier New',monospace; z-index:100; -webkit-user-select:none; user-select:none; }
+  #pocketRave{ display:flex; position:fixed; inset:0; flex-direction:column; background:linear-gradient(135deg,#0c0c0c,#1a1a1a);
+    font-family:'Courier New',monospace; z-index:100; -webkit-user-select:none; user-select:none; overflow:hidden;
+    /* Moog/Buchla walnut end-cheeks (from the app; slightly narrower for phone) */
+    border-left:14px solid transparent; border-right:14px solid transparent;
+    border-image:linear-gradient(180deg,#3d2817 0%,#5a3a22 8%,#4a2f1b 22%,#6b4428 45%,#4a2f1b 68%,#5a3a22 85%,#3a2515 100%) 1; }
+  /* brushed-metal rail between wood cheek and the face — same as the app */
+  #pocketRave::before, #pocketRave::after{ content:""; position:absolute; top:0; bottom:0; width:2px; z-index:110; pointer-events:none;
+    background:linear-gradient(90deg,#2a2a2a 0%,#8a8d90 25%,#c8ccce 50%,#6f7276 75%,#242424 100%); box-shadow:0 0 1px rgba(0,0,0,.6); }
+  #pocketRave::before{ left:0; } #pocketRave::after{ right:0; }
 }
 .pr-header{ height:50px; background:linear-gradient(180deg,#2a2a2a,#222); border-bottom:1px solid #444;
   box-shadow:0 2px 10px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; padding:0 16px; flex-shrink:0; }
 .pr-brandwrap{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-.pr-brand{ font-size:19px; font-weight:700; line-height:1.05;
+.pr-brand{ font-size:19px; font-weight:700; line-height:1;
   background:linear-gradient(45deg,#00d4ff,#ff006e); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-.pr-line2{ margin-top:1px; }
+.pr-line2{ margin-top:-1px; }
 .pr-sub{ font-size:11px; color:#ffa500; }
 .pr-ver{ font-size:10px; color:#888; margin-left:6px; }
 .pr-tabbar{ height:38px; background:linear-gradient(180deg,#252525,#1e1e1e); border-bottom:1px solid #333;
@@ -387,34 +394,32 @@
 .pr-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
 #prMusic{ justify-content:center; gap:18px; padding:18px 0; }
 #prGlover{ position:relative; background:#000; display:none; }
-#prGloverCv{ position:absolute; inset:0; width:100%; height:100%; }
 .pr-hero{ display:flex; align-items:center; justify-content:center; }
-.pr-facewrap{ width:calc(100% - 68px); height:300px; border-radius:10px; cursor:pointer; background:#0a0a0a; border:2px solid #2a2a2a;
-  display:flex; align-items:center; justify-content:center; box-shadow:inset 0 0 30px rgba(0,0,0,.5); transition:border-color .2s; }
+.pr-facewrap{ width:calc(100% - 68px); height:300px; border-radius:10px; cursor:pointer; background:#0a0a0a; border:2px solid #00d4ff;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 6px rgba(0,212,255,.7),0 0 14px rgba(0,212,255,.45),inset 0 0 10px rgba(0,212,255,.35);
+  transition:border-color .2s; }
 .pr-facewrap.playing{ border-color:#ff006e; animation:prGlow 1.6s ease-in-out infinite; }
 @keyframes prGlow{ 0%,100%{ border-color:#ff006e; box-shadow:0 0 18px rgba(255,0,110,.35), inset 0 0 30px rgba(0,0,0,.5);}
   50%{ border-color:#ff6aa6; box-shadow:0 0 32px rgba(255,0,110,.75), inset 0 0 30px rgba(0,0,0,.5);} }
 #prFace{ width:260px; height:260px; pointer-events:none; }
 .pr-tron{ margin:0 34px; padding:8px 4px; border-radius:10px;
   background:radial-gradient(ellipse at 50% 50%, rgba(0,180,255,.06), rgba(0,0,0,0) 70%), #060a0d; border:2px solid #00d4ff;
-  box-shadow:0 0 6px rgba(0,212,255,.7),0 0 14px rgba(0,212,255,.45),inset 0 0 10px rgba(0,212,255,.35);
-  animation:prTron 2.4s ease-in-out infinite; }
-@keyframes prTron{ 0%,100%{ box-shadow:0 0 6px rgba(0,212,255,.6),0 0 14px rgba(0,212,255,.35),inset 0 0 10px rgba(0,212,255,.28); border-color:#00d4ff;}
-  50%{ box-shadow:0 0 10px rgba(0,212,255,.9),0 0 22px rgba(0,212,255,.6),inset 0 0 14px rgba(0,212,255,.4); border-color:#5ce0ff;} }
+  box-shadow:0 0 6px rgba(0,212,255,.7),0 0 14px rgba(0,212,255,.45),inset 0 0 10px rgba(0,212,255,.35); }
 .pr-tline{ overflow:hidden; white-space:nowrap; padding:3px 12px; }
 .pr-tline .pr-scroll{ display:inline-block; padding-left:100%; }
-.pr-tline.info .pr-scroll{ color:#fff; font-size:11px; animation:prScroll 16s linear infinite; text-shadow:0 0 4px rgba(255,255,255,.3); }
+.pr-tline.info{ text-align:center; }
+.pr-tline.info .pr-scroll{ color:#fff; font-size:11px; padding-left:0; text-shadow:0 0 4px rgba(255,255,255,.3); }
 .pr-tline.mon .pr-scroll{ color:#00d4ff; font-size:12px; animation:prScroll 13s linear infinite; text-shadow:0 0 6px rgba(0,212,255,.6); }
 .pr-tline.mon .pr-sep{ color:#c77dff; padding:0 10px; }
 .pr-tline.mon .pr-next{ color:#ffd23f; text-shadow:0 0 6px rgba(255,210,63,.6); }
 @keyframes prScroll{ 0%{transform:translateX(0);} 100%{transform:translateX(-100%);} }
-.pr-bottom{ display:flex; flex-direction:column; align-items:center; gap:12px; }
-.pr-dot{ width:9px; height:9px; border-radius:50%; background:#ff006e; box-shadow:0 0 8px rgba(255,0,110,.8); opacity:0; transition:opacity .2s; }
-.pr-dot.on{ opacity:1; animation:prBlink 1s ease-in-out infinite; }
-@keyframes prBlink{ 0%,100%{opacity:1;} 50%{opacity:.12;} }
+.pr-bottom{ display:flex; flex-direction:column; align-items:center; gap:18px; }
 .pr-link{ line-height:0; } .pr-link img{ height:34px; width:auto; display:block; filter:drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
 .pr-divline{ width:120px; height:1px; background:#2a2a2a; }
 .pr-plur{ color:#c77dff; font-size:16px; font-weight:700; letter-spacing:6px; text-align:center; font-family:'Courier New',monospace; }
+.pr-dot{ width:7px; height:7px; border-radius:50%; background:#ff006e; box-shadow:0 0 8px rgba(255,0,110,.8); opacity:0; transition:opacity .2s; }
+.pr-dot.on{ opacity:1; }
 /* ── end BLOG0102 ── */
 </style>
 </head>
@@ -424,7 +429,7 @@
   <div class="pr-header">
     <div class="pr-brandwrap">
       <span class="pr-brand">ONEMANSHYO</span>
-      <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_02]</span></span>
+      <span class="pr-line2"><span class="pr-sub">chippy app</span> <span class="pr-ver">[Beta&nbsp;V1_13_03]</span></span>
     </div>
   </div>
   <div class="pr-tabbar">
@@ -440,20 +445,20 @@
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">None &middot; raw play</span></div>
     </div>
     <div class="pr-bottom">
-      <div class="pr-dot" id="prDot"></div>
-      <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
+      <a class="pr-link" href="https://chippy.onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — chippy.onemanshyo.com"><img id="prSquint" alt="full version"></a>
       <div class="pr-divline"></div>
       <div class="pr-plur">PLUR</div>
+      <div class="pr-dot" id="prDot"></div>
     </div>
   </div>
-  <div class="pr-panel" id="prGlover"><canvas id="prGloverCv"></canvas></div>
+  <div class="pr-panel" id="prGlover"></div>
 </div>
 
 <div class="app">
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_13_02]</span>
+      <span class="ver">[Beta&nbsp;V1_13_03]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -463,7 +468,7 @@
 
   <div class="tabbar">
     <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop selecta set">MUSIC</div>
-    <div class="tab" id="raveTab" data-panel="rave" title="Glover — Chippy gives you a full-screen light show. Pick a trick below.">GLOVER</div>
+    <div class="tab" id="gloverTab" data-panel="glover" title="Glover — Chippy gives you a full-screen light show. Pick a trick below.">GLOVER</div>
     <div class="tab" id="aboutTab" data-panel="about" title="What Chippy is, who made it, and the license">ABOUT</div>
     <div class="bar-right">
       <button class="bgtoggle on" id="bgBtn" title="persistence — keeps playing when you switch to another tab">∞</button>
@@ -550,9 +555,9 @@
 
    </div><!-- /panelGen -->
 
-   <div class="panel" id="panelRave">
-    <div id="raveWrap">
-      <canvas id="rave"></canvas>
+   <div class="panel" id="panelGlover">
+    <div id="gloverWrap">
+      <canvas id="glover"></canvas>
     </div>
     <div id="gloverTricks">
       <button class="glovbtn active" data-trick="tracers">Tracers</button>
@@ -562,7 +567,7 @@
       <button class="glovbtn" data-trick="orbits">Orbits</button>
       <button class="glovbtn" data-trick="bloom">Bloom</button>
     </div>
-   </div><!-- /panelRave -->
+   </div><!-- /panelGlover -->
 
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
@@ -2016,8 +2021,8 @@
   function frame(){
     requestAnimationFrame(frame);
     tick();
-    // draw the rave canvas whenever it's visible OR being recorded (recording no longer forces the tab)
-    if(raveActive || (mediaRec && mediaRec.state==="recording")){ drawRave(); if(!raveActive){ draw(); drawFace(); } }
+    // draw the glover canvas whenever it's visible OR being recorded (recording no longer forces the tab)
+    if(gloverActive || (mediaRec && mediaRec.state==="recording")){ drawGlover(); if(!gloverActive){ draw(); drawFace(); } }
     else { draw(); drawFace(); }
   }
 
@@ -2175,36 +2180,36 @@
   // ============================================================
   //  RAVE ON  (fullscreen beat-reactive visual — the easter-egg payoff)
   // ============================================================
-  const raveCv=document.getElementById("rave"), rx=raveCv.getContext("2d");
-  let raveActive=false, raveW=0, raveH=0;
+  const gloverCv=document.getElementById("glover"), rx=gloverCv.getContext("2d");
+  let gloverActive=false, gloverW=0, gloverH=0;
   let gloverTrick="tracers";
-  let raveVertical=false;   // false = 16:9 (1920×1080), true = 9:16 (1080×1920)
-  function resizeRave(){
+  let gloverVertical=false;   // false = 16:9 (1920×1080), true = 9:16 (1080×1920)
+  function resizeGlover(){
     // Fixed true-1080p backing store so screen/canvas capture is real YouTube/Shorts resolution.
-    // CSS scales it to fit the display box; drawing uses raveW/raveH so it adapts to orientation.
-    raveW = raveVertical ? 1080 : 1920;
-    raveH = raveVertical ? 1920 : 1080;
-    raveCv.width=raveW; raveCv.height=raveH;
+    // CSS scales it to fit the display box; drawing uses gloverW/gloverH so it adapts to orientation.
+    gloverW = gloverVertical ? 1080 : 1920;
+    gloverH = gloverVertical ? 1920 : 1080;
+    gloverCv.width=gloverW; gloverCv.height=gloverH;
     rx.setTransform(1,0,0,1,0,0);
   }
-  const RAVE_COLORS=[CY,MAG,YEL,GRN,PUR,"#ff5ea0","#4aa3df","#ffa500"];
+  const GLOVER_COLORS=[CY,MAG,YEL,GRN,PUR,"#ff5ea0","#4aa3df","#ffa500"];
   // Papa Chippy's kids — colored, ~half size, each orbiting on its own radius/speed/phase.
-  const RAVE_KIDS=[];
-  (function(){ for(let i=0;i<6;i++){ RAVE_KIDS.push({
-    col:RAVE_COLORS[i%RAVE_COLORS.length],
+  const GLOVER_KIDS=[];
+  (function(){ for(let i=0;i<6;i++){ GLOVER_KIDS.push({
+    col:GLOVER_COLORS[i%GLOVER_COLORS.length],
     orb:0.26+0.16*Math.random(),     // orbit radius (fraction of min dim)
     sp:(0.3+0.5*Math.random())*(Math.random()<0.5?1:-1),  // orbit speed + direction
     ph:Math.random()*Math.PI*2,      // start phase
     sz:0.06+0.03*Math.random(),      // kid size (fraction of min dim) — about half of papa
     bob:0.4+0.6*Math.random()        // how much they bounce on the kick
   }); } })();
-  let raveHue=0;
-  function drawRave(){
-    if(!raveW){ resizeRave(); if(!raveW) return; }
+  let gloverHue=0;
+  function drawGlover(){
+    if(!gloverW){ resizeGlover(); if(!gloverW) return; }
     const t=nowMs()/1000;
     const kick=env(hit.kick,150), snare=env(hit.snare,130), bass=env(hit.bass,240),
           crash=env(hit.crash,500), bar=env(hit.bar,160), lead=env(hit.lead,180);
-    const cx=raveW/2, cy=raveH/2;
+    const cx=gloverW/2, cy=gloverH/2;
 
     // GLOVER TRICK modifiers — each trick reshapes the same beat-reactive layers.
     const TK={
@@ -2219,13 +2224,13 @@
 
     // background: trails via partial fade
     rx.globalAlpha=1;
-    if(tk.fade>=1){ rx.fillStyle="#050505"; rx.fillRect(0,0,raveW,raveH); }
-    else { rx.globalAlpha=tk.fade; rx.fillStyle="#050505"; rx.fillRect(0,0,raveW,raveH); rx.globalAlpha=1; }
+    if(tk.fade>=1){ rx.fillStyle="#050505"; rx.fillRect(0,0,gloverW,gloverH); }
+    else { rx.globalAlpha=tk.fade; rx.fillStyle="#050505"; rx.fillRect(0,0,gloverW,gloverH); rx.globalAlpha=1; }
     const kflash = tk.strobe ? (kick>0.5?0.9:0.06) : 0.10*kick;
     if(kick>0.02 || tk.strobe){
       rx.globalAlpha=kflash;
-      rx.fillStyle=RAVE_COLORS[Math.floor(bar*RAVE_COLORS.length)%RAVE_COLORS.length];
-      rx.fillRect(0,0,raveW,raveH);
+      rx.fillStyle=GLOVER_COLORS[Math.floor(bar*GLOVER_COLORS.length)%GLOVER_COLORS.length];
+      rx.fillRect(0,0,gloverW,gloverH);
       rx.globalAlpha=1;
     }
 
@@ -2234,7 +2239,7 @@
     // own slow cycle. Sits behind the Chippy family.
     if(tk.ledWall){
       const cols=10, rows=6;
-      const cw=raveW/cols, ch=raveH/rows, gap=Math.max(2, Math.min(cw,ch)*0.06);
+      const cw=gloverW/cols, ch=gloverH/rows, gap=Math.max(2, Math.min(cw,ch)*0.06);
       for(let gy=0; gy<rows; gy++){
         for(let gx=0; gx<cols; gx++){
           const i=gx+gy*cols;
@@ -2243,7 +2248,7 @@
           const spd = 0.5 + (i%5)*0.12;
           const bloom = (Math.sin(t*spd + phase)*0.5+0.5);        // 0..1 fade in/out
           const alpha = 0.05 + bloom*bloom*(0.5 + 0.3*lead);      // eased bloom, gentle
-          const col = RAVE_COLORS[(i + Math.floor(t*0.4)) % RAVE_COLORS.length];
+          const col = GLOVER_COLORS[(i + Math.floor(t*0.4)) % GLOVER_COLORS.length];
           rx.globalAlpha = alpha;
           rx.fillStyle = col;
           rx.fillRect(gx*cw+gap, gy*ch+gap, cw-gap*2, ch-gap*2);
@@ -2268,8 +2273,8 @@
       const sway = tk.liquid ? Math.sin(t*1.1 + i*0.7)*0.22 : 0;
       const undulate = tk.liquid ? (0.85 + 0.25*Math.sin(t*0.9 + i*0.5)) : 1;
       const a=(i/beams)*Math.PI*2 + sway;
-      const len=Math.max(raveW,raveH)*(0.55+0.35*kick)*undulate;
-      const col=RAVE_COLORS[(i+Math.floor(bar*3))%RAVE_COLORS.length];
+      const len=Math.max(gloverW,gloverH)*(0.55+0.35*kick)*undulate;
+      const col=GLOVER_COLORS[(i+Math.floor(bar*3))%GLOVER_COLORS.length];
       const g=rx.createLinearGradient(0,0,Math.cos(a)*len,Math.sin(a)*len);
       g.addColorStop(0, hexA(col, 0.16+0.30*kick));
       g.addColorStop(1, hexA(col, 0));
@@ -2286,9 +2291,9 @@
     const ringN=Math.round(4*tk.rings);
     for(let i=0;i<ringN;i++){
       const ph=(t*0.6+i/ringN)%1;
-      const rad=ph*Math.max(raveW,raveH)*0.6*(1+0.3*kick);
+      const rad=ph*Math.max(gloverW,gloverH)*0.6*(1+0.3*kick);
       rx.globalAlpha=(1-ph)*0.5*(0.4+kick);
-      rx.strokeStyle=RAVE_COLORS[(i+Math.floor(t))%RAVE_COLORS.length];
+      rx.strokeStyle=GLOVER_COLORS[(i+Math.floor(t))%GLOVER_COLORS.length];
       rx.lineWidth=2+4*kick;
       rx.beginPath(); rx.arc(cx,cy,rad,0,Math.PI*2); rx.stroke();
     }
@@ -2297,15 +2302,15 @@
     // TUTTING — full-canvas grid of the same small blinky LEDs, plus a line that cycles between
     // grid points in sharp 90° hops (the geometric/boxy tutting feel). Dots keep their size/blink.
     if(tk.tut){
-      const cell=Math.min(raveW,raveH)/10;                 // same density as before
-      const cols=Math.ceil(raveW/cell)+1, rows=Math.ceil(raveH/cell)+1;
+      const cell=Math.min(gloverW,gloverH)/10;                 // same density as before
+      const cols=Math.ceil(gloverW/cell)+1, rows=Math.ceil(gloverH/cell)+1;
       // draw the LED grid across the whole canvas
       for(let gy=0; gy<rows; gy++){
         for(let gx=0; gx<cols; gx++){
           const i=gx+gy*cols;
           const px=gx*cell, py=gy*cell;
           const sz=2+3*Math.abs(Math.sin(i*3+t*4))+4*snare;   // unchanged dot size + blink
-          rx.fillStyle=RAVE_COLORS[i%RAVE_COLORS.length];
+          rx.fillStyle=GLOVER_COLORS[i%GLOVER_COLORS.length];
           rx.globalAlpha=0.5+0.5*lead;
           rx.fillRect(px-sz, py-sz, sz*2, sz*2);
         }
@@ -2314,7 +2319,7 @@
       const step=Math.floor(t*6);                          // one hop ~6x/sec
       const pathN=6;                                        // how many points the line connects
       rx.globalAlpha=0.85; rx.lineWidth=2; rx.lineCap="round";
-      rx.strokeStyle=RAVE_COLORS[step%RAVE_COLORS.length];
+      rx.strokeStyle=GLOVER_COLORS[step%GLOVER_COLORS.length];
       rx.beginPath();
       let gx=(step*3)%cols, gy=(step*2)%rows;
       rx.moveTo(gx*cell, gy*cell);
@@ -2330,10 +2335,10 @@
     const dots=Math.round(40*tk.dots);
     for(let i=0;i<dots;i++){
       const a=i*2.399 + t*0.5;
-      const rr0=(i/Math.max(1,dots))*Math.min(raveW,raveH)*0.46*(1+0.10*snare);
+      const rr0=(i/Math.max(1,dots))*Math.min(gloverW,gloverH)*0.46*(1+0.10*snare);
       const px=cx+Math.cos(a)*rr0, py=cy+Math.sin(a)*rr0;
       const sz=2+3*Math.abs(Math.sin(i*3+t*4))+4*snare;
-      rx.fillStyle=RAVE_COLORS[i%RAVE_COLORS.length];
+      rx.fillStyle=GLOVER_COLORS[i%GLOVER_COLORS.length];
       rx.globalAlpha=0.5+0.5*lead;
       rx.beginPath(); rx.arc(px,py,sz,0,Math.PI*2); rx.fill();
     }
@@ -2346,20 +2351,20 @@
     if(tk.liqWave){
       const bands=5;
       for(let b=0;b<bands;b++){
-        const baseY = raveH*(0.18+0.16*b);
-        const amp = raveH*(0.05+0.03*b)*(1+0.5*bass);       // wave height breathes with bass
+        const baseY = gloverH*(0.18+0.16*b);
+        const amp = gloverH*(0.05+0.03*b)*(1+0.5*bass);       // wave height breathes with bass
         const speed = 0.5+0.25*b;
-        const col = RAVE_COLORS[(b+Math.floor(bar*2))%RAVE_COLORS.length];
+        const col = GLOVER_COLORS[(b+Math.floor(bar*2))%GLOVER_COLORS.length];
         rx.beginPath();
         rx.moveTo(0, baseY);
-        for(let x=0;x<=raveW;x+=14){
+        for(let x=0;x<=gloverW;x+=14){
           const y = baseY
             + Math.sin(x*0.006 + t*speed) * amp
             + Math.sin(x*0.013 - t*speed*0.7) * amp*0.5;   // two waves layered = fluid, not a clean sine
           rx.lineTo(x, y);
         }
-        rx.lineTo(raveW, raveH); rx.lineTo(0, raveH); rx.closePath();
-        const g=rx.createLinearGradient(0, baseY-amp, 0, raveH);
+        rx.lineTo(gloverW, gloverH); rx.lineTo(0, gloverH); rx.closePath();
+        const g=rx.createLinearGradient(0, baseY-amp, 0, gloverH);
         g.addColorStop(0, hexA(col, 0.22+0.15*lead));
         g.addColorStop(1, hexA(col, 0.02));
         rx.fillStyle=g; rx.fill();
@@ -2371,8 +2376,8 @@
     // so the points smear into continuous glowing geometric patterns, like a whirled LED orbit.
     // Sits BEHIND the Chippy family (drawn before them); replaces the default beams/rings bg.
     if(tk.orbit){
-      const md0=Math.min(raveW,raveH);
-      const maxD=Math.max(raveW,raveH);
+      const md0=Math.min(gloverW,gloverH);
+      const maxD=Math.max(gloverW,gloverH);
       // 6 spinners, each with its own character: [bigR-frac, rollR-frac, petals, speed, dir, phase]
       const SP=[
         [0.42, 0.16, 3,  2.4,  1, 0.0],   // big edge-roamer
@@ -2395,7 +2400,7 @@
           const px=cx + Math.cos(tt)*R + Math.cos(tt*ratio)*r;
           const py=cy + Math.sin(tt)*R + Math.sin(tt*ratio)*r;
           const sz=2.4 + 2.6*(1 - j/trailN);
-          rx.fillStyle=RAVE_COLORS[(s+Math.floor(bar*3))%RAVE_COLORS.length];
+          rx.fillStyle=GLOVER_COLORS[(s+Math.floor(bar*3))%GLOVER_COLORS.length];
           rx.globalAlpha=(1 - j/trailN)*(0.5+0.5*lead);
           rx.beginPath(); rx.arc(px,py,sz,0,Math.PI*2); rx.fill();
         }
@@ -2406,7 +2411,7 @@
     // TRACERS — comets: bright points streak on big sweeping curved paths across the whole canvas,
     // each dragging a long bleeding trail (after-image). Very low frame-fade holds the smear.
     if(tk.tracer){
-      const maxD=Math.max(raveW,raveH);
+      const maxD=Math.max(gloverW,gloverH);
       // each comet: [pathRadiusX-frac, pathRadiusY-frac, speed, dir, phase, ratio]
       const COM=[
         [0.46, 0.40, 0.6,  1, 0.0, 0.7],
@@ -2427,7 +2432,7 @@
           const py=cy + Math.cos(tt*1.03)*Ry + Math.cos(tt*m[5])*Ry*0.18;
           const head=1 - j/trailN;                      // 1 at the head, 0 at the tail
           const sz=1.2 + 5.5*head;                      // fat bright head, thin faint tail
-          rx.fillStyle=RAVE_COLORS[(c+Math.floor(bar*3))%RAVE_COLORS.length];
+          rx.fillStyle=GLOVER_COLORS[(c+Math.floor(bar*3))%GLOVER_COLORS.length];
           rx.globalAlpha=head*head*(0.55+0.45*lead);    // trail bleeds/fades quadratically
           rx.beginPath(); rx.arc(px,py,sz,0,Math.PI*2); rx.fill();
         }
@@ -2436,8 +2441,8 @@
     }
 
     // Papa Chippy family — always present, unchanged across all tricks.
-    const md=Math.min(raveW,raveH);
-    RAVE_KIDS.forEach((k,i)=>{
+    const md=Math.min(gloverW,gloverH);
+    GLOVER_KIDS.forEach((k,i)=>{
       const a=k.ph + t*k.sp;
       const orbit=md*k.orb*(1+0.06*bass);
       const kx=cx+Math.cos(a)*orbit;
@@ -2455,7 +2460,7 @@
     // crash = white flash burst
     if(crash>0.4){
       rx.globalAlpha=(crash-0.4)*1.2;
-      rx.fillStyle="#fff"; rx.fillRect(0,0,raveW,raveH);
+      rx.fillStyle="#fff"; rx.fillRect(0,0,gloverW,gloverH);
       rx.globalAlpha=1;
     }
   }
@@ -2464,8 +2469,8 @@
     const h=hex.replace("#",""); const n=parseInt(h.length===3? h.split("").map(c=>c+c).join(""):h,16);
     return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a.toFixed(3)+")";
   }
-  // draw Chippy (head + drifting eyes + mouth) on an arbitrary context/size — shared with rave
-  // headColor lets the rave kids come out in colors; defaults to Chippy yellow (papa).
+  // draw Chippy (head + drifting eyes + mouth) on an arbitrary context/size — shared with glover
+  // headColor lets the glover kids come out in colors; defaults to Chippy yellow (papa).
   function drawChippyAt(c, cx, cy, r, barEnv, headColor){
     c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2);
     c.fillStyle=headColor||YEL; c.fill(); c.lineWidth=r*0.05; c.strokeStyle="#000"; c.stroke();
@@ -3250,13 +3255,13 @@
 
   // ---- RAVE: aspect toggle (16:9 / 9:16) + canvas video recorder ----
   const aspectBtn=document.getElementById("aspectBtn");
-  const raveWrap=document.getElementById("raveWrap");
+  const gloverWrap=document.getElementById("gloverWrap");
   aspectBtn.onclick=()=>{
-    raveVertical=!raveVertical;
-    raveWrap.classList.toggle("vertical", raveVertical);
-    aspectBtn.classList.toggle("vert", raveVertical);
-    resizeRave();
-    msgState("orientation", raveVertical ? "Vertical 9:16" : "Landscape 16:9");
+    gloverVertical=!gloverVertical;
+    gloverWrap.classList.toggle("vertical", gloverVertical);
+    aspectBtn.classList.toggle("vert", gloverVertical);
+    resizeGlover();
+    msgState("orientation", gloverVertical ? "Vertical 9:16" : "Landscape 16:9");
   };
   // ROLL ORIENTATION TOGGLE (MATRIX) — vertical (default) / horizontal
   const rollOriBtn=document.getElementById("rollOriBtn");
@@ -3273,12 +3278,12 @@
   const recBtn=document.getElementById("recBtn"), recTimeEl=document.getElementById("recTime");
   let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recExt="webm", recAudioDest=null;
   function startRec(){
-    if(!raveCv.captureStream){ msgError("recNoSupport"); return; }
-    // ensure the rave canvas is sized so it draws (the frame loop now draws it while recording,
+    if(!gloverCv.captureStream){ msgError("recNoSupport"); return; }
+    // ensure the glover canvas is sized so it draws (the frame loop now draws it while recording,
     // no tab switch needed — you stay on TRACKS to keep tweaking the sound)
-    resizeRave();
+    resizeGlover();
     ensureAudio();
-    const stream=raveCv.captureStream(60);   // 60fps canvas video
+    const stream=gloverCv.captureStream(60);   // 60fps canvas video
     // Mix the live Chippy audio into the recording so the file has sound (not silent video).
     // Tap the master bus into a stream destination and add its audio track to the capture.
     try {
@@ -3311,8 +3316,8 @@
       const type = recExt==="mp4" ? "video/mp4" : "video/webm";
       const blob=new Blob(recChunks, {type});
       const stamp=new Date().toISOString().slice(11,19).replace(/:/g,"");
-      const dim=raveVertical?"1080x1920":"1920x1080";
-      downloadBlob(blob, "ChippyRave_"+dim+"_"+stamp+"."+recExt);
+      const dim=gloverVertical?"1080x1920":"1920x1080";
+      downloadBlob(blob, "ChippyGlover_"+dim+"_"+stamp+"."+recExt);
       setMsg(recExt==="mp4" ? "Rave video saved (MP4) 🎬" : "Rave video saved (WebM) 🎬", GRN);
     };
     // Flush a chunk every second (timeslice). Without this the recorder buffers the whole
@@ -3324,7 +3329,7 @@
       const s=Math.floor((performance.now()-recStart)/1000);
       recTimeEl.textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
     }, 250);
-    setMsg("Recording the rave… hit STOP when done", MAG);
+    setMsg("Recording the Glover… hit STOP when done", MAG);
   }
   function stopRec(){
     if(mediaRec && mediaRec.state!=="inactive") mediaRec.stop();
@@ -3554,9 +3559,9 @@
       document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
       t.classList.add("active");
       document.getElementById("panel"+t.dataset.panel.charAt(0).toUpperCase()+t.dataset.panel.slice(1)).classList.add("active");
-      raveActive = (t.dataset.panel==="rave");
+      gloverActive = (t.dataset.panel==="glover");
       if(t.dataset.panel==="gen"){ resize(); resizeFace(); }
-      if(raveActive) resizeRave();
+      if(gloverActive) resizeGlover();
     };
   });
 
@@ -3654,7 +3659,7 @@
   });
 
   let _resizeT=null;
-  function handleResize(){ resize(); resizeFace(); if(raveActive) resizeRave(); }
+  function handleResize(){ resize(); resizeFace(); if(gloverActive) resizeGlover(); }
   window.addEventListener("resize",()=>{ clearTimeout(_resizeT); _resizeT=setTimeout(handleResize,80); });
   window.addEventListener("orientationchange",()=>{ setTimeout(handleResize,120); });
 
@@ -3694,7 +3699,7 @@
       lblMatrix:  "MATRIX — the live piano roll and whole-loop overview with Chippy",
       // tabs
       genTab:     "MUSIC — make loops: pick genre + length, generate, or run a selecta set",
-      raveTab:    "GLOVER — full-screen beat-reactive light show",
+      gloverTab:    "GLOVER — full-screen beat-reactive light show",
       aboutTab:   "ABOUT — what Chippy is, who made it, the license",
       // tab-bar buttons
       bgBtn:      "Persistence — keep playing when you switch tabs",
@@ -3945,6 +3950,18 @@
     };
     window._stopLineup = function(){ if(window._luStop) window._luStop(); if(typeof stopTransport==="function") stopTransport(); };
     window._isPlaying = function(){ return !!playing; };
+    // BLOG0102: expose the REAL glover engine so the mobile GLOVER tab shows actual Tracers (not a fake).
+    window._gloverOn = function(on){
+      gloverTrick="tracers";
+      gloverActive = !!on;
+      if(on){
+        gloverVertical = true;   // BLOG0102: phone is portrait — 1080×1920 so Chippy renders round, not squished
+        resizeGlover();
+      } else {
+        gloverVertical = false;  // restore landscape default for the desktop app
+        if(gloverActive) resizeGlover();
+      }
+    };
   })();
 
   setMsg("Ready · "+GENRE.house.name+" · press play", CY);
@@ -3999,26 +4016,17 @@
     window.prTab=function(w){
       const m=document.getElementById("prMusic"), g=document.getElementById("prGlover");
       const tm=document.getElementById("prTabMusic"), tg=document.getElementById("prTabGlover");
-      if(w==="glover"){ m.style.display="none"; g.style.display="block"; tm.classList.remove("active"); tg.classList.add("active");
-        prSizeGlover(); if(!prGloverOn){ prGloverOn=true; prDrawGlover(); } }
-      else { g.style.display="none"; m.style.display="flex"; tg.classList.remove("active"); tm.classList.add("active"); }
+      if(w==="glover"){
+        m.style.display="none"; g.style.display="block"; tm.classList.remove("active"); tg.classList.add("active");
+        // move the REAL #glover canvas into the mobile glover panel and start the real engine (Tracers)
+        const gcanvas=document.getElementById("glover");
+        if(gcanvas && gcanvas.parentElement!==g){ gcanvas.style.width="100%"; gcanvas.style.height="100%"; gcanvas.style.objectFit="contain"; g.appendChild(gcanvas); }
+        if(window._gloverOn) window._gloverOn(true);
+      } else {
+        g.style.display="none"; m.style.display="flex"; tg.classList.remove("active"); tm.classList.add("active");
+        if(window._gloverOn) window._gloverOn(false);
+      }
     };
-
-    // Glover — simple beat-reactive rings (stage-1 stand-in)
-    const gcv=document.getElementById("prGloverCv"), gx=gcv.getContext("2d"); let prGloverOn=false, gT=0;
-    function prSizeGlover(){ gcv.width=gcv.clientWidth; gcv.height=gcv.clientHeight; }
-    window.addEventListener("resize", ()=>{ if(document.getElementById("prGlover").style.display!=="none") prSizeGlover(); });
-    function prDrawGlover(){
-      if(document.getElementById("prGlover").style.display==="none"){ prGloverOn=false; return; }
-      const W=gcv.width,H=gcv.height,cx=W/2,cy=H/2, pl=window._isPlaying&&window._isPlaying();
-      gT += pl?0.045:0.008;
-      gx.fillStyle="rgba(0,0,0,0.16)"; gx.fillRect(0,0,W,H);
-      const beat = pl ? (0.5+0.5*Math.sin(gT*4)) : 0.15;
-      for(let i=0;i<9;i++){ const f=i/9, rad=(Math.min(W,H)*0.08)+f*Math.min(W,H)*0.42+beat*40*(1-f), hue=(gT*40+i*24)%360;
-        gx.beginPath(); gx.arc(cx,cy,rad,0,Math.PI*2); gx.strokeStyle="hsla("+hue+",90%,"+(55+beat*20)+"%,"+(0.5*(1-f)+0.15)+")"; gx.lineWidth=2+beat*3*(1-f); gx.stroke(); }
-      gx.beginPath(); gx.arc(cx,cy,10+beat*22,0,Math.PI*2); gx.fillStyle="rgba(255,0,110,"+(0.4+beat*0.5)+")"; gx.fill();
-      requestAnimationFrame(prDrawGlover);
-    }
   })();
   // ── end BLOG0102 ──
 
