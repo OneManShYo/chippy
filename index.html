@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_12_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_13_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OMS Chippy [Beta V1_12_0]</title>
+<title>OMS Chippy [Beta V1_13_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -125,6 +125,13 @@
   .summary-grid .k { color:#666; }
   .console-grid { gap:6px 16px; align-content:center; height:100%; }
   .console-grid .mono { color:#00d4ff; font-size:12px; }
+  /* BLOG0090 — What's Next banner: single-line clipped marquee. The horizontal offset is written by
+     updateTime() each frame (rides the ONE requestAnimationFrame loop — no CSS animation, no new timer,
+     no second timing source near the master clock). overflow:hidden clips; white-space:nowrap never wraps. */
+  .nownext-cell { overflow:hidden; white-space:nowrap; max-width:220px; position:relative; }
+  .nownext-scroll { display:inline-block; white-space:nowrap; will-change:transform; }
+  .nownext-sep { color:#c77dff; padding:0 10px; }
+  .nownext-next { color:#ffd23f; }
   /* MESSAGE BAR (footer) — the Message System's display, ported from Dojo. Strictly UI/UX interaction
      feedback (what you DID in the interface) — distinct from MONITOR, which is performance feedback.
      Type colors are Dojo's: info=cyan, state=orange, error=magenta. */
@@ -296,6 +303,65 @@
   .ab-y { color:#ffcc00; }
   .ab-m { color:#ff00ff; }
   .ab-p { color:#aaa; font-size:13px; line-height:1.7; margin-bottom:10px; }
+  /* ── BLOG0093 Lineup styles (moved into head) ── */
+  /* BLOG0097 — lineup-running indicator: pink blinking dot */
+  @keyframes luBlink { 0%,100%{opacity:1;} 50%{opacity:.15;} }
+  .lu-live { display:inline-block; width:8px; height:8px; border-radius:50%; background:#ff006e;
+    box-shadow:0 0 6px rgba(255,0,110,.7); animation:luBlink 1s ease-in-out infinite; }
+  #lineupBtn .lu-dot { display:none; }   /* dot retired in favor of the ring-glow below */
+  @keyframes luRingPulse {
+    0%,100%{ border-color:#ff006e; box-shadow:0 0 8px rgba(255,0,110,.6); }
+    50%{ border-color:#ff6aa6; box-shadow:0 0 14px rgba(255,0,110,.95); }
+  }
+  #lineupBtn.lu-running { border-color:#ff006e; color:#ff006e; background:rgba(255,0,110,.10);
+    animation:luRingPulse 1s ease-in-out infinite; }
+  .lu-hdr .lu-live { margin-left:8px; vertical-align:middle; display:none; }
+  .lu-hdr.lu-running .lu-live { display:inline-block; }
+  .lu-slot.lu-playing { border-color:#ff006e; box-shadow:0 0 8px rgba(255,0,110,.25); }
+  .lu-slot .lu-nowdot { display:none; }
+  .lu-slot.lu-playing .lu-nowdot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#ff006e;
+    box-shadow:0 0 6px rgba(255,0,110,.7); animation:luBlink 1s ease-in-out infinite; margin-right:2px; }
+  /* BLOG0093 — Lineup slide-out. Right-anchored, off-canvas by default, slides in on .open. Design-system
+     tokens (cyan #00d4ff, panel #0a0a0a, border #2a2a2a). NOT a modal — a styled drawer over the right edge. */
+  #lineupBtn { color:#00d4ff; border-color:#1e4a55; }
+  #lineupBtn:hover { color:#5ce0ff; border-color:#00d4ff; }
+  #lineupBtn.active { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.10); box-shadow:0 0 8px rgba(0,212,255,.25); }
+  #lineupScrim { position:fixed; inset:0; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:60; }
+  #lineupScrim.open { opacity:1; pointer-events:auto; }
+  #lineupPanel { position:fixed; top:0; right:0; height:100%; width:340px; max-width:90vw; background:#0d0d0d;
+    border-left:1px solid #2a2a2a; box-shadow:-8px 0 24px rgba(0,0,0,.5); transform:translateX(100%);
+    transition:transform .24s cubic-bezier(.4,0,.2,1); z-index:61; display:flex; flex-direction:column;
+    font-family:'Courier New',monospace; }
+  #lineupPanel.open { transform:translateX(0); }
+  .lu-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #2a2a2a; }
+  .lu-hdr .lu-title { color:#00d4ff; font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  .lu-hdr .lu-sub { color:#666; font-size:11px; margin-top:2px; }
+  .lu-close { background:none; border:none; color:#888; font-size:20px; cursor:pointer; line-height:1; padding:0 4px; }
+  .lu-close:hover { color:#00d4ff; }
+  .lu-body { flex:1; overflow-y:auto; padding:12px 16px; }
+  .lu-slot { display:flex; align-items:center; gap:8px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:6px;
+    padding:8px 10px; margin-bottom:8px; }
+  .lu-slot .lu-num { color:#00d4ff; font-size:12px; font-weight:700; min-width:20px; }
+  .lu-slot select { flex:1; min-width:0; background:#111; color:#bbb; border:1px solid #2a2a2a; border-radius:4px;
+    padding:5px 6px; font-family:inherit; font-size:12px; }
+  .lu-slot .lu-min { width:52px; background:#111; color:#00d4ff; border:1px solid #2a2a2a; border-radius:4px;
+    padding:5px 6px; font-family:inherit; font-size:12px; font-weight:600; text-align:center; touch-action:pan-y; cursor:ns-resize;
+    -webkit-appearance:none; -moz-appearance:textfield; appearance:none; }
+  /* kill the native spinner arrows (the wack white up/down) — scroll or type to change, design-system style */
+  .lu-slot .lu-min::-webkit-outer-spin-button,
+  .lu-slot .lu-min::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .lu-slot .lu-min:focus { outline:none; border-color:#00d4ff; }
+  .lu-slot .lu-minlbl { color:#666; font-size:11px; }
+  .lu-slot .lu-del { background:none; border:none; color:#555; font-size:15px; cursor:pointer; padding:0 2px; }
+  .lu-slot .lu-del:hover { color:#ff006e; }
+  .lu-add { width:100%; background:#0a0a0a; border:1px dashed #2a4a55; color:#00d4ff; border-radius:6px; padding:9px;
+    font-family:inherit; font-size:12px; cursor:pointer; letter-spacing:1px; text-transform:uppercase; }
+  .lu-add:hover { border-color:#00d4ff; background:rgba(0,212,255,.06); }
+  .lu-foot { padding:12px 16px; border-top:1px solid #2a2a2a; }
+  .lu-play { width:100%; background:rgba(0,212,255,.10); border:1px solid #00d4ff; color:#00d4ff; border-radius:6px;
+    padding:11px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:1px; text-transform:uppercase; }
+  .lu-play:hover { background:rgba(0,212,255,.18); }
+  .lu-note { color:#555; font-size:10px; margin-top:8px; line-height:1.4; text-align:center; }
 </style>
 </head>
 <body>
@@ -303,7 +369,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_12_0]</span>
+      <span class="ver">[Beta&nbsp;V1_13_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -339,9 +405,10 @@
       </div>
       <div id="monitorBox" style="flex:1;min-width:0;padding:8px 12px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;flex-direction:column;justify-content:center;">
         <div class="summary-grid console-grid">
-          <span class="k">master</span><span class="mono" id="timeSess" title="master (session) position — continuous bar . beat . 16th since play started">1 . 1 . 1</span>
-          <span class="k">loop</span><span class="mono" id="timeLoop" title="loop position — bar . beat . 16th of the current loop, over the loop total (e.g. 9.1.1 / 64.4.4 = bar 9 of a 64-bar loop). Blinks on the last bar before it changes.">1 . 1 . 1 / 4 . 4 . 4</span>
+          <span class="k">master</span><span class="mono" id="timeSess">1 . 1 . 1</span>
+          <span class="k">music</span><span class="mono" id="timeLoop">1 . 1 . 1 / 4 . 4 . 4</span>
           <span class="k">tempo</span><span class="mono" id="tempoRead">124 bpm</span>
+          <span class="k">playing</span><span class="mono nownext-cell" id="nowNextCell"><span class="nownext-scroll" id="nowNextScroll">None · raw play</span></span>
         </div>
       </div>
       <div id="faceBox" style="flex:1;min-width:0;padding:6px;border:1px solid #2a2a2a;border-radius:6px;background:#0a0a0a;display:flex;align-items:center;justify-content:center;">
@@ -354,8 +421,8 @@
         <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblTransport">Transport</span><span class="rule"></span></div>
         <div class="transport">
           <div class="ctrlmod" title="Transport">
-            <button class="btn primary" id="playBtn" title="play / pause (space)">▶</button>
-            <button class="btn mag" id="genBtn" title="generate a new roll (G)">⚄</button>
+            <button class="btn primary" id="playBtn">▶</button>
+            <button class="btn mag" id="genBtn">⚄</button>
           </div>
         </div>
       </div>
@@ -363,13 +430,13 @@
         <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblSelecta">Selecta</span><span class="rule"></span></div>
         <div class="transport">
           <div class="ctrlmod selecta-mod" title="Selecta">
-            <span class="tctl"><select id="djSel" class="sel uctl" title="name — the selecta. None = raw play (looping, no conditioning). Pick a selecta to run a nonstop conditioned set that rolls fresh loops in that style.&#10;&#10;Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-            <span class="tctl"><select id="genreSel" class="sel uctl" title="genre — House (4-on-the-floor). Other genres return once the House YoConditioner is proven.">
+            <span class="tctl"><select id="djSel" class="sel uctl"></select></span>
+            <span class="tctl"><select id="genreSel" class="sel uctl">
                 <option value="house" selected>House</option>
               </select>
             </span>
-            <span class="tctl"><select id="vibeSel" class="sel uctl" title="time slot — the club-night arc: Opener (patient, quieter) → Support → Headliner (peak, loudest, rapid cuts) → Closer. Scales pace + master level. Applies only with a selecta active."></select></span>
-            <span class="tctl"><select id="lenSel" class="sel uctl" title="bars — loop length. Longer loops build through more phrasing. Up/Down then Enter to pick · Left/Right scrolls live">
+            <span class="tctl" style="display:none"><select id="vibeSel" class="sel uctl"></select></span>
+            <span class="tctl"><select id="lenSel" class="sel uctl">
                 <option value="4" selected>4 bars</option>
                 <option value="8">8 bars</option>
                 <option value="16">16 bars</option>
@@ -378,16 +445,17 @@
                 <option value="128">128 bars</option>
               </select>
             </span>
-            <span class="tctl"><select id="bpmSel" class="sel uctl" title="tempo (BPM). Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-            <span class="tctl"><select id="swingSel" class="sel uctl" title="swing %. Up/Down then Enter to pick · Left/Right scrolls live"></select></span>
-            <span class="tctl"><span id="quantReadout" class="sel qread" title="quantize — control changes apply on the next beat (quarter note), so playback never skips mid-bar">Q <span class="qnote">♩</span></span></span>
+            <span class="tctl"><select id="bpmSel" class="sel uctl"></select></span>
+            <span class="tctl"><select id="swingSel" class="sel uctl"></select></span>
+            <span class="tctl"><span id="quantReadout" class="sel qread">Q <span class="qnote">♩</span></span></span>
+            <span class="tctl"><button class="bgtoggle" id="lineupBtn"><svg viewBox="0 0 24 24" width="14" height="14" style="display:block" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7.5 8 l1.2 1.2 L11 7"/><path d="M13 8 h4"/><path d="M7.5 13 l1.2 1.2 L11 12"/><path d="M13 13 h4"/><path d="M7.5 18 l1.2 1.2 L11 17"/><path d="M13 18 h4"/></svg><span class="lu-dot"></span></button></span>
           </div>
           <span class="loadhint" id="loadHint"></span>
         </div>
       </div>
     </div>
 
-    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox" title="sound source — the hardware Chippy's synthesis is modeled after (variable-duty pulse + triangle + LFSR noise = Ricoh 2A03, the NES / Famicom sound chip)">Ricoh 2A03</span></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><span class="time mono" id="sourceBox">Ricoh 2A03</span></div>
     <div class="devstrip" id="devStrip"></div>
 
     <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">COMP</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-amt="1"><span class="wv" id="mastercomp-amt-v" style="color:#bbb">4</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">LIMIT</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button></span><span class="mproc-sep"></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></div>
@@ -1435,6 +1503,7 @@
   }
   function stopTransport(){
     playing=false;
+    if(window._luStop) window._luStop();   // BLOG0097: a full stop ends any running lineup (+ clears its pink indicators)
     sessionStart=0;                          // reset session timer
     // True stop: clear the transport/clock anchors so the readout + playhead return to
     // bar 1 · beat 1 (there is no resume-from-here feature — a stop is a full reset).
@@ -1534,6 +1603,11 @@
     const ps=document.getElementById("patSrc"); if(ps) ps.textContent=pp.seed.toString(16);
     const pk=document.getElementById("patKey"); if(pk) pk.textContent=keyTonic+" minor"+(transpose?(" ("+(transpose>0?"+":"")+transpose+" st)"):"");
     const pl=document.getElementById("patLen"); if(pl) pl.textContent=BARS+" bars";
+    // BLOG0089: the swap has now LANDED. Fire the settled selecta state message so the message bar
+    // reflects the change that just took effect (the armed "(next bar)" message fired at click; a hover
+    // in the interim would have reverted the bar to a hint). Stays within the 3-state model — this is a
+    // state/value-change message, no new state. selectaIdx 0 (None) is handled at its own return in applyDj.
+    if(selectaIdx!==0 && typeof selecta==="function" && selecta()) msgState("selecta", selecta().name);
   }
 
   // ============================================================
@@ -2349,9 +2423,57 @@
     // The LOOP readout blinks during its last bar so you get a heads-up the pattern is about to change.
     // Blink now agrees with Chippy (same master clock) — both fire on the true last bar, not early.
     timeLoop.textContent=bar+" . "+beat+" . "+six+" / "+BARS+" . 4 . 4";
+    // BLOG0099: append a countdown to the next selecta swap (lineup) in the same bar.beat.16th standard,
+    // as a third segment on the loop row: "cur / total  ⇢ b . b . 16". Only while a lineup is running.
+    const cd = (typeof window!=="undefined" && window._luCountdown) ? window._luCountdown() : null;
+    if(cd){ timeLoop.textContent += "  \u21e2 "+cd.bar+" . "+cd.beat+" . "+cd.six; }
     timeSess.textContent=sBar+" . "+sBeat+" . "+sSix;
     timeLoop.classList.toggle("finishing", playing && bar===BARS);
     { const tr=document.getElementById("tempoRead"); if(tr) tr.textContent=BPM+" bpm"; }
+    updateNowNext();
+    if(window._luTick) window._luTick();   // BLOG0093 stage 2: advance the lineup scheduler each frame
+  }
+
+  // BLOG0090 — What's Next banner. Composes the NOW summary (selecta · genre · bpm · bars) and, when a
+  // swap is armed, a bar-separated NEXT segment (the cued selecta). Rides updateTime()'s existing frame —
+  // no separate loop/timer. Scroll only engages when the content overflows its cell; otherwise it rests.
+  let _nnText="", _nnOff=0;
+  function nowNextSummary(){
+    // NOW: what's actually playing this loop.
+    let now;
+    if(!yoOn || selectaIdx===0){ now = "None · raw play"; }
+    else { now = selecta().name+" · "+GENRE[genre].name+" · "+BPM+" · "+BARS+" bars"; }
+    // NEXT: only when a swap is staged. pendingYo carries the cued genre/bpm/bars; selecta() is already
+    // the cued selecta (applyDj set selectaIdx at click). Show its name so the crowd sees what's coming.
+    // NEXT: prefer the LINEUP's upcoming slot (shown the whole time the current slot runs, so you know
+    // the next DJ is coming). Fall back to the manual bar-boundary swap (skipArmed/pendingYo) otherwise.
+    let next="";
+    const luN = (typeof window!=="undefined" && window._luNext) ? window._luNext() : null;
+    if(luN){
+      next = luN.name+" · "+luN.min+" min";
+    } else if(skipArmed && pendingYo && selectaIdx!==0){
+      next = selecta().name+" · "+(GENRE[pendingYo.genre]||GENRE.house).name+" · "+pendingYo.bpm+" · "+pendingYo.bars+" bars";
+    }
+    return { now, next };
+  }
+  function updateNowNext(){
+    const cell=document.getElementById("nowNextCell"), scr=document.getElementById("nowNextScroll");
+    if(!cell||!scr) return;
+    const {now,next}=nowNextSummary();
+    // NEXT present → styled marquee HTML with a bar separator; else plain NOW text.
+    const html = next
+      ? '<span>'+now+'</span><span class="nownext-sep">┃</span><span class="nownext-next">next: '+next+'</span>'
+      : now;
+    if(html!==_nnText){ scr.innerHTML=html; _nnText=html; _nnOff=0; }  // rebuild only on change; reset scroll
+    // Scroll ONLY if content overflows the cell (a short NOW line just sits still, left-aligned).
+    const over = scr.scrollWidth - cell.clientWidth;
+    if(over > 4){
+      _nnOff -= 0.6;                                  // px/frame; ties to the same rAF cadence as the clocks
+      if(_nnOff < -(scr.scrollWidth + 24)) _nnOff = cell.clientWidth;   // wrap the marquee with a gap
+      scr.style.transform = "translateX("+_nnOff+"px)";
+    } else {
+      _nnOff=0; scr.style.transform = "translateX(0)";
+    }
   }
 
   // ============================================================
@@ -2854,9 +2976,20 @@
                       { role:'dj_util', kind:'outro',     bar:160, len:32 }
                     ]
                   }
-                } } }
+                } } },
+    // index 2 = RESIDENT DJ (BLOG0088): the always-available house act. This is the pre-JNO
+    // "Giorgio Levan" selecta (V1.5.0) flagged back per BLOG0026 — restored VERBATIM in current
+    // parameter naming. A minimal, scalar-only, corpus-free profile: no AMU/MIDI/stems behind it,
+    // just authored values. It runs the SAME YoConditioner fork points as JNO (setDensityFromProfile /
+    // swing / buildMoves at ~L705) and degrades gracefully where fields are absent — proof a selecta
+    // needs no measured corpus to function. LIVE fields: mode, swing, bpm, barsAllowed/barsChange,
+    // pool/genreChance. structure/dynamics are carried-but-dormant (no consumer yet — same as JNO's).
+    // Giorgio had NO densities (those arrived at the JNO max-out), so per-band density stays neutral =
+    // stock house. Densities are a deliberate follow-on tuning item, NOT part of this restoration.
+    { id:"resident", name:"Resident DJ", genreChance:0.0, barsAllowed:[32,64], barsChange:0.35, pool:["house"], bpm:[124,128],
+      profile:{ mode:"minor", swing:[0,0.05], structure:[2,4,8], dynamics:"punchy" } }   // Giorgio Levan restored (V1.5.0 L2107)
   ];
-  let selectaIdx=0;   // default = None (index 0): raw play, no conditioning. JNO is index 1.
+  let selectaIdx=2;   // BLOG0091: default = Resident DJ (index 2). None=0, JNO=1. Boots STOPPED (default selection, not auto-play).
   const selecta = () => SELECTAS[selectaIdx];
 
   // VIBE / selecta time-slot — a second axis over the selecta (selecta style = genre engine).
@@ -3248,9 +3381,20 @@
   // Selecta style select
   const djSel=document.getElementById("djSel");
   (function(){ let h=""; SELECTAS.forEach((m,i)=>{ h+='<option value="'+i+'"'+(i===selectaIdx?" selected":"")+'>'+m.name+'</option>'; }); djSel.innerHTML=h; })();
+  // BLOG0092: under an active selecta, genre/bars/tempo/swing are overridden by the party reroll
+  // (verified: nextGenre/nextBars/nextBPM from M.pool/barsAllowed/bpm, SWING from pf.swing), so changing
+  // them does nothing — disable them. None (selectaIdx 0) = raw play, controls live again. Time slot
+  // (vibeSel) is a separate live axis (master level/density) and stays enabled.
+  function lockSelectaFields(){
+    const lock = selectaIdx!==0;
+    ["genreSel","lenSel","bpmSel","swingSel"].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.disabled=lock;
+    });
+  }
   function applyDj(i){
     selectaIdx=((i%SELECTAS.length)+SELECTAS.length)%SELECTAS.length;
     if(djSel.selectedIndex!==selectaIdx) djSel.selectedIndex=selectaIdx;
+    lockSelectaFields();   // BLOG0092: genre/bars/tempo/swing are selecta-governed (no-ops under a selecta) → disable them; time slot stays live
     // Selecta selection IS the mode switch (party button retired V1.8.01).
     // TIMING (V1.8.08): if the transport is PLAYING, ANY selecta change — None→selecta, selecta→
     // selecta, including the very first pick from None — lets the CURRENT BAR FINISH, then the new
@@ -3368,7 +3512,7 @@
 
     // TRANSPORT + SELECTA — one visual row, shipped left→right order.
     const transportSelecta = byId(
-      ["playBtn","genBtn","djSel","genreSel","vibeSel","lenSel","bpmSel","swingSel"]);
+      ["playBtn","genBtn","djSel","genreSel","lenSel","bpmSel","swingSel"]);
 
     // VOICES — each module is a .dm-row of [ select, dice ]; querySelectorAll returns them
     // interleaved in DOM order automatically.
@@ -3388,7 +3532,9 @@
   function wasdMove(key){
     // Reads the centralized navRows() descriptor — the single source of grid truth.
     // Empty rows (a strip not built yet) are filtered so traversal never lands on nothing.
-    const rows=navRows().filter(row=>row.length);
+    // BLOG0092 UX fix: also drop DISABLED fields (e.g. genre/bars/tempo/swing under an active selecta)
+    // so WASD skips right over them instead of getting stuck — standard nav requirement.
+    const rows=navRows().map(row=>row.filter(el=>el && !el.disabled)).filter(row=>row.length);
     const firstRow=rows[0];
     const active=document.activeElement;
     // locate active element in the grid
@@ -3449,6 +3595,12 @@
   const MSG = {
     // ── phase-1 HOVER hints (info / cyan) — keyed by element id or [data-*] attribute ──
     hint: {
+      // MONITOR counter rows (bar.beat.16th). timeLoop carries up to 3 segments.
+      timeSess:   "Master — continuous position since play: bar . beat . 16th, never resets while playing",
+      timeLoop:   "Music — loop position now / loop total, and when a lineup runs, ⇢ countdown to the next selecta (all bar . beat . 16th)",
+      tempoRead:  "Tempo — current playback speed in BPM",
+      nowNextCell:"Playing — the live set summary (selecta · genre · bpm · bars); when a swap or lineup is cued, the next act scrolls on after a separator",
+      faceBox:    "Chippy — eat, sleep, rave, repeat",
       // section-header labels
       lblInfo:    "INFO — the current loop: name, genre, source, key, length",
       lblTransport:"TRANSPORT — play/pause and generate a new roll",
@@ -3577,6 +3729,131 @@
   resizeFace();
   document.getElementById("logoMark").src=YOBOT_SRC;   // header logo mark
   requestAnimationFrame(frame);
+  lockSelectaFields();   // BLOG0092: apply the lock at boot for the default selecta (Resident DJ per BLOG0091)
+
+  // ── BLOG0093 — LINEUP (session set-list scheduler). STAGE 1: the slide-out panel + slot editing.
+  //  It is JUST a scheduler-to-be: an ordered list of {selectaIdx, minutes}. Playback (run slots in
+  //  order, minutes→bars, auto-advance via applyDj) is wired in a follow-on iteration. No music-chain
+  //  contact — it only decides which selecta is active when. Session-only, no persistence.
+  (function initLineup(){
+    const btn=document.getElementById("lineupBtn");
+    if(!btn) return;
+    // Build the panel DOM in JS so it never depends on markup parse order (the script runs before any
+    // markup placed after it would exist). Injected once into <body>.
+    const scrim=document.createElement("div"); scrim.id="lineupScrim";
+    scrim.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:60;";
+    const panel=document.createElement("aside"); panel.id="lineupPanel"; panel.setAttribute("aria-label","Lineup");
+    panel.style.cssText="position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;background:#0d0d0d;border-left:1px solid #2a2a2a;box-shadow:-8px 0 24px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);z-index:61;display:flex;flex-direction:column;font-family:'Courier New',monospace;";
+    panel.innerHTML=
+      '<div class="lu-hdr"><div><div class="lu-title">Lineup<span class="lu-live"></span></div><div class="lu-sub">session set-list · who plays when</div></div>'+
+      '<button class="lu-close" id="lineupClose" title="Close">✕</button></div>'+
+      '<div class="lu-body" id="lineupSlots"></div>'+
+      '<div class="lu-foot"><button class="lu-add" id="lineupAdd">+ Add slot</button>'+
+      '<button class="lu-play" id="lineupPlay" style="margin-top:8px;">▶ Play lineup</button>'+
+      '<div class="lu-note">Session only — the lineup isn\u2019t saved and resets on reload. Durations are in minutes, converted to bars at play.</div></div>';
+    document.body.appendChild(scrim); document.body.appendChild(panel);
+    const closeBtn=panel.querySelector("#lineupClose"), slotsBox=panel.querySelector("#lineupSlots"),
+          addBtn=panel.querySelector("#lineupAdd"), playBtn=panel.querySelector("#lineupPlay");
+    // default lineup: two slots using the real selectas (skip None at idx 0 for a slot default).
+    let slots=[ {sel:2, min:10}, {sel:1, min:10} ];   // Resident DJ 10m, JNO 10m
+    function selectaOptions(cur){
+      let h="";
+      SELECTAS.forEach((m,i)=>{ if(i===0) return;   // None isn't a lineup act
+        h+='<option value="'+i+'"'+(i===cur?" selected":"")+'>'+m.name+'</option>'; });
+      return h;
+    }
+    function render(){
+      slotsBox.innerHTML="";
+      slots.forEach((s,idx)=>{
+        const row=document.createElement("div"); row.className="lu-slot"+(luActive && idx===luIdx ? " lu-playing" : "");
+        row.innerHTML='<span class="lu-num">'+(idx+1)+'</span>'+
+          '<span class="lu-nowdot"></span>'+
+          '<select class="lu-sel">'+selectaOptions(s.sel)+'</select>'+
+          '<input class="lu-min" type="number" min="1" max="120" value="'+s.min+'"><span class="lu-minlbl">min</span>'+
+          '<button class="lu-del" title="remove slot">✕</button>';
+        row.querySelector(".lu-sel").addEventListener("change",e=>{ s.sel=parseInt(e.target.value,10); });
+        row.querySelector(".lu-min").addEventListener("change",e=>{ s.min=Math.max(1,Math.min(120,parseInt(e.target.value,10)||1)); e.target.value=s.min; });
+        // design-system wheel behavior: scroll over the minutes field to change it (like tempo/swing), no native arrows
+        row.querySelector(".lu-min").addEventListener("wheel",e=>{
+          e.preventDefault();
+          const d = e.deltaY < 0 ? 1 : -1;
+          s.min = Math.max(1, Math.min(120, s.min + d));
+          e.target.value = s.min;
+        }, {passive:false});
+        row.querySelector(".lu-del").addEventListener("click",()=>{ slots.splice(idx,1); render(); });
+        slotsBox.appendChild(row);
+      });
+    }
+    function open(){ render(); panel.classList.add("open"); scrim.classList.add("open"); btn.classList.add("active");
+      panel.style.transform="translateX(0)"; scrim.style.opacity="1"; scrim.style.pointerEvents="auto"; }
+    function close(){ panel.classList.remove("open"); scrim.classList.remove("open"); btn.classList.remove("active");
+      panel.style.transform="translateX(100%)"; scrim.style.opacity="0"; scrim.style.pointerEvents="none"; }
+    btn.addEventListener("click",()=> panel.classList.contains("open")?close():open());
+    closeBtn.addEventListener("click",close);
+    scrim.addEventListener("click",close);
+    addBtn.addEventListener("click",()=>{ slots.push({sel:2, min:10}); render(); });
+    // STAGE 2 will implement playback here. For now, a clear message so the button isn't a dead end.
+    // STAGE 2 (BLOG0093, V1.12.09) — LINEUP PLAYBACK. Runs slots in order: engage each slot's selecta,
+    // convert its minutes→bars against current BPM, and advance to the next slot when that many bars have
+    // elapsed. Bar counting rides sessionClock() (continuous 16th-steps since play) — NO new timing source
+    // (CODEX0002). Advancing a slot = an applyDj call (existing staged swap). Session-only.
+    let luActive=false, luIdx=0, luSlotStartBar=0, luSlotBars=0;
+    // BLOG0097: toggle the pink running indicators (button dot + header dot). Slot dot handled by render().
+    function luSetRunning(on){
+      if(btn) btn.classList.toggle("lu-running", on);
+      const hdr = panel.querySelector(".lu-hdr"); if(hdr) hdr.classList.toggle("lu-running", on);
+      render();   // refresh so the current-slot .lu-playing dot reflects luActive/luIdx
+    }
+    function luMinToBars(min){ return Math.max(1, Math.round(min * BPM / 4)); }   // min * (BPM beats/min) / (4 beats/bar)
+    function luCurrentBar(){ return Math.floor(sessionClock().es / STEPS_PER_BAR); }
+    function luEngageSlot(i){
+      const s=slots[i]; if(!s) return;
+      luIdx=i; luSlotStartBar=luCurrentBar(); luSlotBars=luMinToBars(s.min);
+      applyDj(s.sel);   // engage this slot's selecta via the existing staged-swap path
+      msgState("selecta", "Lineup "+(i+1)+"/"+slots.length+" · "+SELECTAS[s.sel].name+" · "+s.min+" min");
+      luSetRunning(true);   // BLOG0097: refresh indicators; moves the pink slot dot to this slot
+    }
+    // BLOG0093: expose the upcoming slot so the "playing" banner shows the NEXT DJ for the WHOLE time the
+    // current slot runs (not just the ~1-loop flash at handover). null when no lineup or on the last slot.
+    window._luNext = function(){
+      if(!luActive) return null;
+      const n=slots[luIdx+1];
+      return n ? { name:SELECTAS[n.sel].name, min:n.min } : null;
+    };
+    // BLOG0099: countdown to the next selecta swap, in the app's bar.beat.16th standard. Returns the
+    // remaining time as {bar,beat,six} (1-based, like the loop readout) or null when no lineup runs.
+    // Total slot steps = luSlotBars*STEPS_PER_BAR; elapsed steps since slot start; remaining → b.b.16.
+    window._luCountdown = function(){
+      if(!luActive || !playing) return null;
+      const totalSteps = luSlotBars * STEPS_PER_BAR;
+      const elapsedSteps = Math.max(0, sessionClock().es - (luSlotStartBar * STEPS_PER_BAR));
+      let rem = Math.max(0, totalSteps - elapsedSteps);
+      const bar = Math.floor(rem / STEPS_PER_BAR);
+      const beat = Math.floor((rem % STEPS_PER_BAR) / 4);
+      const six = rem % 4;
+      return { bar, beat, six };   // bars.beats.16ths remaining until the next slot takes over
+    };
+    function luTick(){   // called each frame from updateTime while a lineup is running
+      if(!luActive || !playing) return;
+      const elapsed = luCurrentBar() - luSlotStartBar;
+      if(elapsed >= luSlotBars){
+        if(luIdx+1 < slots.length){ luEngageSlot(luIdx+1); }
+        else { luActive=false; msgState("selecta", "Lineup complete"); luSetRunning(false); }   // ends after the last slot
+      }
+    }
+    window._luTick = luTick;   // updateTime calls this
+    function luStop(){ luActive=false; luSetRunning(false); }
+    window._luStop = luStop;
+    playBtn.addEventListener("click",()=>{
+      if(!slots.length){ msgState("selecta","Lineup empty — add a slot"); return; }
+      luActive=true; close();
+      if(!playing){ startSet(); }        // start transport if stopped
+      luEngageSlot(0);                    // engage first slot immediately (also sets running indicators)
+    });
+    // expose for stage 2 wiring
+    window._lineup = { get slots(){ return slots; } };
+  })();
+
   setMsg("Ready · "+GENRE.house.name+" · press play", CY);
 
 })();

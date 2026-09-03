@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_12_0] — USER GUIDE
+# OMS Chippy [Beta V1_13_0] — USER GUIDE
 
 Chippy is a browser instrument. Open the file, press play, and it makes music. No install, no account,
 no files. Here's everything you can do.
@@ -11,14 +11,17 @@ no files. Here's everything you can do.
 ## The message bar + monitor
 - **Message bar** (bottom of the app) — hover any control and it tells you what it does; change a value
   and it shows the new value. Cyan = help, orange = a value you changed, magenta = an error.
-- **Monitor** (top row, center) — the live readout: master clock, loop clock, tempo. The loop clock shows
-  your position over the loop total (e.g. `9 . 1 . 1 / 64 . 4 . 4`) and blinks through its last bar so you
-  can see a change coming.
+- **Monitor** (top row, center) — the live readout: **master** clock, **music** (loop position / loop total,
+  e.g. `9 . 1 . 1 / 64 . 4 . 4`, blinking through its last bar), and **tempo**. When a Lineup is running the
+  music row appends a countdown to the next selecta (`⇢ b . b . 16`). A fourth **playing** line scrolls what's
+  on now — and, mid-Lineup, what's up next. Hover any row (or Chippy's face) for a one-line explainer.
 - **MATRIX orientation** — the button by the MATRIX label flips the piano roll between vertical (default:
   time flows up, voices as columns under their mixer channels) and horizontal (time flows left). The
   overview strip with Chippy stays put and shows your position in the whole loop either way.
-- **Selecta DNA** — picking a selecta (e.g. Juice Night Out) conditions the generator with real musical DNA;
-  None plays raw. A conditioned set shapes sections and leans the patterns toward that artist's feel.
+- **Selecta DNA** — picking a selecta conditions the generator with a musical profile; None plays raw. Two
+  ship: **Resident DJ** (the default — the always-available house act, a corpus-free hand-authored profile)
+  and **Juice Night Out** (built from analysis of Wes's own tracks). While a selecta runs, the fields it
+  controls (genre/bars/tempo/swing) disable, since it's driving them.
 
 ## Making music (MUSIC)
 - **Play (▶)** — start/stop.
@@ -38,6 +41,13 @@ Press **party** and Chippy runs a nonstop set on its own, evolving loops seamles
 
 Party is where the YoConditioner runs — the layer that biases what gets generated toward the selecta's
 sound. Outside party mode, generate gives you clean, un-conditioned house.
+
+## The Lineup (session set-list)
+Click the **notepad button** in the SELECTA row to open the **Lineup** — a slide-out where you program a
+set. Add slots; each slot picks a selecta (Resident DJ, Juice Night Out) and a duration in minutes (scroll
+or type). Hit **Play Lineup** and Chippy runs the slots in order, swapping DJ on the bar line when each
+slot's time is up. A pink ring glows on the button while a lineup plays, the monitor shows who's up next,
+and the music row counts down to the swap. The lineup lives for the session only — it resets on reload.
 
 ## Voices (the 8 modules)
 Each voice (drums, perc, bass, lead, synth, accents, fills, FX) is a module with a **sound selector** and a

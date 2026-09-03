@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_12_0] — CLAUDE PROJECT INSTRUCTIONS
+# OMS Chippy [Beta V1_13_0] — CLAUDE PROJECT INSTRUCTIONS
 
 How an AI (or dev) should work in the Chippy project. Read this first. These rules were learned the
 hard way; follow them.

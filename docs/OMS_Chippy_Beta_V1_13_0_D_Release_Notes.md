@@ -1,6 +1,29 @@
-# OMS Chippy [Beta V1_12_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_13_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.13.0 — Resident DJ, the Lineup, and a smarter monitor
+
+This release makes Chippy programmable as a set. The headline is the **Lineup** — a styled slide-out where
+you build a session set-list: pick which selecta plays each slot and for how many minutes, hit Play Lineup,
+and Chippy runs the whole thing on its own, swapping DJs on the bar line as each slot's time runs out. It's
+a scheduler sitting on top of the music engine — it decides who's on when, and never touches how the music
+is generated.
+
+Alongside it arrives **Resident DJ** — the house act. It's the original pre-JNO "Giorgio Levan" selecta
+brought back as a permanent, always-available conditioned set, built from a tiny hand-authored profile with
+no analysis behind it at all. It proves the point that a selecta doesn't need a corpus of stems and MIDI to
+work — a few honest values are enough. Resident DJ is now the default when Chippy opens.
+
+The **monitor** got a real upgrade to match. A new "playing" line scrolls what's on now and, when a lineup
+is running, what's coming up next — like a booth monitor or a jukebox up-next. The counter row (now labeled
+"music") shows a live countdown to the next selecta in Chippy's own bar-beat-sixteenth format. And a pulsing
+pink ring glows on the Lineup button whenever a set is running, so you always know it's live. Every monitor
+row and even Chippy's face now explain themselves on hover.
+
+Under the hood, the controls that a selecta takes over — genre, bars, tempo, swing — now disable themselves
+while a selecta is driving (with keyboard nav skipping right past them), and a handful of interface papercuts
+got cleaned up along the way.
 
 ## V1.12.0 — Yo DNA, the section engine, and a vertical roll
 

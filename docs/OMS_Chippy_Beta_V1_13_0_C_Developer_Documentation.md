@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_12_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_13_0] — DEVELOPER DOCUMENTATION
 
-**Run date:** 2026-09-01  
-**Current Unix Epoch:** 1788281198  
-**App Version:** Chippy Beta V1_11_0  
+**Run date:** 2026-09-03  
+**Current Unix Epoch:** 1788444001  
+**App Version:** Chippy Beta V1_13_0  
 **License:** GPL-3.0  
 
 **Purpose:** The explanatory technical spec for OMS Chippy — how each system works and why. Modeled on
@@ -878,6 +878,41 @@ two peer sections sharing one header row (V1.9.11).
 
 ---
 
+# 8bis. NODE: THE LINEUP (session set-list scheduler) — V1.13.0
+
+A **scheduler that sits ABOVE the conditioner** — it decides *which selecta is active when*, and never
+touches generation, the YoConditioner grid, or the clock's audio path. Pure sequencing over time, driving
+the existing selecta-swap machinery.
+
+**Structure.** A styled right-anchored slide-out (`#lineupPanel`, injected in JS by `initLineup()` so it
+never depends on markup parse order; toggled by `#lineupBtn` in the SELECTA row). Holds an ordered list of
+slots — each slot is `{sel, min}` (a selecta index + a duration in minutes). Session-only, no persistence.
+
+**Playback.** `Play Lineup` sets `luActive=true`, starts the transport if stopped, and engages slot 0.
+`luEngageSlot(i)` converts minutes→bars — `luMinToBars(min) = round(min·BPM/4)` (min · BPM beats/min ÷ 4
+beats/bar) — records `luSlotStartBar`, and engages the slot's selecta via `applyDj(sel)` (the existing
+staged bar-boundary swap; no new machinery). `luTick()`, called each frame from `updateTime()`, counts
+elapsed bars off `sessionClock().es / STEPS_PER_BAR`; when a slot's bar budget elapses it advances to the
+next slot, ending after the last. **No new timing source** — it rides the master-loop clock and the existing
+frame (CODEX0002 clean).
+
+**Monitor integration (V1.13.0).** The MONITOR gained a "playing" now/next banner (`#nowNextCell` /
+`nowNextScroll`, composed by `nowNextSummary()` / `updateNowNext()` each frame). `window._luNext()` exposes
+the upcoming slot so the banner shows the next DJ the *whole* time the current slot runs (not just the
+one-loop flash at handover). `window._luCountdown()` returns `{bar,beat,six}` remaining to the next swap;
+`updateTime()` appends it to the loop row (relabeled **loop → music**) as `⇢ b . b . 16`, in the app's
+bar.beat.16th standard. A pulsing pink running indicator (§10) lights `#lineupBtn` while `luActive`.
+
+**Resident DJ + selecta-lock (V1.13.0).** `SELECTAS[2]` = **Resident DJ**, the pre-JNO "Giorgio Levan"
+selecta (V1.5.0) restored verbatim — a scalar-only profile (`mode:minor, swing:[0,0.05], structure:[2,4,8],
+dynamics:punchy`), run through the same fork points as JNO (`setDensityFromProfile`, `buildMoves`) with no
+`midi`, proving the conditioner works from a corpus-free authored profile. It is the default selecta on load
+(`selectaIdx=2`; boots stopped). While a selecta is active, `lockSelectaFields()` disables genre/bars/tempo/
+swing (the reroll overrides them — no-op made visible; None re-enables); the WASD nav mover filters disabled
+fields so keyboard nav skips them.
+
+---
+
 # 9. LEAF REFERENCE (controls + keyboard)
 
 **Transport** (Controls → Transport module): play/pause · randomize (⚄ generate) · kill (master mute —
@@ -921,6 +956,15 @@ are a uniform 30 px height; no text labels on modules except the Matrix lane chi
 Lineage: Chippy inherits the OMS design language from the Sozo/Dojo template (dark rack aesthetic,
 Eurorack-style module boxes, cyan section headers) — a scaled-down sibling of the Dojo Design System, same
 language, Chippy's own values.
+
+**Active-state glow pattern (V1.13.0).** The standard "this control is active / on / live" treatment is a
+combination of *border-color + a ~10% background tint + a box-shadow glow*, optionally animated as a pulse.
+Colors carry meaning: **cyan `#00d4ff`** = standard active/selected (`.glovbtn.active`, `.sel` focus);
+**green `#00e08a`** = persistence on (`.bgtoggle.on`); **pink `#ff006e`** = running/live (the Lineup-running
+ring on `#lineupBtn.lu-running`, animated via the `luRingPulse` keyframe). New "is-live/running" indicators
+reuse the pink animated ring rather than inventing dots or new treatments — one idiom, three meanings by
+color. (This is a design-system pattern, deliberately NOT Cortex — a CSS active-state is not a load-bearing
+system.)
 
 ---
 

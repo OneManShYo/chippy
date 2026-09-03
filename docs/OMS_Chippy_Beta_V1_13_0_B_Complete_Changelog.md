@@ -1,5 +1,45 @@
 # OMS Chippy — Changelog
 
+## V1_13_0 — Resident DJ + the Lineup scheduler + monitor upgrades (2026-09-03)
+Rolled up from iterations V1_12_01…V1_12_19 (the selecta/lineup/monitor line following the V1.12.0
+MIDI-DNA release). Live at chippy.onemanshyo.com.
+### Added
+- **Resident DJ selecta** — the pre-JNO "Giorgio Levan" selecta (V1.5.0), flagged back per BLOG0026 and
+  restored VERBATIM as a permanent house-act selecta named "Resident DJ": a minimal scalar-only profile
+  (`mode:minor, swing:[0,0.05], structure:[2,4,8], dynamics:punchy`, bpm `[124,128]`, bars `[32,64]`), run
+  through the V1.12.0 YoConditioner unchanged. Proves the conditioner works from a thin, corpus-free authored
+  profile — no AMU/MIDI/stems required. `structure`/`dynamics` carried dormant (same as JNO). Default selecta
+  on load (boots stopped; press play for a Resident DJ set) (BLOG0088, BLOG0091).
+- **Lineup — session set-list scheduler** — a styled right-side slide-out (notepad button in the SELECTA row)
+  to program a set: ordered slots, each a selecta + a duration in minutes. Play Lineup runs the slots in
+  order, converting minutes→bars (`min·BPM/4`) and auto-advancing the selecta via the existing `applyDj`
+  staged bar-boundary swap. Session-only (no persistence). A pure scheduler ABOVE the conditioner — no music-
+  chain or clock contact (BLOG0093).
+- **What's Next monitor** — a "playing" row in the MONITOR: a single-line scrolling now/next banner
+  (selecta · genre · bpm · bars; None reads "None · raw play"). During a lineup it shows the upcoming DJ the
+  whole time the current slot runs; on a manual swap it shows the cued loop (BLOG0090).
+- **Countdown to next selecta** — the loop counter row (relabeled "loop"→"music") appends a third segment
+  during a lineup: `⇢ b . b . 16`, the bars·beats·16ths remaining until the next slot, in the app's
+  bar.beat.16th standard (BLOG0099).
+- **Lineup running indicator** — a pulsing pink (`#ff006e`) glowing ring on the Lineup button while a lineup
+  plays (design-system active-state idiom, not a dot), a header dot when open, and a moving marker on the
+  currently-playing slot (BLOG0097).
+- **Monitor + face hover hints** — every MONITOR row (master/music/tempo/playing) and Chippy's face now carry
+  message-system hints (face: "Chippy — eat, sleep, rave, repeat") (BLOG0090, BLOG0099).
+### Changed
+- **Selecta-governed fields disabled under a selecta** — genre/bars/tempo/swing are overridden by the reroll
+  while a selecta runs, so they're disabled (no-op made visible); time slot removed from the standard row
+  (owned by the lineup). WASD nav skips disabled fields (BLOG0092, BLOG0094).
+- **Lineup button relocated** to the SELECTA row; leftover native `title=` tooltips stripped from message-
+  system controls (the Q/quantize one included) (BLOG0094).
+### Fixed
+- **Selecta-switch message** now fires when the swap actually lands at the bar boundary (not only when armed
+  at click), so the message bar reflects the settled selecta instead of reverting to the resting hint
+  (BLOG0089).
+- **Minutes field** — stripped the native number-spinner arrows; design-system styling + scroll-to-change
+  (BLOG0097).
+
+
 ## V1_12_0 — Yo DNA transplant + the section engine + the vertical channel-grid roll (2026-09-02)
 Rolled up from iterations V1_11_01…V1_11_11 (the MIDI-DNA / section-engine / roll-orientation line
 following the V1.11.0 mixer release). Live at chippy.onemanshyo.com.
