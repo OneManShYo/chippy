@@ -1,5 +1,33 @@
 # OMS Chippy — Changelog
 
+## V1_14_0 — SID chip family + mobile Pocket Rave + Glover rename (2026-09-03)
+Rolled up from iterations V1_13_01…V1_13_12 (the SID / mobile / rename line following V1.13.0). Live at chippy.onemanshyo.com.
+### Added
+- **SID 6581 voice-model family (Commodore 64).** A second chip model, swapped via the SOURCE dropdown
+  (Ricoh 2A03 ↔ SID 6581). In SID mode every voice routes through the SID's signature multimode FILTER
+  (BiquadFilter lowpass + resonance) and the triangle-bass becomes a sawtooth — turning the clean NES beeper
+  into a fat, filtered, resonant C64 synth. First instance of the swappable voice-model-family architecture.
+  Authentic quirk kept: the fixed filter doesn't keyboard-track, so some songs land the lead delightfully
+  out-of-tune — exactly how real SID chips behaved (BLOG0107; see CODEX0005).
+- **Mobile Pocket Rave — a portrait phone experience.** In portrait, Chippy shows a purpose-built one-tap
+  surface instead of the desktop app (which stays for landscape/desktop): an animated Chippy that IS the play
+  button (runs the default lineup, rolling a random chip per song), a Tron-neon monitor (info + roll-over
+  now/next + a static loop⇢selecta-countdown clock), MUSIC/GLOVER tabs, a scrolling piano-roll behind the
+  boxes, and a Moogerfooger enclosure (walnut cheeks, brushed-metal rails, a recessed top port-bay with a
+  power switch + I/O jacks). GLOVER opens a true full-screen light show (real Tracers engine, edge-to-edge,
+  tap to exit). Supersedes the old party-box (BLOG0005), folds in the rotate concept (BLOG0018) (BLOG0102).
+- **Screen Wake Lock** — keeps the screen awake while playing so the phone's auto-lock never sleeps it and
+  cuts the audio (BLOG0105).
+- **Uniform voice-label chips** on the vertical roll — same-size marquee tags (BLOG0101).
+### Changed
+- **Visualizer renamed rave* → glover* throughout** — the internal engine was named "rave" (predating the
+  GLOVER brand); standardized every identifier on Glover (the performer-role name, parallel to selecta), since
+  "rave" is too generic. UI, code, and docs now agree (BLOG0103). Naming law recorded: "rave" is not a system
+  name (BLOG0104).
+### Fixed
+- Mobile monitor marquee reset/scroll issues — calmed to roll-over/static, no runaway scrolling (BLOG0106).
+
+
 ## V1_13_0 — Resident DJ + the Lineup scheduler + monitor upgrades (2026-09-03)
 Rolled up from iterations V1_12_01…V1_12_19 (the selecta/lineup/monitor line following the V1.12.0
 MIDI-DNA release). Live at chippy.onemanshyo.com.

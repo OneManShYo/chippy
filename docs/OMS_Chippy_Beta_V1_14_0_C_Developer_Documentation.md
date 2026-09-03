@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_13_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_14_0] — DEVELOPER DOCUMENTATION
 
 **Run date:** 2026-09-03  
-**Current Unix Epoch:** 1788444001  
-**App Version:** Chippy Beta V1_13_0  
+**Current Unix Epoch:** 1788473550  
+**App Version:** Chippy Beta V1_14_0  
 **License:** GPL-3.0  
 
 **Purpose:** The explanatory technical spec for OMS Chippy — how each system works and why. Modeled on
@@ -935,6 +935,45 @@ automatically. Every field speaks to the message bar on focus (keyboard-first, �
 **audio-effects rack** (reverb / echo / filter / backspin — §4.4), **master solo** + mute (§4.5), quantize
 readout (Q ♩), selecta/time-slot selectors. Value wheels take **horizontal touch-drag** (vertical is the
 browser's scroll gesture; mouse keeps vertical drag — BLOG0046).
+
+---
+
+---
+
+# 9bis. CHIP VOICE-MODEL FAMILIES — 2A03 / SID (V1.14.0)
+
+Chippy synthesizes each voice from Web Audio primitives modeled on a chip. As of V1.14.0 the chip is
+SWAPPABLE via the SOURCE dropdown (`#sourceBox`, a real select: `Ricoh 2A03` / `SID 6581`), driving `chipMode`.
+
+**Ricoh 2A03 (default).** Pulse voices = `PeriodicWave` built from the Fourier series of the duty cycle
+(band-limited, no aliasing). Bass = fixed `triangle`. Noise = a noise buffer through a bandpass. Clean, bright.
+
+**SID 6581 (`chipMode==="sid"`).** The whole difference is one insertion: every voice routes through the SID's
+signature multimode FILTER — a `BiquadFilter` (lowpass, cutoff ~1400Hz, Q~8) created once (`sidFilter`, feeds
+master), and voices connect via `voiceOut()` which returns `sidFilter` in SID mode (else `curDest`). The
+triangle-bass also swaps to `sawtooth` in SID mode. Result: clean beeper → fat, resonant, squelchy C64 synth.
+INTENTIONAL AUTHENTIC QUIRK: the filter is fixed and does NOT track `generate()`'s per-song transpose, so some
+songs land the lead out-of-tune — exactly how real SIDs behaved (kept, not a bug; see CODEX0005). Stage 2/3
+(ring-mod, hard-sync, PWM, ADSR) are parked. `voiceOut()` is the one seam; grep `chipMode`, `sidFilter`,
+`voiceOut`, `#sourceBox`.
+
+---
+
+# 9ter. MOBILE — POCKET RAVE (portrait surface) (V1.14.0)
+
+In portrait (`@media (orientation:portrait)`), `#pocketRave` shows and the desktop `.app` is `display:none`
+(NOT reflowed — dodges the old narrow-width black-screen; two independent surfaces, CSS picks one). All mobile
+code is namespaced `pr-*` / `pocketRave` / `initPocketRave`. It REUSES the real engine through bridges:
+`_playLineup`/`_stopLineup`/`_isPlaying` (Chippy-tap runs the default lineup), `_gloverOn` (full-screen Glover),
+`_nowNext`/`_luCountdown` (monitor). Key pieces: animated Chippy canvas IS the play button (`#prPlay`/`prToggle`,
+rolls a random `chipMode` per new song via `prChipRandom` read in `generate()`); a Tron-neon monitor (`#prInfo`
+static, `#prMon` roll-over now/next — letterbox flip, no scroll — and `#prClocks` static loop-position ⇢
+selecta-countdown); a dim vertical-roll background (`#prRollBg`/`prDrawBg`, reads live `pattern`+`sessionClock`);
+MUSIC/GLOVER tabs (`prTab`) where GLOVER goes true full-screen (`#prGlover.pr-fs`, z-index 300, `body.glover-fs`
+hides the jack-bay + rails, tap anywhere exits); a Moogerfooger enclosure (walnut `border-image` cheeks,
+brushed-metal `::before/::after` rails, `#prSafeTop` recessed port-bay with a power switch + jack-nuts, sized to
+`env(safe-area-inset-top)` + `viewport-fit=cover`). Screen wake-lock (`prWakeLockOn/Off`) holds the screen awake
+while playing. Landscape/desktop = the full app, unchanged.
 
 ---
 

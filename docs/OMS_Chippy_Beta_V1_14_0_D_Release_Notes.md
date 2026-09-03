@@ -1,6 +1,27 @@
-# OMS Chippy [Beta V1_13_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_14_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.14.0 — A second chip, a rave in your pocket
+
+This release does two big things: it gives Chippy a **second sound chip**, and it puts Chippy **in your pocket**.
+
+**The SID.** Chippy has modeled the NES's Ricoh 2A03 from the start — clean, bright, video-gamey. V1.14.0 adds
+the **SID 6581**, the Commodore 64's chip, selectable from the SOURCE dropdown. Where the NES is a clean beeper,
+the SID is a proper analog synth on a chip: flip to it and everything runs through a resonant filter, the bass
+turns to sawtooth, and the whole thing goes fat and squelchy — a genuinely different machine. It even drifts
+out of tune on some tunes, exactly like real SID chips did. And because Chippy's drums live outside the chip
+model, the kick stays modern underneath — chiptune with real bass.
+
+**Pocket Rave.** Hold your phone in portrait and Chippy becomes a one-tap toy: a big grinning Chippy you press
+to play (he rolls a random chip each song so it's always a surprise), a neon monitor, and — flip to the GLOVER
+tab — a full-screen light show. The whole thing is wrapped in a Moogerfooger-style enclosure, wood sides and
+all, with fake I/O jacks across the top. It keeps the screen awake so it never quits mid-set, and it'll happily
+AirPlay to a speaker. Landscape and desktop still get the full instrument, unchanged.
+
+Under the hood, the visualizer's internal code was finally renamed from "rave" to **Glover** (the performer who
+does the glove light-show — a sibling to the selecta who runs the music), so the code matches what the UI has
+always called it.
 
 ## V1.13.0 — Resident DJ, the Lineup, and a smarter monitor
 

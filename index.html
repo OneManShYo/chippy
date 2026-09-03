@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_13_09  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_14_0  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OMS Chippy [Beta V1_13_09]</title>
+<title>OMS Chippy [Beta V1_14_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -392,7 +392,7 @@
     background:linear-gradient(90deg,#2a2a2a 0%,#8a8d90 25%,#c8ccce 50%,#6f7276 75%,#242424 100%); box-shadow:0 0 1px rgba(0,0,0,.6); }
   #pocketRave::before{ left:14px; } #pocketRave::after{ right:14px; }
 }
-.pr-header{ height:62px; background:linear-gradient(180deg,#2a2a2a,#222); border-bottom:1px solid #444;
+.pr-header{ height:54px; background:linear-gradient(180deg,#2a2a2a,#222); border-bottom:1px solid #444;
   box-shadow:0 2px 10px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; padding:0 16px; flex-shrink:0; }
 .pr-brandwrap{ display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
 .pr-brand{ font-size:27px; font-weight:700; line-height:1; letter-spacing:1px;
@@ -400,16 +400,21 @@
 .pr-line2{ margin-top:-1px; }
 .pr-sub{ font-size:13px; color:#ffa500; }
 .pr-ver{ font-size:10px; color:#888; text-align:center; font-weight:700; }
-.pr-tabbar{ height:38px; background:linear-gradient(180deg,#252525,#1e1e1e); border-bottom:1px solid #333;
+.pr-tabbar{ height:32px; background:linear-gradient(180deg,#252525,#1e1e1e); border-bottom:1px solid #333;
   display:flex; align-items:center; justify-content:center; padding:0 16px; gap:18px; flex-shrink:0; }
-.pr-tab{ padding:8px 13px; font-size:12px; font-weight:600; letter-spacing:.4px; color:#888;
+.pr-tab{ padding:6px 13px; font-size:12px; font-weight:600; letter-spacing:.4px; color:#888;
   border-bottom:2px solid transparent; cursor:pointer; transition:all .18s; }
 .pr-tab.active{ color:#00d4ff; border-bottom:2px solid #00d4ff; }
 .pr-panel{ flex:1; display:flex; flex-direction:column; min-height:0; }
-#prMusic{ justify-content:center; gap:16px; padding:70px 0 40px; position:relative; }
+#prMusic{ justify-content:center; gap:14px; padding:30px 0 28px; position:relative; }
 #prRollBg{ position:absolute; inset:0; width:100%; height:100%; z-index:0; opacity:0.35; pointer-events:none; }
 #prMusic > .pr-hero, #prMusic > .pr-tron, #prMusic > .pr-bottom, #prMusic > .pr-ver{ position:relative; z-index:1; }
 #prGlover{ position:relative; background:#000; display:none; }
+/* full-screen mode: Glover fills the ENTIRE viewport over everything, edge-to-edge; tap anywhere to exit */
+#prGlover.pr-fs{ position:fixed; inset:0; z-index:300; display:block; background:#000; }
+  /* in full-screen Glover, hide the Moogerfooger top bay + side rails so it's true edge-to-edge */
+  body.glover-fs #prSafeTop{ display:none !important; }
+  body.glover-fs #pocketRave::before, body.glover-fs #pocketRave::after{ display:none !important; }
 .pr-hero{ display:flex; align-items:center; justify-content:center; }
 .pr-facewrap{ width:calc(100% - 68px); height:300px; border-radius:10px; cursor:pointer; background:#0a0a0a; border:2px solid #00d4ff;
   display:flex; align-items:center; justify-content:center;
@@ -419,19 +424,27 @@
 @keyframes prGlow{ 0%,100%{ border-color:#ff006e; box-shadow:0 0 18px rgba(255,0,110,.35), inset 0 0 30px rgba(0,0,0,.5);}
   50%{ border-color:#ff6aa6; box-shadow:0 0 32px rgba(255,0,110,.75), inset 0 0 30px rgba(0,0,0,.5);} }
 #prFace{ width:260px; height:260px; pointer-events:none; }
-.pr-tron{ margin:0 34px; padding:8px 4px; border-radius:10px;
+.pr-tron{ margin:0 34px; padding:7px 4px; border-radius:10px;
   background:radial-gradient(ellipse at 50% 50%, rgba(0,180,255,.06), rgba(0,0,0,0) 70%), #060a0d; border:2px solid #00d4ff;
   box-shadow:0 0 6px rgba(0,212,255,.7),0 0 14px rgba(0,212,255,.45),inset 0 0 10px rgba(0,212,255,.35); }
-.pr-tline{ overflow:hidden; white-space:nowrap; padding:3px 12px; }
-.pr-tline .pr-scroll{ display:inline-block; }
-.pr-tline.info{ text-align:center; }
-.pr-tline.info .pr-scroll{ color:#fff; font-size:11px; padding-left:0; text-shadow:0 0 4px rgba(255,255,255,.3); }
-.pr-tline.mon{ position:relative; }
-.pr-tline.mon .pr-scroll{ color:#00d4ff; font-size:12px; animation:prScroll 14s linear infinite; text-shadow:0 0 6px rgba(0,212,255,.6); white-space:nowrap; will-change:transform; }
-.pr-tline.mon .pr-sep{ color:#c77dff; padding:0 10px; }
-.pr-tline.mon .pr-next{ color:#ffd23f; text-shadow:0 0 6px rgba(255,210,63,.6); }
+.pr-tline{ overflow:hidden; white-space:nowrap; padding:2px 12px; line-height:1.2; }
+  .pr-tline .pr-scroll{ display:inline-block; }
+  .pr-tline.info{ text-align:center; }
+  .pr-tline.info .pr-scroll{ color:#fff; font-size:11px; text-shadow:0 0 4px rgba(255,255,255,.3); }
+  .pr-tline.mon{ text-align:center; }
+  .pr-tline.mon .pr-scroll{ color:#00d4ff; font-size:12px; text-shadow:0 0 6px rgba(0,212,255,.6); }
+  .pr-tline.mon .pr-scroll.flip{ animation:prMonFlip .35s ease-in-out; }
+  .pr-tline.mon .pr-sep{ color:#c77dff; padding:0 10px; }
+  .pr-tline.mon .pr-next{ color:#ffd23f; text-shadow:0 0 6px rgba(255,210,63,.6); }
+  @keyframes prMonFlip{ 0%{ transform:translateY(0); opacity:1; } 49%{ transform:translateY(-100%); opacity:0; }
+    50%{ transform:translateY(100%); opacity:0; } 100%{ transform:translateY(0); opacity:1; } }
+
+
+  /* 3-clock readout (master/music/tempo) — mirrors the desktop monitor, inside the Tron box */
+  .pr-clocks{ padding:2px 12px; line-height:1.2;
+    color:#00d4ff; font-size:12px; text-align:center; white-space:nowrap; text-shadow:0 0 5px rgba(0,212,255,.4); }
 @keyframes prScroll{ from{ transform:translateX(100%);} to{ transform:translateX(-100%);} }
-.pr-bottom{ display:flex; flex-direction:column; align-items:center; gap:18px; }
+.pr-bottom{ display:flex; flex-direction:column; align-items:center; gap:10px; }
 .pr-link{ line-height:0; } .pr-link img{ height:34px; width:auto; display:block; filter:drop-shadow(0 1px 3px rgba(0,0,0,.5)); }
 .pr-divline{ width:120px; height:1px; background:#2a2a2a; }
 .pr-plur{ color:#c77dff; font-size:16px; font-weight:700; letter-spacing:6px; text-align:center; font-family:'Courier New',monospace; }
@@ -467,11 +480,11 @@
     <div class="pr-tron">
       <div class="pr-tline info"><span class="pr-scroll" id="prInfo">Chippy &middot; House &middot; 124 bpm</span></div>
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">press chippy to play</span></div>
+      <div class="pr-clocks" id="prClocks">1 . 1 . 1</div>
     </div>
-    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_13_09]</div>
+    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_14_0]</div>
     <div class="pr-bottom">
       <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
-      <div class="pr-divline"></div>
       <div class="pr-plur">PLUR</div>
       <div class="pr-dot" id="prDot"></div>
     </div>
@@ -483,7 +496,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_13_09]</span>
+      <span class="ver">[Beta&nbsp;V1_14_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -2589,6 +2602,13 @@
     timeSess.textContent=sBar+" . "+sBeat+" . "+sSix;
     timeLoop.classList.toggle("finishing", playing && bar===BARS);
     { const tr=document.getElementById("tempoRead"); if(tr) tr.textContent=BPM+" bpm"; }
+    // mobile monitor clock (static): current loop position ⇢ selecta countdown
+    { const pc=document.getElementById("prClocks"); if(pc){
+        const cd=(typeof window!=="undefined" && window._luCountdown)? window._luCountdown() : null;
+        pc.textContent = (bar+" . "+beat+" . "+six) + (cd ? ("  \u21e2  "+cd.bar+" . "+cd.beat+" . "+cd.six) : "");
+      } }
+    // BLOG0102: mirror the 3 clocks into the mobile PocketRave monitor (same values, per-frame)
+
     updateNowNext();
     if(window._luTick) window._luTick();   // BLOG0093 stage 2: advance the lineup scheduler each frame
   }
@@ -2615,6 +2635,7 @@
     }
     return { now, next };
   }
+  window._nowNext = nowNextSummary;   // BLOG0102: mobile roll-over reads the now/next parts
   function updateNowNext(){
     const cell=document.getElementById("nowNextCell"), scr=document.getElementById("nowNextScroll");
     if(!cell||!scr) return;
@@ -4076,6 +4097,33 @@
     }
     prDrawFace();
 
+    // monitor now/next roll-over (no scroll — flips like a letterbox, Chippy is the only moving thing).
+    // idle: "press chippy to play". playing: rolls between the current selecta and the cued next one.
+    (function(){
+      const mon=document.getElementById("prMon"); if(!mon) return;
+      let showNext=false;
+      function render(){
+        const pl=window._isPlaying && window._isPlaying();
+        if(!pl){ mon.innerHTML="press chippy to play"; return; }
+        const nn=(window._nowNext)? window._nowNext() : {now:"playing",next:""};
+        if(showNext && nn.next){ mon.innerHTML='<span class="pr-next">next: '+nn.next+'</span>'; }
+        else { mon.innerHTML=nn.now||"playing"; showNext=false; }
+      }
+      // flip every 3.5s (only toggles to 'next' when there IS a next cued)
+      setInterval(()=>{
+        const pl=window._isPlaying && window._isPlaying();
+        const nn=(window._nowNext)? window._nowNext() : {next:""};
+        if(pl && nn.next){ showNext=!showNext; mon.classList.remove("flip"); void mon.offsetWidth; mon.classList.add("flip"); }
+        render();
+      }, 3500);
+      // keep the current value fresh between flips
+      setInterval(render, 400);
+      render();
+    })();
+
+    // clock flip-rotation: one line cycling master -> music -> tempo (letterbox roll, no scroll motion)
+
+
     // ── background vertical piano-roll — dim scrolling note-blocks behind the boxes (ambient texture) ──
     const bg=document.getElementById("prRollBg"), bx=bg && bg.getContext("2d");
     function prSizeBg(){ if(!bg) return; bg.width=bg.clientWidth; bg.height=bg.clientHeight; }
@@ -4135,9 +4183,7 @@
       const nm=(document.querySelector('.summary-title')||{}).textContent||"Chippy";
       const info = nm+"  ·  "+(GENRE[genre]?GENRE[genre].name:"House")+"  ·  "+BPM+" bpm";
       document.getElementById("prInfo").textContent=info;
-      // monitor line: when playing → the real now/next banner; when idle → a prompt
-      const nn=document.getElementById("nowNextScroll");
-      document.getElementById("prMon").innerHTML = pl ? (nn ? nn.innerHTML : "playing") : "press chippy to play";
+      // monitor line handled by the roll-over rotator (prMonRoll) — no scroll copy here
       setTimeout(prUpdate, 700);
     }
     prUpdate();
@@ -4147,13 +4193,16 @@
       const m=document.getElementById("prMusic"), g=document.getElementById("prGlover");
       const tm=document.getElementById("prTabMusic"), tg=document.getElementById("prTabGlover");
       if(w==="glover"){
-        m.style.display="none"; g.style.display="block"; tm.classList.remove("active"); tg.classList.add("active");
-        // move the REAL #glover canvas into the mobile glover panel and start the real engine (Tracers)
+        m.style.display="none"; g.style.display="block"; g.classList.add("pr-fs"); tm.classList.remove("active"); tg.classList.add("active");
+        // move the REAL #glover canvas into the full-screen mobile panel and start the real engine (Tracers)
         const gcanvas=document.getElementById("glover");
-        if(gcanvas && gcanvas.parentElement!==g){ gcanvas.style.width="100%"; gcanvas.style.height="100%"; gcanvas.style.objectFit="contain"; g.appendChild(gcanvas); }
+        if(gcanvas && gcanvas.parentElement!==g){ gcanvas.style.width="100%"; gcanvas.style.height="100%"; gcanvas.style.objectFit="cover"; g.appendChild(gcanvas); }
         if(window._gloverOn) window._gloverOn(true);
+        document.body.classList.add("glover-fs");
+        g.onclick=()=>window.prTab("music");   // tap anywhere to exit full-screen
       } else {
-        g.style.display="none"; m.style.display="flex"; tg.classList.remove("active"); tm.classList.add("active");
+        document.body.classList.remove("glover-fs");
+        g.style.display="none"; g.classList.remove("pr-fs"); g.onclick=null; m.style.display="flex"; tg.classList.remove("active"); tm.classList.add("active");
         if(window._gloverOn) window._gloverOn(false);
       }
     };
