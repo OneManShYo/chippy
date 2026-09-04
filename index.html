@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_14_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_14_01  ·  Chiptune EDM Generator
   Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OMS Chippy [Beta V1_14_0]</title>
+<title>OMS Chippy [Beta V1_14_01]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -482,7 +482,7 @@
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">press chippy to play</span></div>
       <div class="pr-clocks" id="prClocks">1 . 1 . 1</div>
     </div>
-    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_14_0]</div>
+    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_14_01]</div>
     <div class="pr-bottom">
       <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
       <div class="pr-plur">PLUR</div>
@@ -496,7 +496,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_14_0]</span>
+      <span class="ver">[Beta&nbsp;V1_14_01]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -2594,7 +2594,11 @@
     // Two clocks only (per spec): loop-relative bar.beat.six  |  Ableton-style session bar.beat.six.
     // The LOOP readout blinks during its last bar so you get a heads-up the pattern is about to change.
     // Blink now agrees with Chippy (same master clock) — both fire on the true last bar, not early.
-    timeLoop.textContent=bar+" . "+beat+" . "+six+" / "+BARS+" . 4 . 4";
+    { const totalSteps=BARS*STEPS_PER_BAR;
+      const elapsed=(bar-1)*STEPS_PER_BAR + (beat-1)*4 + (six-1);
+      let rem=totalSteps-1-elapsed; if(rem<0) rem=0;
+      const rB=Math.floor(rem/STEPS_PER_BAR)+1, rBt=Math.floor((rem%STEPS_PER_BAR)/4)+1, rSx=(rem%4)+1;
+      timeLoop.textContent=rB+" . "+rBt+" . "+rSx; }
     // BLOG0099: append a countdown to the next selecta swap (lineup) in the same bar.beat.16th standard,
     // as a third segment on the loop row: "cur / total  ⇢ b . b . 16". Only while a lineup is running.
     const cd = (typeof window!=="undefined" && window._luCountdown) ? window._luCountdown() : null;
@@ -2604,8 +2608,12 @@
     { const tr=document.getElementById("tempoRead"); if(tr) tr.textContent=BPM+" bpm"; }
     // mobile monitor clock (static): current loop position ⇢ selecta countdown
     { const pc=document.getElementById("prClocks"); if(pc){
+        const totalSteps=BARS*STEPS_PER_BAR;
+        const elapsed=(bar-1)*STEPS_PER_BAR + (beat-1)*4 + (six-1);
+        let rem=totalSteps-1-elapsed; if(rem<0) rem=0;
+        const rB=Math.floor(rem/STEPS_PER_BAR)+1, rBt=Math.floor((rem%STEPS_PER_BAR)/4)+1, rSx=(rem%4)+1;
         const cd=(typeof window!=="undefined" && window._luCountdown)? window._luCountdown() : null;
-        pc.textContent = (bar+" . "+beat+" . "+six) + (cd ? ("  \u21e2  "+cd.bar+" . "+cd.beat+" . "+cd.six) : "");
+        pc.textContent = (rB+" . "+rBt+" . "+rSx) + (cd ? ("  \u21e2  "+cd.bar+" . "+cd.beat+" . "+cd.six) : "");
       } }
     // BLOG0102: mirror the 3 clocks into the mobile PocketRave monitor (same values, per-frame)
 
@@ -2620,8 +2628,10 @@
   function nowNextSummary(){
     // NOW: what's actually playing this loop.
     let now;
+    const luC = (typeof window!=="undefined" && window._luCurrent) ? window._luCurrent() : null;
     if(!yoOn || selectaIdx===0){ now = "None · raw play"; }
-    else { now = selecta().name+" · "+GENRE[genre].name+" · "+BPM+" · "+BARS+" bars"; }
+    else if(luC){ now = luC.name+" · "+luC.min+" min"; }   // mirrors the next: line exactly
+    else { now = selecta().name; }
     // NEXT: only when a swap is staged. pendingYo carries the cued genre/bpm/bars; selecta() is already
     // the cued selecta (applyDj set selectaIdx at click). Show its name so the crowd sees what's coming.
     // NEXT: prefer the LINEUP's upcoming slot (shown the whole time the current slot runs, so you know
@@ -4017,6 +4027,11 @@
       const n=slots[luIdx+1];
       return n ? { name:SELECTAS[n.sel].name, min:n.min } : null;
     };
+    window._luCurrent = function(){
+      if(!luActive) return null;
+      const c=slots[luIdx];
+      return c ? { name:SELECTAS[c.sel].name, min:c.min } : null;
+    };
     // BLOG0099: countdown to the next selecta swap, in the app's bar.beat.16th standard. Returns the
     // remaining time as {bar,beat,six} (1-based, like the loop readout) or null when no lineup runs.
     // Total slot steps = luSlotBars*STEPS_PER_BAR; elapsed steps since slot start; remaining → b.b.16.
@@ -4107,7 +4122,7 @@
         if(!pl){ mon.innerHTML="press chippy to play"; return; }
         const nn=(window._nowNext)? window._nowNext() : {now:"playing",next:""};
         if(showNext && nn.next){ mon.innerHTML='<span class="pr-next">next: '+nn.next+'</span>'; }
-        else { mon.innerHTML=nn.now||"playing"; showNext=false; }
+        else { mon.innerHTML = (nn.now && nn.now!=="None · raw play") ? ('playing: '+nn.now) : (nn.now||"playing"); showNext=false; }
       }
       // flip every 3.5s (only toggles to 'next' when there IS a next cued)
       setInterval(()=>{
