@@ -1,6 +1,28 @@
 # OMS Chippy — Changelog
 
-## V1_14_0 — SID chip family + mobile Pocket Rave + Glover rename (2026-09-03)
+## V1.15.0 — Master panel + mixer/master restructure + design-system hardening (2026-09-05)
+Rolled up from iterations V1.15.01…V1.14.18. Live at chippy.onemanshyo.com.
+### Added
+- **Master slide-out panel** — a non-blocking overlay (M key or the mixer-header panel button; app stays usable behind it; close via X/toggle/Esc). Houses LEVEL, Output, DSP, and Audio Effects as outlined-group modules (BLOG0016).
+- **Level meter** — stereo L/R bars (Dojo-ported), dB scale (+6…-48), peak-hold lines, clip dots, OUTPUT + PEAK readouts; positioned above DSP (BLOG0016, BLOG0129). Output row (Vol/Solo/Mute → Vol/Talk/Mute) as its own outlined module (BLOG0130).
+- **Expanded master DSP** — Compressor now exposes Threshold (-60..0) / Ratio (1..20) / Attack (1..100ms); Limiter gains an adjustable Ceiling (-24..0) (BLOG0127).
+- **TALK talk-over dim** — master output button (T) that cuts ~10 dB to talk over the music (BLOG0131).
+- **Sound Source Profile** — per-engine default 8-voice loadout applied on every SOURCE switch (BLOG0113).
+- **Origin Seed documented** — 0x1337 named as the grounding reference constant (BLOG0124).
+- **Random-on-open** — fresh random seed each load, new song every time (BLOG0125).
+- **RESEARCH & REFERENCES** in ABOUT — INSPIRATION groups (People/Companies/Communities) + linked research references (BLOG0123, plus the reference-block standard).
+### Changed
+- **Mixer/master split.** DJ effects (Echo, Filter, Backspin) moved back to the mixer header; Reverb stays in the master Audio Effects; master Solo returned to the mixer header (BLOG0131). Master Audio Effects reframed as an outlined-group module (BLOG0128).
+- **Header controls modularized** — Echo/Filter/Backspin/Solo, the Voices SOURCE control, each wrapped as a bordered module with a label pill, uniform 18px header-strip height (BLOG0131, BLOG0132).
+- **Panel-open buttons unified** — the Selecta lineup button and the Mixer master button share the cyan-glow styling + generic panel icon (indicator only, no tooltip); lineup button moved to the Selecta header far-right (BLOG0133, BLOG0134).
+- **Slide-out panels are non-blocking overlays** (no scrim) — applied to Lineup and Master (BLOG0016).
+- **Loop clock counts down** (bars remaining) (BLOG0115).
+- **ABOUT platform definition** — "audio-visual generation and performance platform" (BLOG0123).
+- **Design System hardened → Human Interface Guidelines** — C §10 / Y §9 rewritten with the hardware-mindset philosophy, affirmative DO-rules, the slide-out panel spec, and the module hierarchy (panel → outlined group → cell → control + pill).
+### Fixed
+- Mobile Glover full-screen fell back to the main app on rotation — now holds (BLOG0118).
+
+## V1_15_0 — SID chip family + mobile Pocket Rave + Glover rename (2026-09-03)
 Rolled up from iterations V1_13_01…V1_13_12 (the SID / mobile / rename line following V1.13.0). Live at chippy.onemanshyo.com.
 ### Added
 - **SID 6581 voice-model family (Commodore 64).** A second chip model, swapped via the SOURCE dropdown

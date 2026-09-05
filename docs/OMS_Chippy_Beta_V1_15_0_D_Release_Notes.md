@@ -1,12 +1,22 @@
-# OMS Chippy [Beta V1_14_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_15_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
 
-## V1.14.0 — A second chip, a rave in your pocket
+## V1.15.0 — The Master panel, and a real mixing surface
+
+This release is about **control**. Chippy gets a proper **Master slide-out panel** — press M (or the panel button on the mixer) and a drawer slides in with a real stereo **level meter** (peak-hold, clip dots, dB readouts), a **DSP** section with a genuine compressor (threshold/ratio/attack) and a limiter with an adjustable ceiling, master **EQ**, and the **Reverb**. It's a non-blocking overlay — the app keeps working behind it, so you can open it and keep playing.
+
+The mixer got sorted out too. The **DJ effects** — Echo, Filter, Backspin — moved back onto the mixer header where they belong for live performance, each in its own tidy little module. **Solo** came back to the mixer. And a new **TALK** button dims the master ~10 dB so you can talk over the track.
+
+Under the surface, this release **hardened the whole design system into Human Interface Guidelines** — built with a hardware mindset (once it ships, it has to be right), everything modular, consistent, and precise, on the screen and in the code. The blueprints were updated to match, including a new sheet documenting the entire UI/control-surface architecture.
+
+Also: Chippy now opens on a **different song every time** (random-on-open), and the signature default tune is preserved as the documented "origin seed."
+
+## V1.15.0 — A second chip, a rave in your pocket
 
 This release does two big things: it gives Chippy a **second sound chip**, and it puts Chippy **in your pocket**.
 
-**The SID.** Chippy has modeled the NES's Ricoh 2A03 from the start — clean, bright, video-gamey. V1.14.0 adds
+**The SID.** Chippy has modeled the NES's Ricoh 2A03 from the start — clean, bright, video-gamey. V1.15.0 adds
 the **SID 6581**, the Commodore 64's chip, selectable from the SOURCE dropdown. Where the NES is a clean beeper,
 the SID is a proper analog synth on a chip: flip to it and everything runs through a resonant filter, the bass
 turns to sawtooth, and the whole thing goes fat and squelchy — a genuinely different machine. It even drifts

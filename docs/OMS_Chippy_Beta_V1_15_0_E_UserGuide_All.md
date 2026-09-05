@@ -1,4 +1,4 @@
-# OMS Chippy [Beta V1_14_0] — USER GUIDE
+# OMS Chippy [Beta V1_15_0] — USER GUIDE
 
 Chippy is a browser instrument. Open the file, press play, and it makes music. No install, no account,
 no files. Here's everything you can do.
@@ -55,34 +55,38 @@ Each voice (drums, perc, bass, lead, synth, accents, fills, FX) is a module with
 ship horn — it's a *sound*, one of the eight instruments. (Not to be confused with the mixer's audio
 effects, which are processing — see below.)
 
-## The mixer (levels, effects, processing)
+## The mixer (levels + live DJ effects)
 Below the voices is the mixer. Each of the 8 channels has a **level**, a **solo** (S), and a **kill** (⏻).
-Solo is additive — tap S on a few channels to build a group; tap again to drop one. The **master solo**
-button lights whenever anything is soloed; one tap clears them all (great for a subtractive build — solo a
-few elements down, then release everything on the drop).
+Solo is additive — tap S on a few channels to build a group; tap again to drop one. The **master solo** on
+the mixer header lights whenever anything is soloed; one tap clears them all (great for a subtractive
+build — solo a few elements down, then release everything on the drop).
 
-Along the mixer header is the **audio-effects rack** and the **master processing**, each control labeled so
-you know what it is at a glance. Every dial runs a simple **0–10** scale (EQ is in dB).
-
-**Audio effects (live performance FX on the whole mix):**
+The mixer header carries the **live DJ effects**, each in its own little module (label + button + amount):
 
 | Control | What it does | How to use |
 |---|---|---|
-| **REVERB** | Space/wash on the mix (drums stay dry). | Button on/off, dial for strength. On by default, low. |
 | **ECHO** | Tempo-synced repeat (dotted-eighth), bass cut so it stays clean. | Button on, dial the amount. Great for transitions/exits. |
-| **FILTER** | The DJ sweep. Dial down = muffled/underwater; dial up = thin/bass-out; 5 = off. | Turn the dial to sweep; button toggles it in/out and *keeps* your setting. |
-| **BACKSPIN** | Tape-stop brake — the mix spins/pitches down while held. | **Press and hold** (or hold **Enter** when focused); release and you're back on the beat, no time lost. Dial = how long the brake takes. |
+| **FILTER** | The DJ sweep. Dial down = muffled/underwater; up = thin/bass-out; 5 = off. | Turn to sweep; button toggles it in/out and *keeps* your setting. |
+| **BACKSPIN** | Tape-stop brake — the mix spins/pitches down while held. | **Press and hold** (or hold **Enter** when focused); release and you're back on the beat. Dial = brake length. |
 
-**Master processing (set-and-forget session tone, end of the chain):**
+At the far right of the mixer header is the **Master panel button** (the cyan-glow panel icon) — it opens the
+Master slide-out.
 
-| Control | What it does | How to use |
-|---|---|---|
-| **EQ** (High/Mid/Low) | 3-band tone shaping on the whole mix. | Each dial ±12 dB, 0 = flat. Boost/cut top, middle, or bottom. |
-| **COMP** | Compressor — glues/thickens the mix. | Button on/off; dial sets the ratio (gentle → hard). Gets louder/fatter as you push it. |
-| **LIMIT** | Limiter — a peak ceiling so the output can't clip. | Button on/off. Safety net; catches whatever the effects throw at it. |
-| **VOL** | Master output volume (live). | The final level, at the very end before kill. |
+## The Master panel (level, output, DSP, effects)
+Press **M** or the Master button on the mixer header to slide out the **Master panel**. It's a non-blocking
+overlay — the app keeps running behind it, so you can open it and keep playing. Close it with the **✕**, the
+button again, or **Esc**. Top to bottom:
 
-**Kill (⏻)** — mute the whole mix without stopping playback (talk over it, then unmute).
+- **LEVEL** — a stereo L/R meter with a dB scale (peak-hold marks + clip dots), and **OUTPUT** / **PEAK**
+  readouts. This is your "how hot is the mix" at a glance.
+- **OUTPUT** — **Talk**, **Volume**, **Mute**. **Talk** dims the master ~10 dB so you can talk over the
+  music (tap again to restore). **Volume** is the master level. **Mute** silences the mix without stopping
+  playback.
+- **DSP** — **EQ** (High/Mid/Low, ±12 dB, 0 = flat), **Comp** (Threshold / Ratio / Attack — a real
+  compressor to glue and thicken), **Limiter** (adjustable Ceiling — the peak ceiling so the output can't
+  clip). Hover any control and the message bar tells you what it is.
+- **Audio Effects** — **Reverb** (space/wash on the mix; drums stay dry). Button on/off, dial for strength.
+
 
 ## Glover (the light show)
 Go to GLOVER, hit party, and pick a trick: Tracers, Liquid, Tutting, Strobe, Orbits, Bloom. Each is a

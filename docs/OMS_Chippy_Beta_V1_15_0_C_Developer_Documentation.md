@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_14_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_15_0] — DEVELOPER DOCUMENTATION
 
 **Run date:** 2026-09-03  
 **Current Unix Epoch:** 1788473550  
-**App Version:** Chippy Beta V1_14_0  
+**App Version:** Chippy Beta V1_15_0  
 **License:** GPL-3.0  
 
 **Purpose:** The explanatory technical spec for OMS Chippy — how each system works and why. Modeled on
@@ -940,9 +940,9 @@ browser's scroll gesture; mouse keeps vertical drag — BLOG0046).
 
 ---
 
-# 9bis. CHIP VOICE-MODEL FAMILIES — 2A03 / SID (V1.14.0)
+# 9bis. CHIP VOICE-MODEL FAMILIES — 2A03 / SID (V1.15.0)
 
-Chippy synthesizes each voice from Web Audio primitives modeled on a chip. As of V1.14.0 the chip is
+Chippy synthesizes each voice from Web Audio primitives modeled on a chip. As of V1.15.0 the chip is
 SWAPPABLE via the SOURCE dropdown (`#sourceBox`, a real select: `Ricoh 2A03` / `SID 6581`), driving `chipMode`.
 
 **Ricoh 2A03 (default).** Pulse voices = `PeriodicWave` built from the Fourier series of the duty cycle
@@ -959,7 +959,7 @@ songs land the lead out-of-tune — exactly how real SIDs behaved (kept, not a b
 
 ---
 
-# 9ter. MOBILE — POCKET RAVE (portrait surface) (V1.14.0)
+# 9ter. MOBILE — POCKET RAVE (portrait surface) (V1.15.0)
 
 In portrait (`@media (orientation:portrait)`), `#pocketRave` shows and the desktop `.app` is `display:none`
 (NOT reflowed — dodges the old narrow-width black-screen; two independent surfaces, CSS picks one). All mobile
@@ -977,33 +977,88 @@ while playing. Landscape/desktop = the full app, unchanged.
 
 ---
 
-# 10. THE DESIGN SYSTEM (governed — NOT Cortex)
+# 10. THE DESIGN SYSTEM — HUMAN INTERFACE GUIDELINES (governed — NOT Cortex)
 
-The universal UI/UX rules: tokens, typography, layout/spacing, color semantics, component patterns, and
-anti-drift hard rules. It **governs visual consistency** across every section and tab — new UI inherits its
-tokens/classes rather than hand-rolling a one-off. It is **important and governed, but it is NOT Cortex**:
-breaking it makes the app look like amateur slop, not stop working. (It earned a written spec after real UI
-drift — a magenta header, an oversized master-FX cluster, invented labels — proved the tokens needed to be
-documented law, not just values loose in the CSS.)
+## 10.0 Philosophy (why this section is governed as law)
 
-The **full token values, color table, component classes, and the six hard rules** live in the Y System
-Reference (§ "The Design System") so they sit next to the other machine-readable identifiers. This section
-records *what the Design System is and why it's governed*; Y records *the exact values*. Core rules in
-brief: section headers are always cyan; new UI inherits `.sec-hdr` / `.devmod` / `.dm-btn`; module controls
-are a uniform 30 px height; no text labels on modules except the Matrix lane chips.
+This is Chippy's **Human Interface Guidelines**. The term is Apple's, and the citation is deliberate.
+Apple designs with a **hardware mindset**, and that mindset governs this entire section. On hardware you
+cannot make a million units and then wave a wand to fix the padding — it has to be *right*, and it has to be
+the *best* it can be, at the moment you ship. You get there through iteration, but once you settle — the
+software equivalent of running a build, and especially a full-build packaging — it must be perfect, with
+nothing left as hindsight. This mindset guides the whole design system and **drives** the technical
+specifications that follow; the specs exist *because* of the mindset. They are not thrown together
+willy-nilly, and they are not negotiable at ship time.
 
-Lineage: Chippy inherits the OMS design language from the Sozo/Dojo template (dark rack aesthetic,
-Eurorack-style module boxes, cyan section headers) — a scaled-down sibling of the Dojo Design System, same
-language, Chippy's own values.
+A second principle we hold, from Jobs/Apple: **things should look as good on the inside as on the outside.**
+In software that means the design system cannot be something you merely document and talk about while the
+code underneath is an ad-hoc array of prose and one-offs that looks like fifteen different developers wrote
+it. That is inexcusable. The CSS, the class structure, and the markup must be as disciplined and consistent
+as the surface they produce. **We do not ship slop** — not on the screen, and not under the hood.
 
-**Active-state glow pattern (V1.13.0).** The standard "this control is active / on / live" treatment is a
-combination of *border-color + a ~10% background tint + a box-shadow glow*, optionally animated as a pulse.
-Colors carry meaning: **cyan `#00d4ff`** = standard active/selected (`.glovbtn.active`, `.sel` focus);
-**green `#00e08a`** = persistence on (`.bgtoggle.on`); **pink `#ff006e`** = running/live (the Lineup-running
-ring on `#lineupBtn.lu-running`, animated via the `luRingPulse` keyframe). New "is-live/running" indicators
-reuse the pink animated ring rather than inventing dots or new treatments — one idiom, three meanings by
-color. (This is a design-system pattern, deliberately NOT Cortex — a CSS active-state is not a load-bearing
-system.)
+## 10.1 What the Design System is
+
+The universal UI/UX rules: tokens, typography, layout/spacing, color semantics, component patterns, the
+slide-out panel system, the module hierarchy, and the governance rules. It **governs visual consistency**
+across every section, tab, and panel — new UI inherits its tokens/classes rather than hand-rolling a
+one-off. It is **important and governed, but it is NOT Cortex**: breaking it makes the app look like amateur
+slop, not stop working. (It earned a written spec after real UI drift — a magenta header, an oversized
+master-FX cluster, invented labels — and was hardened again after the master-panel build, which took ~25
+revisions precisely because the module/panel patterns were not yet written down as law.)
+
+The **full token values, color table, component classes, module hierarchy, panel spec, and the governance
+rules** live in the Y System Reference (§ "The Design System") so they sit next to the other machine-readable
+identifiers. This section records *what the Design System is and why it's governed*; Y records *the exact
+values*.
+
+## 10.2 What we DO (rules stated affirmatively)
+
+The system is expressed as what we DO, not as a list of prohibitions — you can invent exceptions to a
+prohibition all day; an affirmative rule is the target. In brief:
+- Section headers are always cyan `#00d4ff`; new UI inherits `.sec-hdr` / `.devmod` / `.dm-btn` (never a
+  parallel hand-rolled style).
+- Every control in a main-grid module row is a uniform 30 px; every control in a header-strip module is a
+  uniform 18 px — uniform *within its context* so rows align.
+- Labels are the **pill treatment**: a `#151515` / `#333` bordered chip. Where a control or module needs a
+  name (mixer-header effects, master-panel modules, the SOURCE control, Matrix lane chips), it wears a pill.
+- Hover feedback is the message bar only. There are **no native `title=` tooltips** anywhere.
+- When a styled element moves between headers/surfaces, its CSS scope moves with it.
+
+## 10.3 Two surfaces + the module hierarchy
+
+The system now spans **two surfaces**: the always-visible **section grid** (Info / Controls / Voices /
+Mixer / Matrix) and **slide-out panels** (Lineup, Master). Both use the same tokens and module language.
+
+Inside a panel, UI nests in a precise containment hierarchy — document/diagram this as a tree:
+**panel → outlined group → module cell → control(s) + label pill.**
+- **Outlined group** — a `fieldset`-style box with a **cyan `legend` sitting on the top border** (DSP,
+  Audio Effects, LEVEL, Output). This is the Moogerfooger-style bordered section.
+- **Module cell** — a bordered `#0a0a0a` / `#2a2a2a` box grouping one control cluster with its pill.
+- **Control(s) + pill** — the actual button/wheel/select plus its label chip.
+
+## 10.4 Slide-out panels (Chippy's spec)
+
+Lineage: the slide-out concept came from Dojo, but Chippy's implementation is its own spec and differs:
+- **Right-anchored drawer, fixed 340 px width** (same width as the Lineup panel — panels do not vary width).
+- **Non-blocking overlay:** panels do NOT scrim/dim the app and do NOT block interaction behind them. The
+  app stays fully usable with a panel open (you can hit play, work the mixer). Panels are dismissed **only**
+  by explicit close — the X, the toggle button, or Esc — never by clicking the app.
+- **Panel-open button:** a cyan-glow `.bgtoggle` at the **far-right end of the section header** that owns the
+  panel (Lineup button on the Selecta header; Master button on the Mixer header). It carries a **generic
+  panel/slide-out icon** — it indicates *there is a panel here*, it does NOT try to depict the panel's
+  contents (the row it sits in already says what the panel is). No tooltip.
+
+Active-state glow pattern (V1.13.0). The standard "this control is active / on / live" treatment is
+border-color + a ~10% background tint + a box-shadow glow, optionally a pulse. Colors carry meaning: **cyan
+`#00d4ff`** = standard active/selected and the panel-open buttons; **green `#00e08a`** = audio-effect / persistence on;
+**pink `#ff006e`** = running/live (Lineup-running ring, animated `luRingPulse`). New "is-live" indicators
+reuse an existing idiom rather than inventing dots or new treatments.
+
+## 10.5 Lineage
+
+Chippy inherits the OMS design language from the Sozo/Dojo template (dark rack aesthetic, Eurorack-style
+module boxes, cyan section headers) — a scaled-down sibling of the Dojo Design System: same language,
+Chippy's own values, and (for the slide-out panels and module hierarchy) Chippy's own spec per §10.3–10.4.
 
 ---
 

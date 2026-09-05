@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_14_01  ·  Chiptune EDM Generator
-  Companion to OMS Dojo / Sozo. Single-file HTML · Chrome-targeted · no dependencies · no build.
+  OMS Chippy  ·  Beta V1_15_0  ·  Chiptune EDM Generator
+  Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
   Copyright (C) 2024-2026 Wes Smith / ONEMANSHYO · GPL-3.0
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OMS Chippy [Beta V1_14_01]</title>
+<title>OMS Chippy [Beta V1_15_0]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -171,7 +171,7 @@
   .ctrl-col-transport { flex:0 0 auto; }
   .ctrl-col-selecta { flex:1 1 auto; min-width:0; }
   .ctrl-col .transport { margin-bottom:0; padding:0; border:none; background:none; }
-  .ctrl-col .sec-hdr { margin-top:0; }
+  .ctrl-col .sec-hdr { margin-top:0; height:30px; min-height:30px; }
   .time { font-size:11px; color:#bbb; font-family:'Courier New',monospace; min-width:58px;
     background:#0a0a0a; border:1px solid #2a2a2a; border-radius:4px; padding:0 9px;
     text-align:right; height:20px; line-height:20px; box-sizing:border-box; }
@@ -323,10 +323,15 @@
     box-shadow:0 0 6px rgba(255,0,110,.7); animation:luBlink 1s ease-in-out infinite; margin-right:2px; }
   /* BLOG0093 — Lineup slide-out. Right-anchored, off-canvas by default, slides in on .open. Design-system
      tokens (cyan #00d4ff, panel #0a0a0a, border #2a2a2a). NOT a modal — a styled drawer over the right edge. */
-  #lineupBtn { color:#00d4ff; border-color:#1e4a55; }
-  #lineupBtn:hover { color:#5ce0ff; border-color:#00d4ff; }
-  #lineupBtn.active { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.10); box-shadow:0 0 8px rgba(0,212,255,.25); }
+  #lineupBtn, #masterBtn { color:#00d4ff; border-color:#1e4a55; }
+  #lineupBtn:hover, #masterBtn:hover { color:#5ce0ff; border-color:#00d4ff; }
+  #lineupBtn.active, #masterBtn.active { color:#00d4ff; border-color:#00d4ff; background:rgba(0,212,255,.10); box-shadow:0 0 8px rgba(0,212,255,.25); }
   #sourceBox{ min-width:104px; }
+  /* BLOG0132: Voices SOURCE styled as a header module (matches mixer modules) */
+  #voicesHdr .voices-src-mod { display:inline-flex; align-items:center; gap:4px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:3px 4px; }
+  #voicesHdr .voices-src-mod .vh-mlabel { font-size:9px; font-weight:700; letter-spacing:1px; color:#888; font-family:'Courier New',monospace; margin:0;
+    background:#151515; border:1px solid #333; border-radius:3px; padding:0 5px; height:18px; line-height:18px; display:inline-flex; align-items:center; box-sizing:border-box; }
+  #voicesHdr .voices-src-mod #sourceBox { height:18px; min-height:0; padding:0 6px; font-size:11px; background:#151515; border:1px solid #333; border-radius:4px; color:#bbb; box-sizing:border-box; }
   #lineupScrim { position:fixed; inset:0; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:60; }
   #lineupScrim.open { opacity:1; pointer-events:auto; }
   #lineupPanel { position:fixed; top:0; right:0; height:100%; width:340px; max-width:90vw; background:#0d0d0d;
@@ -334,6 +339,115 @@
     transition:transform .24s cubic-bezier(.4,0,.2,1); z-index:61; display:flex; flex-direction:column;
     font-family:'Courier New',monospace; }
   #lineupPanel.open { transform:translateX(0); }
+  #masterPanel.open { transform:translateX(0); }
+  #masterScrim.open { opacity:1; pointer-events:auto; }
+  /* BLOG0016 — Master slide-out meter + controls (Dojo master-module spec, Chippy tokens) */
+  #masterPanel .lu-body { padding:16px; }
+  .mm-section-label { font-family:'Courier New',monospace; font-size:9px; letter-spacing:1.5px; color:#666; margin:0 0 8px; }
+  /* two-column body: effects rows on the left, meter column on the right, aligned to top */
+  .mm-stack { display:flex; flex-direction:column; align-items:stretch; }
+  .mm-level-group { display:flex; flex-direction:column; align-items:stretch; }
+  /* LEVEL: meter unit (L + R channel strips + scale) on the left, readout column on the right, equal height */
+  .mm-level-body { display:flex; align-items:stretch; justify-content:center; gap:20px; padding:4px 6px; }
+  .mm-meter-unit { display:flex; align-items:flex-start; gap:10px;
+    background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:8px; }
+  .mm-chan { display:flex; flex-direction:column; align-items:center; gap:7px; }
+  .mm-chan .mm-chip { display:inline-flex; align-items:center; justify-content:center; width:38px; height:18px;
+    font-family:'Courier New',monospace; font-size:10px; letter-spacing:1px; color:#888;
+    background:#151515; border:1px solid #333; border-radius:4px; }
+  .mm-bar { width:38px; height:160px; position:relative; border:1px solid #333; border-radius:3px; overflow:hidden;
+    background:linear-gradient(to top,#00e08a 0%,#00e08a 62.5%,#ffcc00 62.5%,#ffcc00 87.5%,#e0114b 87.5%,#e0114b 100%); }
+  .mm-mask { position:absolute; top:0; left:0; width:100%; height:100%; background:#0a0a0a; transform-origin:top center; transform:scaleY(1); transition:transform .05s linear; will-change:transform; }
+  .mm-hold { position:absolute; left:0; right:0; height:2px; background:#fff; top:100%; opacity:0; pointer-events:none; box-shadow:0 0 4px rgba(255,255,255,.6); }
+  .mm-clip { position:absolute; top:3px; left:50%; transform:translateX(-50%); width:7px; height:7px; border-radius:50%;
+    background:#e0114b; opacity:0; box-shadow:0 0 6px #e0114b; pointer-events:none; }
+  .mm-scale-chan .mm-scale { position:relative; width:44px; height:160px; font-family:'Courier New',monospace; font-size:8px; color:#666;
+    background:#0a0a0a; border:1px solid #333; border-radius:3px; }
+  .mm-scale span { position:absolute; left:0; right:0; text-align:center; transform:translateY(-50%); }
+  /* readout column: OUTPUT + PEAK cells nested together in one surround */
+  .mm-level-body { display:flex; align-items:stretch; justify-content:center; gap:12px; padding:4px; min-width:0; }
+  .mm-level-readout { flex:1; min-width:0; display:flex; flex-direction:column; align-items:stretch; justify-content:space-between; gap:8px;
+    background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:8px; box-sizing:border-box; }
+  .mm-ro-cell { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:8px 10px; text-align:center;
+    font-family:'Courier New',monospace; font-variant-numeric:tabular-nums; }
+  .mm-ro-cell .mm-ro-lbl { font-size:8px; letter-spacing:1.5px; color:#666; }
+  .mm-ro-cell #masterMeterDb { font-size:24px; color:#00d4ff; white-space:nowrap; line-height:1; }
+  .mm-ro-cell #masterMeterPk { font-size:20px; color:#888; white-space:nowrap; line-height:1; }
+  .mm-ro-cell .mm-ro-unit { font-size:9px; color:#666; }
+  .mm-meter-box { display:flex; justify-content:center; padding:0; background:transparent; border:none; }
+
+  .mm-toprow { display:flex; flex-direction:column; align-items:stretch; gap:14px; }
+  .mm-output-group { display:flex; flex-direction:column; }
+  #masterOutRow { display:flex; align-items:flex-end; justify-content:space-around; gap:10px; padding:4px; }
+  #masterOutRow .mm-out-cell { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; max-width:96px;
+    background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:6px; box-sizing:border-box; }
+  #masterOutRow .mm-out-actions { display:contents; }
+  #masterOutRow .vh-mlabel { width:100%; box-sizing:border-box; font-size:9px; letter-spacing:1px; color:#888; margin:0; text-align:center;
+    background:#151515; border:1px solid #333; border-radius:4px; padding:2px 0; }
+  #masterOutRow .mproc { display:flex; width:100%; }
+  #masterOutRow .wheel, #masterOutRow .dm-btn, #masterOutRow .vh-mkill, #masterOutRow .vh-msolo {
+    width:100%; height:30px; padding:0 8px; background:#151515; border:1px solid #333; border-radius:4px; color:#999;
+    display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
+  #masterOutRow .vh-msolo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; }
+  #masterOutRow .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; }
+  /* BLOG0131: master solo back on the mixer header row */
+  /* BLOG0131: DJ effects (echo/filter/backspin) back on the mixer header */
+  #mixerHdr .mixer-fx-slot { display:inline-flex; align-items:center; gap:6px; margin-right:8px; }
+  /* each control group wrapped as a compact bordered module — kept tight so the uniform header row height is unchanged */
+  #mixerHdr .mixer-fx-mod { display:inline-flex; align-items:center; gap:4px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:3px 4px; }
+  #mixerHdr .mixer-fx-mod .vh-mlabel { font-size:9px; font-weight:700; letter-spacing:1px; color:#888; font-family:'Courier New',monospace; margin:0;
+    background:#151515; border:1px solid #333; border-radius:3px; padding:0 5px; height:18px; line-height:18px; display:inline-flex; align-items:center; box-sizing:border-box; }
+  #mixerHdr .mixer-fx-slot .vh-audioeffects { min-height:0; height:18px; padding:0 6px; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; }
+  #mixerHdr .mixer-fx-slot .vh-audioeffects svg { display:block; width:13px; height:11px; }
+  #mixerHdr .mixer-fx-slot .vh-audioeffects:hover { color:#00e08a; border-color:#00e08a; }
+  #mixerHdr .mixer-fx-slot .vh-audioeffects.audioEffectsOn { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
+  #mixerHdr .mixer-fx-slot .vh-audioeffects-amt { height:18px; padding:0 4px; min-width:22px; touch-action:pan-y; background:#151515; border:1px solid #333; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; }
+  #mixerHdr .mixer-solo-slot { display:inline-flex; align-items:center; gap:4px; margin-left:6px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:3px 4px; }
+  #mixerHdr .mixer-solo-slot .vh-mlabel { font-size:9px; font-weight:700; letter-spacing:1px; color:#888; font-family:'Courier New',monospace; margin:0;
+    background:#151515; border:1px solid #333; border-radius:3px; padding:0 5px; height:18px; line-height:18px; display:inline-flex; align-items:center; box-sizing:border-box; }
+  #mixerHdr .mixer-solo-slot .vh-msolo { height:18px; width:24px; padding:0; box-sizing:border-box; }
+  #mixerHdr .vh-msolo { min-height:0; height:20px; width:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; color:#999; border-radius:4px; cursor:pointer; font-weight:700; font-family:'Courier New',monospace; }
+  #mixerHdr .vh-msolo:hover { color:#ffcc00; border-color:#ffcc00; }
+  #mixerHdr .vh-msolo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; box-shadow:0 0 8px rgba(255,204,0,.5); }
+  .mm-divider { height:1px; background:#2a2a2a; margin:14px 0; }
+  /* master controls: one .lu-slot-style row per effect (matches the lineup rows) */
+  #masterFxHost { display:flex; flex-direction:column; gap:6px; }
+  /* DSP = Moogerfooger-style outlined group: bordered box, label sitting on the top border */
+  .mm-group { border:1px solid #2a2a2a; border-radius:6px; margin:0; padding:8px; width:100%; box-sizing:border-box; }
+  .mm-group-lg { padding:0 6px; margin-left:2px; font-family:'Courier New',monospace; font-size:10px;
+    letter-spacing:1.5px; color:#00d4ff; }
+  #masterDspHost { display:flex; flex-direction:row; align-items:stretch; gap:6px; }
+  /* each DSP module sits side-by-side; inside, control(s) fill width on top, label below */
+  .mm-dsp-row { flex:1; display:flex; flex-direction:column; align-items:stretch; gap:6px; background:#0a0a0a;
+    border:1px solid #2a2a2a; border-radius:5px; padding:6px; }
+  .mm-dsp-row .vh-mlabel { flex:none; font-size:10px; letter-spacing:1px; color:#888; margin:0; text-align:center;
+    background:#151515; border:1px solid #333; border-radius:4px; padding:2px 0; }
+  .mm-eq { flex-direction:column; }   /* EQ: label ABOVE its inputs */
+  .mm-dsp-row .wheel, .mm-dsp-row .dm-btn, .mm-dsp-row .vh-audioeffects {
+    width:100%; height:30px; padding:0 6px; background:#151515; border:1px solid #333; border-radius:4px; color:#999;
+    display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
+  .mm-dsp-row .mproc { display:flex; flex-direction:column; gap:6px; width:100%; }
+  .mm-dsp-row .vh-audioeffects.audioEffectsOn, .mm-dsp-row .dm-audioeffects.audioEffectsOn { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); }
+  .mm-row { display:flex; align-items:center; gap:6px; background:#0a0a0a; border:1px solid #2a2a2a; border-radius:5px; padding:6px; }
+  .mm-row .vh-mlabel { flex:1; font-size:11px; letter-spacing:1px; color:#888; margin:0; }
+  .mm-row .wheel, .mm-row .dm-btn, .mm-row .mproc { margin:0; vertical-align:middle; }
+  .mm-row .mproc { display:inline-flex; align-items:center; gap:5px; }
+  /* re-apply the design-standard button styling (lost when nodes moved out of #mixerHdr/.devmod) */
+  .mm-row .dm-btn, .mm-row .vh-audioeffects, .mm-row .vh-mkill, .mm-row .vh-msolo {
+    height:24px; min-height:0; padding:0 8px; border-radius:4px; background:#151515; border:1px solid #333; color:#999;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all .12s; }
+  .mm-row .dm-btn svg, .mm-row .vh-audioeffects svg { display:block; }
+  .mm-row .vh-audioeffects:hover, .mm-row .dm-audioeffects:hover { color:#00e08a; border-color:#00e08a; }
+  .mm-row .vh-audioeffects.audioEffectsOn, .mm-row .dm-audioeffects.audioEffectsOn { color:#00e08a; border-color:#00e08a; background:rgba(0,224,138,.12); box-shadow:0 0 8px rgba(0,224,138,.3); }
+  .mm-row .vh-msolo { width:28px; padding:0; font-weight:700; font-family:'Courier New',monospace; }
+  .mm-row .vh-msolo:hover { color:#ffcc00; border-color:#ffcc00; }
+  .mm-row .vh-msolo.soloon { color:#0a0a0a; background:#ffcc00; border-color:#ffcc00; box-shadow:0 0 8px rgba(255,204,0,.5); }
+  .mm-row .vh-mkill { width:28px; padding:0; }
+  .mm-row .vh-mkill:hover { color:#fff; border-color:#555; }
+  .mm-row .vh-mkill.killed { color:#fff; background:#e0114b; border-color:#ff2d6f; box-shadow:0 0 8px rgba(224,17,75,.6); }
+  .mm-row .wheel { height:24px; padding:0 8px; min-width:34px; background:#151515; border:1px solid #333; border-radius:4px;
+    display:inline-flex; align-items:center; justify-content:center; }
   .lu-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #2a2a2a; }
   .lu-hdr .lu-title { color:#00d4ff; font-size:14px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
   .lu-hdr .lu-sub { color:#666; font-size:11px; margin-top:2px; }
@@ -482,7 +596,7 @@
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">press chippy to play</span></div>
       <div class="pr-clocks" id="prClocks">1 . 1 . 1</div>
     </div>
-    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_14_01]</div>
+    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_15_0]</div>
     <div class="pr-bottom">
       <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
       <div class="pr-plur">PLUR</div>
@@ -496,7 +610,7 @@
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_14_01]</span>
+      <span class="ver">[Beta&nbsp;V1_15_0]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -554,7 +668,7 @@
         </div>
       </div>
       <div class="ctrl-col ctrl-col-selecta">
-        <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblSelecta">Selecta</span><span class="rule"></span></div>
+        <div class="sec-hdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblSelecta">Selecta</span><span class="rule"></span><button class="bgtoggle" id="lineupBtn" style="margin-left:6px;"><svg viewBox="0 0 24 24" width="14" height="14" style="display:block" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7.5 8 l1.2 1.2 L11 7"/><path d="M13 8 h4"/><path d="M7.5 13 l1.2 1.2 L11 12"/><path d="M13 13 h4"/><path d="M7.5 18 l1.2 1.2 L11 17"/><path d="M13 18 h4"/></svg><span class="lu-dot"></span></button></div>
         <div class="transport">
           <div class="ctrlmod selecta-mod" title="Selecta">
             <span class="tctl"><select id="djSel" class="sel uctl"></select></span>
@@ -575,17 +689,17 @@
             <span class="tctl"><select id="bpmSel" class="sel uctl"></select></span>
             <span class="tctl"><select id="swingSel" class="sel uctl"></select></span>
             <span class="tctl"><span id="quantReadout" class="sel qread">Q <span class="qnote">♩</span></span></span>
-            <span class="tctl"><button class="bgtoggle" id="lineupBtn"><svg viewBox="0 0 24 24" width="14" height="14" style="display:block" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7.5 8 l1.2 1.2 L11 7"/><path d="M13 8 h4"/><path d="M7.5 13 l1.2 1.2 L11 12"/><path d="M13 13 h4"/><path d="M7.5 18 l1.2 1.2 L11 17"/><path d="M13 18 h4"/></svg><span class="lu-dot"></span></button></span>
+            
           </div>
           <span class="loadhint" id="loadHint"></span>
         </div>
       </div>
     </div>
 
-    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="cc-lbl">SOURCE</span><select id="sourceBox" class="sel" data-hint="sourceBox"><option value="2a03">Ricoh 2A03</option><option value="sid">SID 6581</option></select></div>
+    <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="voices-src-mod"><span class="vh-mlabel">SOURCE</span><select id="sourceBox" class="sel" data-hint="sourceBox"><option value="2a03">Ricoh 2A03</option><option value="sid">SID 6581</option></select></span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">COMP</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-amt="1"><span class="wv" id="mastercomp-amt-v" style="color:#bbb">4</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">LIMIT</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button></span><span class="mproc-sep"></span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></div>
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="mixer-fx-slot"><span class="mixer-fx-mod"><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span></span><span class="mixer-fx-mod"><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span></span><span class="mixer-fx-mod"><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span></span></span><span id="masterCtlGroup"><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">C</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-thr="1"><span class="wv" id="mastercomp-thr-v" style="color:#bbb">-18</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-rat="1"><span class="wv" id="mastercomp-rat-v" style="color:#bbb">4</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-atk="1"><span class="wv" id="mastercomp-atk-v" style="color:#bbb">3</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">L</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-masterlim-ceil="1"><span class="wv" id="masterlim-ceil-v" style="color:#bbb">-3</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">TALK</span><button class="dm-btn dm-audioeffects vh-audioeffects" id="masterTalkBtn" data-mastertalk="1">T</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></span><span class="mixer-solo-slot"><span class="vh-mlabel">SOLO</span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button></span><button class="bgtoggle" id="masterBtn"><svg viewBox="0 0 24 24" width="14" height="14" style="display:block" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7.5 8 l1.2 1.2 L11 7"/><path d="M13 8 h4"/><path d="M7.5 13 l1.2 1.2 L11 12"/><path d="M13 13 h4"/><path d="M7.5 18 l1.2 1.2 L11 17"/><path d="M13 18 h4"/></svg></button></div>
     <div class="devstrip" id="mixStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><button class="bgtoggle vert" id="rollOriBtn" title="piano-roll orientation — vertical (columns, time flows up) / horizontal (lanes, time flows left)"><span class="ori-h"></span><span class="ori-v"></span></button><span class="rule"></span></div>
@@ -610,16 +724,24 @@
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">Chippy is a techno rave chiptune love song generator.</div>
-      <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">A single-file chiptune engine. Seven lanes of pulse, triangle, and noise voices fire off a shared beat grid and draw as a scrolling piano roll. Companion to <span style="color:#aaa;">OMS Dojo</span> and <span style="color:#aaa;">Sozo</span>.</div>
+      <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">Chippy is an <span style="color:#aaa;">audio-visual generation and performance platform</span> &mdash; one self-contained HTML file that generates chiptune dance music and its live light show. Open it, press play, it makes music. No install, no account, no files, no network. Everything is synthesized live in the browser.</div>
 
       <div class="ab-h">WTF</div>
       <div class="ab-p">Chippy generates fun chiptune loops in the browser — no DAW, no files, no dependencies. V0 plays one embedded hardcoded loop across seven lanes: drums, percussion, bass, lead, synth, accents, fills. Press generate to re-roll the pattern with playback transforms — transpose, swing, and per-voice re-seeding — over the same groove. The synthesis is pure Web Audio: variable-duty pulse waves (via PeriodicWave), a triangle bass, and a real LFSR-style noise channel from a buffer source. Each lane is an independent voice with its own oscillator type and short snappy envelope — the timbre is what makes it chiptune, not the voice count.</div>
 
       <div class="ab-h">INSPIRATION</div>
       <div style="color:#888;font-size:12px;line-height:1.9;">
-        <div><span style="color:#c77dff;">Apple Music</span> <span style="color:#666;margin-left:8px;">— and the Apple Music Understanding (AMU) framework</span></div>
-        <div><span style="color:#c77dff;">Fatboy Slim</span> <span style="color:#666;margin-left:8px;">— big-beat energy, playful sample-driven dance music</span></div>
-        <div><span style="color:#c77dff;">Smile</span> <span style="color:#666;margin-left:8px;">— Ableton Live device</span></div>
+        <div><span style="color:#c77dff;">People</span> <span style="color:#666;margin-left:8px;">Bileam Tschepe (elekktronaut), Bob Moog, Chris Wilson, Christoph Guttandin, Dave Smith, Deadmau5, Dennis &quot;Thresh&quot; Fong, Ducky 3D, ELPHNT, Fatboy Slim, FOMO, Gerhard Behles, Ikutaro Kakehashi, Masato Tsutsui, Ned Rush, Robert Henke, Tadao Kikumoto, Tom Cosm, Xan3D</span></div>
+        <div style="margin-top:8px;"><span style="color:#c77dff;">Companies</span> <span style="color:#666;margin-left:8px;">Ableton, Cycling &apos;74, DJ Tech Tools, DJ.Studio, EboSuite, Pioneer, Serato, Showsync, Yaeltex, ZwoBot</span></div>
+        <div style="margin-top:8px;"><span style="color:#c77dff;">Communities</span> <span style="color:#666;margin-left:8px;">Kick &amp; Bass Community, W3C&apos;s &quot;GPU for the Web&quot; Community Group</span></div>
+      </div>
+
+      <div class="ab-h">RESEARCH &amp; REFERENCES</div>
+      <div style="color:#888;font-size:12px;line-height:1.9;">
+        <div><a href="https://developer.apple.com/documentation/musicunderstanding" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Apple Music Understanding (AMU)</a> <span style="color:#666;margin-left:8px;">Apple developer framework &mdash; developer.apple.com/documentation/musicunderstanding [framework docs]</span></div>
+        <div><a href="https://youtu.be/4ZAJHl02X7s" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Capturing and Transferring Expressive Microtiming in Drumming</a> <span style="color:#666;margin-left:8px;">Eemi Fagerlund &mdash; ADCx Copenhagen [talk]</span></div>
+        <div><span style="color:#c77dff;">Response delays and the timing of discrete motor responses</span> <span style="color:#666;margin-left:8px;">Wing, A. &amp; Kristofferson, A. (1973) &mdash; Perception &amp; Psychophysics 13, 455&ndash;460 [paper]</span></div>
+        <div><a href="https://youtu.be/7MpDAHd7rbw" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">What Is Documented Shall Never Die</a> <span style="color:#666;margin-left:8px;">Astrid Bin (Bela) &mdash; Audio Developer Conference [talk]</span></div>
       </div>
 
       <div class="ab-h">CREATED BY</div>
@@ -1089,9 +1211,11 @@
   let masterLimit=null;                                     // limiter (DynamicsCompressorNode, limiter preset)
   let masterVolGain=null;                                   // master volume (final GainNode, live control)
   let masterEqLow=0, masterEqMid=0, masterEqHigh=0;         // EQ band gains in dB (0 = flat), ±12
-  let masterCompOn=false, masterCompAmt=40;                 // compressor on/off + macro amount 0..100 (gentle..aggressive)
-  let masterLimitOn=false;                                  // limiter on/off (fixed ceiling preset)
+  let masterCompOn=false, masterCompAmt=40;                 // (legacy macro, retained for compat)
+  let masterCompThresh=-18, masterCompRatioV=4, masterCompAttackMs=3;  // BLOG0127 real comp params
+  let masterLimitOn=false, masterLimitCeil=-3;             // limiter on/off + adjustable ceiling dB
   let masterVolume=100;                                     // master output volume 0..100 (100 = unity within master*0.5)
+  let masterTalkOn=false;                                   // BLOG0131 talk-over: dims master ~10 dB when on
   let airDest=null, airEl=null, airBridge=false;   // audio routes through an <audio> element (routable)
   let curDest=null;   // per-voice output destination (master, or a node that also feeds reverb)
   // ── BLOG0107 — SID 6581 chip mode (voice-model family #2) ──────────────────
@@ -1100,7 +1224,28 @@
   // of "the C64 sound" — the 2A03 has nothing like it. Voices route g -> sidFilter
   // -> master when SID is active (vs g -> curDest for 2A03). Stage 2/3 add ring-mod
   // + hard-sync + PWM/saw voice shapes.
+  let masterSplitter=null, masterAnalyserL=null, masterAnalyserR=null, _meterBuf=null, _meterRAF=null;
   let chipMode="2a03";                 // "2a03" | "sid"
+
+  // BLOG0113: SOUND SOURCE PROFILE — each engine has a default 8-voice loadout, applied on every SOURCE
+  // switch (manual #sourceBox OR automatic lineup/time-slot + mobile prChipRandom). Per-slot osc + drums kick.
+  // 2a03 profile == the VOICES[] defaults; sid is the authored alternate. Seed-independent.
+  const SOURCE_PROFILES = {
+    "2a03": { drums:{osc:"noise",kick:"909"}, perc:{osc:"noise"}, bass:{osc:"triangle"}, lead:{osc:"pulse12"},
+              synth:{osc:"pulse50"}, accent:{osc:"pulse25"}, fills:{osc:"noise"}, fx:{osc:"glitchDn"} },
+    "sid":  { drums:{osc:"noise",kick:"808"}, perc:{osc:"pulse50"}, bass:{osc:"noise"}, lead:{osc:"pulse50"},
+              synth:{osc:"pulse12"}, accent:{osc:"pulse25"}, fills:{osc:"noise"}, fx:{osc:"sweep"} }
+  };
+  function applySourceProfile(mode){
+    const prof = SOURCE_PROFILES[mode]; if(!prof) return;
+    for(const v of VOICES){
+      const p = prof[v.id]; if(!p) continue;
+      if(p.osc!==undefined)  v.osc  = p.osc;
+      if(p.kick!==undefined) v.kick = p.kick;
+    }
+    if(typeof buildStrip==="function") buildStrip();     // refresh the voice-slot dropdowns to match
+    if(typeof rebuildEvents==="function") rebuildEvents();
+  }
   let prChipRandom=false;              // mobile PocketRave: roll a random chip per new song (BLOG0107)
   let sidFilter=null;                  // the SID multimode filter (BiquadFilter)
   let sidFilterCutoff=1400, sidFilterQ=8;   // squelchy default: mid cutoff, high resonance
@@ -1165,6 +1310,17 @@
     brakeGain.connect(eqLow); eqLow.connect(eqMid); eqMid.connect(eqHigh);
     eqHigh.connect(masterComp); masterComp.connect(masterLimit); masterLimit.connect(masterVolGain);
     const outBus=masterVolGain;   // final master output — route this to the OS bridge / destination
+    // BLOG0016: master level meter — READ-ONLY stereo tap (splitter -> L/R analysers) on the final master
+    // node (does not alter audio). Ported from Dojo's master meter.
+    try{
+      masterSplitter=actx.createChannelSplitter(2);
+      masterAnalyserL=actx.createAnalyser(); masterAnalyserL.fftSize=256; masterAnalyserL.smoothingTimeConstant=0.8;
+      masterAnalyserR=actx.createAnalyser(); masterAnalyserR.fftSize=256; masterAnalyserR.smoothingTimeConstant=0.8;
+      outBus.connect(masterSplitter);            // tap only; splitter/analysers have no downstream connection
+      masterSplitter.connect(masterAnalyserL,0);
+      masterSplitter.connect(masterAnalyserR,1);
+      _meterBuf=new Float32Array(masterAnalyserL.fftSize);
+    }catch(_){ masterAnalyserL=null; masterAnalyserR=null; }
     // AUDIO OUTPUT — route through an <audio> element (via MediaStream), NOT straight to
     // actx.destination. Web Audio's destination is invisible to the OS audio router (AirPlay/HomePod/
     // Bluetooth all fail). An <audio> element IS routable media (same as how YouTube's audio routes).
@@ -2907,20 +3063,22 @@
   function applyMasterComp(){
     if(!masterComp||!actx) return; const t=actx.currentTime;
     if(!masterCompOn){ masterComp.threshold.setTargetAtTime(0, t, 0.02); masterComp.ratio.setTargetAtTime(1, t, 0.02); return; }
-    // macro amt 0..100 sweeps gentle(-12,2:1,knee20) -> aggressive(-24,8:1,knee6)
-    const f=masterCompAmt/100;
-    masterComp.threshold.setTargetAtTime(-12 + f*(-12), t, 0.02);  // -12 .. -24
-    masterComp.ratio.setTargetAtTime(2 + f*6, t, 0.02);           // 2 .. 8
-    masterComp.knee.setTargetAtTime(20 - f*14, t, 0.02);          // 20 .. 6
+    // BLOG0127: real params — Threshold / Ratio / Attack (knee + release fixed sensible defaults)
+    masterComp.threshold.setTargetAtTime(masterCompThresh, t, 0.02);   // -60 .. 0 dB
+    masterComp.ratio.setTargetAtTime(masterCompRatioV, t, 0.02);       // 1 .. 20 :1
+    masterComp.attack.setTargetAtTime(masterCompAttackMs/1000, t, 0.02); // ms -> s
+    masterComp.knee.setTargetAtTime(12, t, 0.02);
+    masterComp.release.setTargetAtTime(0.25, t, 0.02);
   }
   function applyMasterLimit(){
     if(!masterLimit||!actx) return; const t=actx.currentTime;
-    // limiter preset when on (-3 ceiling, 20:1); bypass (threshold 0) when off
-    masterLimit.threshold.setTargetAtTime(masterLimitOn ? -3 : 0, t, 0.02);
+    // BLOG0127: adjustable ceiling (was fixed -3). 20:1 brickwall when on; bypass when off.
+    masterLimit.threshold.setTargetAtTime(masterLimitOn ? masterLimitCeil : 0, t, 0.02);
   }
   function applyMasterVolume(){
     if(!masterVolGain||!actx) return;
-    masterVolGain.gain.setTargetAtTime(masterVolume/100, actx.currentTime, 0.02);
+    const talk = masterTalkOn ? 0.316 : 1;   // BLOG0131: TALK dims ~10 dB for talk-over
+    masterVolGain.gain.setTargetAtTime((masterVolume/100)*talk, actx.currentTime, 0.02);
   }
   (function(){
     const bBtn=document.querySelector('#mixerHdr [data-audioeffects-backspin]');
@@ -2965,27 +3123,47 @@
         1);
     });
   })();
-  (function(){   // COMPRESSOR
+  (function(){   // COMPRESSOR — BLOG0127: Threshold / Ratio / Attack
     const cBtn=document.querySelector('#mixerHdr [data-mastercomp]');
-    const cAmt=document.querySelector('#mixerHdr [data-mastercomp-amt]');
     if(!cBtn) return;
     cBtn.classList.toggle("audioEffectsOn", masterCompOn);
-    document.getElementById("mastercomp-amt-v").textContent=Math.round(masterCompAmt/10);
     cBtn.onclick=(e)=>{ e.stopPropagation(); masterCompOn=!masterCompOn;
       cBtn.classList.toggle("audioEffectsOn",masterCompOn); applyMasterComp(); msgState("masterComp", masterCompOn); };
-    bindWheel(cAmt,
-      ()=>Math.round(masterCompAmt/10),
-      val=>{ const p=Math.max(0,Math.min(10,Math.round(val))); masterCompAmt=p*10;
-        document.getElementById("mastercomp-amt-v").textContent=p; applyMasterComp();
-        msgState("masterCompRatio", (2+masterCompAmt/100*6).toFixed(1)); },
-      1);
+    const thr=document.querySelector('#mixerHdr [data-mastercomp-thr]');
+    const rat=document.querySelector('#mixerHdr [data-mastercomp-rat]');
+    const atk=document.querySelector('#mixerHdr [data-mastercomp-atk]');
+    document.getElementById("mastercomp-thr-v").textContent=masterCompThresh;
+    document.getElementById("mastercomp-rat-v").textContent=masterCompRatioV;
+    document.getElementById("mastercomp-atk-v").textContent=masterCompAttackMs;
+    bindWheel(thr, ()=>masterCompThresh,
+      val=>{ const d=Math.max(-60,Math.min(0,Math.round(val))); masterCompThresh=d;
+        document.getElementById("mastercomp-thr-v").textContent=d; applyMasterComp(); msgState("masterCompThr", d); }, 1);
+    bindWheel(rat, ()=>masterCompRatioV,
+      val=>{ const d=Math.max(1,Math.min(20,Math.round(val))); masterCompRatioV=d;
+        document.getElementById("mastercomp-rat-v").textContent=d; applyMasterComp(); msgState("masterCompRat", d); }, 1);
+    bindWheel(atk, ()=>masterCompAttackMs,
+      val=>{ const d=Math.max(1,Math.min(100,Math.round(val))); masterCompAttackMs=d;
+        document.getElementById("mastercomp-atk-v").textContent=d; applyMasterComp(); msgState("masterCompAtk", d); }, 1);
   })();
-  (function(){   // LIMITER
+  (function(){   // LIMITER — BLOG0127: on/off + adjustable Ceiling
     const lBtn=document.querySelector('#mixerHdr [data-masterlimit]');
     if(!lBtn) return;
     lBtn.classList.toggle("audioEffectsOn", masterLimitOn);
     lBtn.onclick=(e)=>{ e.stopPropagation(); masterLimitOn=!masterLimitOn;
       lBtn.classList.toggle("audioEffectsOn",masterLimitOn); applyMasterLimit(); msgState("masterLimit", masterLimitOn); };
+    const ceil=document.querySelector('#mixerHdr [data-masterlim-ceil]');
+    document.getElementById("masterlim-ceil-v").textContent=masterLimitCeil;
+    bindWheel(ceil, ()=>masterLimitCeil,
+      val=>{ const d=Math.max(-24,Math.min(0,Math.round(val))); masterLimitCeil=d;
+        document.getElementById("masterlim-ceil-v").textContent=d; applyMasterLimit(); msgState("masterLimitCeil", d); }, 1);
+  })();
+  (function(){   // TALK (BLOG0131) — talk-over dim toggle
+    const tBtn=document.getElementById("masterTalkBtn");
+    if(!tBtn) return;
+    tBtn.classList.toggle("audioEffectsOn", masterTalkOn);
+    tBtn.onclick=(e)=>{ e.stopPropagation(); masterTalkOn=!masterTalkOn;
+      tBtn.classList.toggle("audioEffectsOn", masterTalkOn); applyMasterVolume();
+      msgState("masterTalk", masterTalkOn); };
   })();
   (function(){   // VOLUME (live master output level)
     const vEl=document.querySelector('#mixerHdr [data-mastervol-amt]');
@@ -3010,6 +3188,7 @@
     if(prChipRandom){
       chipMode = (Math.random()<0.5) ? "2a03" : "sid";
       const sb=document.getElementById("sourceBox"); if(sb) sb.value=chipMode;
+      applySourceProfile(chipMode);   // BLOG0113: auto switch loads the engine's default voice loadout
     }
     const seed=(Date.now() ^ (genN*2654435761))>>>0;
     // random transpose within a musical range
@@ -3658,6 +3837,7 @@
     if(!sb) return;
     sb.onchange=()=>{
       chipMode = sb.value;   // "2a03" | "sid"
+      applySourceProfile(chipMode);   // BLOG0113: load this engine's default voice loadout
       if(typeof msgState==="function") msgState("selecta", (chipMode==="sid") ? "SID 6581 — filtered C64 synth" : "Ricoh 2A03 — NES");
     };
   })();
@@ -3729,7 +3909,7 @@
     // how the row is arranged: FX rack wheels/buttons, master solo, EQ/comp/limit/vol, master mute.
     const hdr = document.getElementById("mixerHdr");
     const masterRow = hdr ? Array.from(hdr.querySelectorAll(
-      "[data-audioeffects-reverb],[data-audioeffects-reverb-amt],[data-audioeffects-echo],[data-audioeffects-echo-amt],[data-audioeffects-filter],[data-audioeffects-filter-amt],[data-audioeffects-backspin],[data-audioeffects-backspin-amt],#vhSoloBtn,[data-mastereq-high],[data-mastereq-mid],[data-mastereq-low],[data-mastercomp],[data-mastercomp-amt],[data-masterlimit],[data-mastervol-amt],#vhKillBtn")) : [];
+      "[data-audioeffects-reverb],[data-audioeffects-reverb-amt],[data-audioeffects-echo],[data-audioeffects-echo-amt],[data-audioeffects-filter],[data-audioeffects-filter-amt],[data-audioeffects-backspin],[data-audioeffects-backspin-amt],#vhSoloBtn,[data-mastereq-high],[data-mastereq-mid],[data-mastereq-low],[data-mastercomp],[data-mastercomp-thr],[data-mastercomp-rat],[data-mastercomp-atk],[data-masterlimit],[data-masterlim-ceil],[data-mastertalk],[data-mastervol-amt],#vhKillBtn")) : [];
 
     // MIXER channels — each channel is a .dm-row of [ level, solo, kill ]; interleaved in DOM order.
     const mixerChannels = inDom(document.getElementById("mixStrip"), "[data-lvl],[data-solo],[data-mute]");
@@ -3781,13 +3961,174 @@
   window.addEventListener("resize",()=>{ clearTimeout(_resizeT); _resizeT=setTimeout(handleResize,80); });
   window.addEventListener("orientationchange",()=>{ setTimeout(handleResize,120); });
 
+  // ── BLOG0016 — MASTER SLIDE-OUT + LEVEL METER. Lineup-style drawer holding master-bus controls + meter.
+  (function initMaster(){
+    const btn=document.getElementById("masterBtn");
+    if(!btn) return;
+    const panel=document.createElement("aside"); panel.id="masterPanel"; panel.setAttribute("aria-label","Master");
+    panel.style.cssText="position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;background:#0d0d0d;border-left:1px solid #2a2a2a;box-shadow:-8px 0 24px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);z-index:61;display:flex;flex-direction:column;font-family:'Courier New',monospace;";
+    panel.innerHTML=
+      '<div class="lu-hdr"><div><div class="lu-title">Master</div></div>'+
+      '<button class="lu-close" id="masterClose" title="Close">\u2715</button></div>'+
+      '<div class="lu-body">'+
+        '<div class="mm-stack">'+
+          '<div class="mm-toprow">'+
+          '<fieldset class="mm-group mm-level-group"><legend class="mm-group-lg">LEVEL</legend>'+
+            '<div class="mm-level-body">'+
+              '<div class="mm-meter-unit">'+
+                '<div class="mm-chan"><span class="mm-chip">L</span>'+
+                  '<div class="mm-bar"><div class="mm-mask" id="masterMeterL"></div><div class="mm-hold" id="masterHoldL"></div><div class="mm-clip" id="masterClipL"></div></div>'+
+                '</div>'+
+                '<div class="mm-chan"><span class="mm-chip">R</span>'+
+                  '<div class="mm-bar"><div class="mm-mask" id="masterMeterR"></div><div class="mm-hold" id="masterHoldR"></div><div class="mm-clip" id="masterClipR"></div></div>'+
+                '</div>'+
+                '<div class="mm-chan mm-scale-chan"><span class="mm-chip">dB</span>'+
+                  '<div class="mm-scale"><span style="top:0%">+6</span><span style="top:12%">0</span><span style="top:25%">-6</span><span style="top:50%">-18</span><span style="top:100%">-48</span></div>'+
+                '</div>'+
+              '</div>'+
+              '<div class="mm-level-readout">'+
+                '<div class="mm-ro-cell"><span class="mm-ro-lbl">OUTPUT</span><span id="masterMeterDb">-\u221e</span> <span class="mm-ro-unit">dB</span></div>'+
+                '<div class="mm-ro-cell"><span class="mm-ro-lbl">PEAK</span><span id="masterMeterPk">-\u221e</span> <span class="mm-ro-unit">dB</span></div>'+
+              '</div>'+
+            '</div>'+
+          '</fieldset>'+
+          '<fieldset class="mm-group mm-output-group"><legend class="mm-group-lg">Output</legend>'+
+            '<div id="masterOutRow"></div>'+
+          '</fieldset>'+
+          '</div>'+
+          '<fieldset class="mm-group" style="margin-top:14px;"><legend class="mm-group-lg">DSP</legend>'+
+            '<div id="masterDspHost"></div>'+
+          '</fieldset>'+
+          '<fieldset class="mm-group" style="margin-top:14px;"><legend class="mm-group-lg">Audio Effects</legend>'+
+            '<div id="masterFxHost"></div>'+
+          '</fieldset>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(panel);   // no scrim: overlay must not block the app
+    // Relocate the master-bus controls into the panel AS ONE ROW PER EFFECT.
+    // The header group is a flat run of spans separated by .mproc-sep. Walk it, split on the
+    // separators, and wrap each segment in a .lu-slot row (same styling as the lineup rows).
+    // Moving the live nodes keeps every data-* handler bound (no rewiring).
+    const ctlGroup=document.getElementById("masterCtlGroup");
+    const fxHost=panel.querySelector("#masterFxHost");
+    const dspHost=panel.querySelector("#masterDspHost");
+    const outRow=panel.querySelector("#masterOutRow");
+    if(ctlGroup && fxHost && dspHost && outRow){
+      const FX=new Set(["REVERB"]);   // only reverb stays in the master Audio Effects group (BLOG0131)
+      const OUT=new Set(["VOL"]);                                // NOT DSP — goes to the bottom output row
+      const kids=Array.from(ctlGroup.childNodes);
+      let target=null;
+      for(const node of kids){
+        if(node.nodeType===1 && node.classList){
+          if(node.classList.contains("mproc-sep")) continue;   // drop separators
+          if(node.classList.contains("vh-mlabel")){
+            const lbl=(node.textContent||"").trim().toUpperCase();
+            if(FX.has(lbl)){
+              const row=document.createElement("div"); row.className="lu-slot mm-row"; fxHost.appendChild(row);
+              row.appendChild(node); target=row;
+            } else if(OUT.has(lbl)){
+              // VOL -> Volume cell (left): VOLUME pill label + the value box
+              node.textContent="VOLUME";
+              const cell=document.createElement("div"); cell.className="mm-out-cell";
+              cell.appendChild(node); outRow.appendChild(cell); target=cell;
+            } else if(lbl==="TALK"){
+              // TALK -> its own output cell (talk-over dim)
+              const cell=document.createElement("div"); cell.className="mm-out-cell";
+              cell.appendChild(node); outRow.appendChild(cell); target=cell;
+            } else {
+              const row=document.createElement("div");
+              row.className = (lbl==="EQ") ? "mm-dsp-row mm-eq" : "mm-dsp-row";
+              dspHost.appendChild(row);
+              row.appendChild(node); target=row;                 // DSP: EQ / COMP / LIMITER
+            }
+            continue;
+          }
+        }
+        if(node.nodeType===1 && node.id && (node.id==="vhSoloBtn"||node.id==="vhKillBtn")){
+          // Solo/Mute -> right group; each gets a pill label. S left of kill.
+          let grp=outRow.querySelector(".mm-out-actions");
+          if(!grp){ grp=document.createElement("div"); grp.className="mm-out-actions"; outRow.appendChild(grp); }
+          const cell=document.createElement("div"); cell.className="mm-out-cell";
+          const pill=document.createElement("span"); pill.className="vh-mlabel";
+          pill.textContent = (node.id==="vhSoloBtn") ? "SOLO" : "MUTE";
+          cell.appendChild(pill); cell.appendChild(node); grp.appendChild(cell);
+          continue;
+        }
+        if(target) target.appendChild(node);
+      }
+      Array.from(panel.querySelectorAll(".mm-row, .mm-dsp-row")).forEach(r=>{ if(!r.children.length) r.remove(); });
+      ctlGroup.remove();
+    }
+    const closeBtn=panel.querySelector("#masterClose");
+    let open=false;
+    function setOpen(v){ open=v;
+      // set transform/opacity INLINE — inline base styles beat the stylesheet .open rule, so toggle inline too
+      panel.style.transform = v ? "translateX(0)" : "translateX(100%)";
+      // no scrim dimming / no pointer blocking — true overlay, app stays usable behind it
+      btn.classList.toggle("active",v);
+      if(v) drawMeter(); }
+    btn.addEventListener("click",()=>setOpen(!open));
+    closeBtn.addEventListener("click",()=>setOpen(false));
+    window.addEventListener("keydown",e=>{
+      if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||e.target.isContentEditable) return;
+      if(e.key==="m"||e.key==="M"){ e.preventDefault(); setOpen(!open); }
+      else if(e.key==="Escape" && open){ setOpen(false); }
+    });
+    // ---- meter update: vertical L/R mask, dB-scaled (Dojo recipe), only while panel open ----
+    const maskL=panel.querySelector("#masterMeterL"), maskR=panel.querySelector("#masterMeterR"),
+          dbRead=panel.querySelector("#masterMeterDb"), pkRead=panel.querySelector("#masterMeterPk"),
+          holdL=panel.querySelector("#masterHoldL"), holdR=panel.querySelector("#masterHoldR"),
+          clipL=panel.querySelector("#masterClipL"), clipR=panel.querySelector("#masterClipR");
+    const FLOOR=-48, CEIL=6, RANGE=CEIL-FLOOR;   // Dojo master scale (+6 top .. -48 bottom)
+    function peakLevel(an){ if(!an||!_meterBuf) return 0; an.getFloatTimeDomainData(_meterBuf);
+      let p=0; for(let i=0;i<_meterBuf.length;i++){ const a=Math.abs(_meterBuf[i]); if(a>p)p=a; } return p; }
+    function toPct(peak){ if(peak<=0) return 0; const dB=20*Math.log10(peak);
+      if(dB<=FLOOR) return 0; if(dB>=CEIL) return 100; return ((dB-FLOOR)/RANGE)*100; }
+    let _lastL=-1,_lastR=-1,_lastDb=null,_lastPk=null;
+    let _holdL=0,_holdR=0,_clipLt=0,_clipRt=0;
+    function drawMeter(){
+      if(!open){ _meterRAF=null; return; }
+      _meterRAF=requestAnimationFrame(drawMeter);
+      const pL=peakLevel(masterAnalyserL), pR=peakLevel(masterAnalyserR);
+      const lvL=toPct(pL), lvR=toPct(pR);
+      // Use transform scaleY (GPU-composited, NO layout reflow) instead of height (which reflowed
+      // the panel every frame and made the whole UI jitter). Only write when the value changes.
+      if(maskL && lvL!==_lastL){ maskL.style.transform="scaleY("+((100-lvL)/100)+")"; _lastL=lvL; }
+      if(maskR && lvR!==_lastR){ maskR.style.transform="scaleY("+((100-lvR)/100)+")"; _lastR=lvR; }
+      // peak-hold: track the highest recent level, decay slowly; position the hold line from the top
+      _holdL = Math.max(lvL, _holdL - 0.4); _holdR = Math.max(lvR, _holdR - 0.4);
+      if(holdL){ holdL.style.top=(100-_holdL)+"%"; holdL.style.opacity=_holdL>0?"0.9":"0"; }
+      if(holdR){ holdR.style.top=(100-_holdR)+"%"; holdR.style.opacity=_holdR>0?"0.9":"0"; }
+      // clip: light the dot when a channel hits the ceiling; hold ~1s then fade
+      const now=performance.now();
+      if(lvL>=100) _clipLt=now; if(lvR>=100) _clipRt=now;
+      if(clipL) clipL.style.opacity=(now-_clipLt<1000)?"1":"0";
+      if(clipR) clipR.style.opacity=(now-_clipRt<1000)?"1":"0";
+      if(dbRead){ const mx=Math.max(pL,pR); const db=mx>0?Math.round(20*Math.log10(mx)):-Infinity;
+        const txt = db===-Infinity ? "-\u221e" : db;
+        if(txt!==_lastDb){ dbRead.textContent=txt; _lastDb=txt; } }
+      if(pkRead){ const hpct=Math.max(_holdL,_holdR); // held peak % -> dB via the scale range
+        const pdb = hpct<=0 ? -Infinity : Math.round(FLOOR + (hpct/100)*RANGE);
+        const ptxt = pdb===-Infinity ? "-\u221e" : pdb;
+        if(ptxt!==_lastPk){ pkRead.textContent=ptxt; _lastPk=ptxt; } }
+    }
+    window._openMasterPanel=()=>setOpen(true);   // handle for other callers if needed
+  })();
+
   // ============================================================
   //  BOOT
   // ============================================================
   genre="house";
   BPM=GENRE.house.bpm;
   { const bs=document.getElementById("bpmSel"); if(bs) bs.value=String(BPM); }
-  pattern=buildPattern(0x1337);
+  // ORIGIN SEED (0x1337) — the grounding reference song. Not behaviorally special; it is the fixed
+  // baseline anyone can return to and work on as "a known good song." See BLOG0124. (Future: random-on-
+  // open BLOG0124; seed lookup BLOG0116; seed set-list BLOG0117.)
+  const ORIGIN_SEED = 0x1337;   // grounding reference song (BLOG0124) — no longer forced at boot
+  // BLOG0125: random-on-open — fresh seed every load so repeat visitors don't hear the same song.
+  // Same generator the generate button uses. Origin seed stays recallable (type it / future lookup).
+  const bootSeed = (Date.now() ^ (Math.floor(Math.random()*0xffffffff))) >>> 0;
+  pattern=buildPattern(bootSeed);
   rebuildEvents();
   buildStrip();
   buildMixer();
@@ -3859,8 +4200,12 @@
       "data-mastereq-mid":  "Master EQ — Mid (peaking 1kHz), 0 = flat, ±12 dB",
       "data-mastereq-high": "Master EQ — High (highshelf 2.5kHz), 0 = flat, ±12 dB",
       "data-mastercomp":    "Master compressor on/off",
-      "data-mastercomp-amt":"Compressor ratio — gentle (2:1) → hard (8:1)",
-      "data-masterlimit":   "Master limiter on/off (peak ceiling, protects the output)",
+      "data-mastercomp-thr":"Compressor threshold — dB where compression starts (-60..0)",
+      "data-mastercomp-rat":"Compressor ratio — 1:1 (off) .. 20:1 (hard)",
+      "data-mastercomp-atk":"Compressor attack — ms before it clamps (1..100)",
+      "data-masterlimit":   "Master limiter on/off (brickwall ceiling, protects the output)",
+      "data-masterlim-ceil":"Limiter ceiling — max output dB (-24..0)",
+      "data-mastertalk":    "Talk-over — dim the master ~10 dB to talk over the music",
       "data-mastervol-amt": "Master volume — final output level"
     },
     // ── phase-2 CHANGE messages (state / orange) — functions of the new value ──
@@ -3883,6 +4228,11 @@
       masterEq:(band,v) => "EQ "+band+" "+(v>0?"+":"")+v+" dB",
       masterComp:on => "Compressor "+(on?"on":"off"),
       masterCompRatio:r => "Compressor ratio "+r+":1",
+      masterCompThr:v => "Comp threshold "+v+" dB",
+      masterCompRat:v => "Comp ratio "+v+":1",
+      masterCompAtk:v => "Comp attack "+v+" ms",
+      masterLimitCeil:v => "Limiter ceiling "+v+" dB",
+      masterTalk:on => on?"Talk-over on (dimmed)":"Talk-over off",
       masterLimit:on => "Limiter "+(on?"on":"off"),
       masterVol:v => "Master volume "+v,
       persistence:on => "Persistence "+(on?"on":"off"),
@@ -3931,7 +4281,7 @@
   wireAllHints();
   document.getElementById("patName").textContent=makeTitle();
   { const pg=document.getElementById("patGenre"); if(pg) pg.textContent=GENRE.house.name; }
-  document.getElementById("patSrc").textContent="1337";
+  document.getElementById("patSrc").textContent=bootSeed.toString(16);
   resize();
   resizeFace();
   document.getElementById("logoMark").src=YOBOT_SRC;   // header logo mark
@@ -3947,8 +4297,6 @@
     if(!btn) return;
     // Build the panel DOM in JS so it never depends on markup parse order (the script runs before any
     // markup placed after it would exist). Injected once into <body>.
-    const scrim=document.createElement("div"); scrim.id="lineupScrim";
-    scrim.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:60;";
     const panel=document.createElement("aside"); panel.id="lineupPanel"; panel.setAttribute("aria-label","Lineup");
     panel.style.cssText="position:fixed;top:0;right:0;height:100%;width:340px;max-width:90vw;background:#0d0d0d;border-left:1px solid #2a2a2a;box-shadow:-8px 0 24px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .24s cubic-bezier(.4,0,.2,1);z-index:61;display:flex;flex-direction:column;font-family:'Courier New',monospace;";
     panel.innerHTML=
@@ -3958,7 +4306,7 @@
       '<div class="lu-foot"><button class="lu-add" id="lineupAdd">+ Add slot</button>'+
       '<button class="lu-play" id="lineupPlay" style="margin-top:8px;">▶ Play lineup</button>'+
       '<div class="lu-note">Session only — the lineup isn\u2019t saved and resets on reload. Durations are in minutes, converted to bars at play.</div></div>';
-    document.body.appendChild(scrim); document.body.appendChild(panel);
+    document.body.appendChild(panel);   // no scrim: overlay must not block the app
     const closeBtn=panel.querySelector("#lineupClose"), slotsBox=panel.querySelector("#lineupSlots"),
           addBtn=panel.querySelector("#lineupAdd"), playBtn=panel.querySelector("#lineupPlay");
     // default lineup: two slots using the real selectas (skip None at idx 0 for a slot default).
@@ -3991,13 +4339,12 @@
         slotsBox.appendChild(row);
       });
     }
-    function open(){ render(); panel.classList.add("open"); scrim.classList.add("open"); btn.classList.add("active");
-      panel.style.transform="translateX(0)"; scrim.style.opacity="1"; scrim.style.pointerEvents="auto"; }
-    function close(){ panel.classList.remove("open"); scrim.classList.remove("open"); btn.classList.remove("active");
-      panel.style.transform="translateX(100%)"; scrim.style.opacity="0"; scrim.style.pointerEvents="none"; }
+    function open(){ render(); panel.classList.add("open"); btn.classList.add("active");
+      panel.style.transform="translateX(0)"; }   // non-blocking overlay: app stays usable behind it
+    function close(){ panel.classList.remove("open"); btn.classList.remove("active");
+      panel.style.transform="translateX(100%)"; }
     btn.addEventListener("click",()=> panel.classList.contains("open")?close():open());
     closeBtn.addEventListener("click",close);
-    scrim.addEventListener("click",close);
     addBtn.addEventListener("click",()=>{ slots.push({sel:2, min:10}); render(); });
     // STAGE 2 will implement playback here. For now, a clear message so the button isn't a dead end.
     // STAGE 2 (BLOG0093, V1.12.09) — LINEUP PLAYBACK. Runs slots in order: engage each slot's selecta,
@@ -4203,6 +4550,11 @@
     }
     prUpdate();
 
+    // BLOG0118: rotation fires a stray tap on the full-screen panel; timestamp orientation changes
+    // so the tap-to-exit handler can ignore that synthetic click and keep you in Glover.
+    let _prOriAt = 0;
+    window.addEventListener("orientationchange", ()=>{ _prOriAt = Date.now(); });
+    window.addEventListener("resize", ()=>{ if(document.body.classList.contains("glover-fs")) _prOriAt = Date.now(); });
     // tabs
     window.prTab=function(w){
       const m=document.getElementById("prMusic"), g=document.getElementById("prGlover");
@@ -4214,7 +4566,7 @@
         if(gcanvas && gcanvas.parentElement!==g){ gcanvas.style.width="100%"; gcanvas.style.height="100%"; gcanvas.style.objectFit="cover"; g.appendChild(gcanvas); }
         if(window._gloverOn) window._gloverOn(true);
         document.body.classList.add("glover-fs");
-        g.onclick=()=>window.prTab("music");   // tap anywhere to exit full-screen
+        g.onclick=()=>{ if(Date.now()-_prOriAt < 700) return; window.prTab("music"); };   // tap to exit; ignore the stray click a rotation fires (BLOG0118)
       } else {
         document.body.classList.remove("glover-fs");
         g.style.display="none"; g.classList.remove("pr-fs"); g.onclick=null; m.style.display="flex"; tg.classList.remove("active"); tm.classList.add("active");
