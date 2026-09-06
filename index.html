@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  OMS Chippy  ·  Beta V1_15_0  ·  Chiptune EDM Generator
+  OMS Chippy  ·  Beta V1_15_05  ·  Chiptune EDM Generator
   Single-file HTML · Chrome-targeted · no dependencies · no build.
   A 7-lane chiptune engine (pulse / triangle / noise) driven off a beat grid,
   drawn as a scrolling piano-roll. V0: one hardcoded embedded loop, no MIDI parser yet.
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OMS Chippy [Beta V1_15_0]</title>
+<title>OMS Chippy [Beta V1_15_05]</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -252,6 +252,17 @@
   .devmod .dm-lvl { font-size:9px; color:#666; font-family:'Courier New',monospace; min-width:18px; text-align:right; }
   /* level wheel = a value cell matching button height; flex-grows to fill the strip */
   .devmod .dm-wheel { flex:1; min-width:0; height:30px; display:inline-flex; align-items:center; justify-content:center; background:#151515; border:1px solid #333; border-radius:4px; padding:0; touch-action:pan-y; }
+  .devmod .dm-lvl { flex:1; }   /* level fills remaining space; up to 3 digits (100) fits */
+  /* BLOG0136: per-channel FX button (Solo-style engage of the armed DJ effect) */
+  .devmod .dm-fx { font-weight:700; font-size:10px; letter-spacing:.5px; font-family:'Courier New',monospace; }
+  .devmod .dm-fx:hover { color:#00e08a; border-color:#00e08a; }
+  .devmod .dm-fx.fxon { color:#0a0a0a; background:#00e08a; border-color:#00e08a; box-shadow:0 0 8px rgba(0,224,138,.5); }
+  /* mixer-header DJ FX group button (mirrors master-solo look, green) */
+  #mixerHdr .mixer-fxgroup-slot { display:inline-flex; align-items:center; gap:4px; margin-right:8px; }
+  #mixerHdr .mixer-fxgroup-slot .vh-mlabel { font-size:9px; font-weight:700; letter-spacing:1px; color:#888; font-family:'Courier New',monospace; margin:0; background:#151515; border:1px solid #333; border-radius:3px; padding:0 5px; height:18px; line-height:18px; display:inline-flex; align-items:center; box-sizing:border-box; }
+  #mixerHdr .dm-fxgroup { height:18px; width:26px; padding:0; font-size:9px; font-weight:700; font-family:'Courier New',monospace; background:#151515; border:1px solid #333; color:#999; border-radius:4px; }
+  #mixerHdr .dm-fxgroup:hover { color:#00e08a; border-color:#00e08a; }
+  #mixerHdr .dm-fxgroup.soloon { color:#0a0a0a; background:#00e08a; border-color:#00e08a; box-shadow:0 0 8px rgba(0,224,138,.5); }
   .devmod .dm-wheel .wv { font-size:12px; text-align:center; }
   .devmod .dm-btn {
     flex:0 0 34px; width:34px; height:30px; padding:0; border-radius:4px; cursor:pointer;
@@ -585,6 +596,7 @@
   <div class="pr-tabbar">
     <div class="pr-tab active" id="prTabMusic" onclick="prTab('music')">MUSIC</div>
     <div class="pr-tab" id="prTabGlover" onclick="prTab('glover')">GLOVER</div>
+    <div class="pr-tab" id="prTabAbout" onclick="prTab('about')">ABOUT</div>
   </div>
   <div class="pr-panel" id="prMusic">
     <canvas id="prRollBg"></canvas>
@@ -596,7 +608,7 @@
       <div class="pr-tline mon"><span class="pr-scroll" id="prMon">press chippy to play</span></div>
       <div class="pr-clocks" id="prClocks">1 . 1 . 1</div>
     </div>
-    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_15_0]</div>
+    <div class="pr-ver"><span class="pr-sub">chippy app</span> &nbsp; [Beta&nbsp;V1_15_05]</div>
     <div class="pr-bottom">
       <a class="pr-link" href="https://onemanshyo.com/" target="_blank" rel="noopener noreferrer" title="full version — onemanshyo.com"><img id="prSquint" alt="full version"></a>
       <div class="pr-plur">PLUR</div>
@@ -604,13 +616,14 @@
     </div>
   </div>
   <div class="pr-panel" id="prGlover"></div>
+  <div class="pr-panel" id="prAbout" style="overflow-y:auto;padding:16px;"></div>
 </div>
 
 <div class="app">
   <div class="header">
     <div style="display:flex;align-items:baseline;gap:11px;">
       <span class="brand">ONEMANSHYO <span class="sub">chippy app</span></span>
-      <span class="ver">[Beta&nbsp;V1_15_0]</span>
+      <span class="ver">[Beta&nbsp;V1_15_05]</span>
     </div>
     <div class="hdr-right">
       <span class="hdr-desc">Hi Friend, Let's Dance&nbsp;;)</span>
@@ -621,6 +634,7 @@
   <div class="tabbar">
     <div class="tab active" id="genTab" data-panel="gen" title="Make music — pick a genre and length, generate loops, hit party for a nonstop selecta set">MUSIC</div>
     <div class="tab" id="gloverTab" data-panel="glover" title="Glover — Chippy gives you a full-screen light show. Pick a trick below.">GLOVER</div>
+    <div class="tab" id="learnTab" data-panel="learn">LEARN</div>
     <div class="tab" id="aboutTab" data-panel="about" title="What Chippy is, who made it, and the license">ABOUT</div>
     <div class="bar-right">
       <button class="bgtoggle on" id="bgBtn" title="persistence — keeps playing when you switch to another tab">∞</button>
@@ -699,7 +713,7 @@
     <div class="sec-hdr" id="voicesHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblVoices">Voices</span><span class="rule"></span><span class="voices-src-mod"><span class="vh-mlabel">SOURCE</span><select id="sourceBox" class="sel" data-hint="sourceBox"><option value="2a03">Ricoh 2A03</option><option value="sid">SID 6581</option></select></span></div>
     <div class="devstrip" id="devStrip"></div>
 
-    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="mixer-fx-slot"><span class="mixer-fx-mod"><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span></span><span class="mixer-fx-mod"><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span></span><span class="mixer-fx-mod"><span class="vh-mlabel">BACKSPIN</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-backspin="1" style="touch-action:none"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 4 M9 4 L12 4 L12 7"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-backspin-amt="1"><span class="wv" id="audioeffects-backspin-amt-v" style="color:#bbb">5</span></span></span></span><span id="masterCtlGroup"><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">C</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-thr="1"><span class="wv" id="mastercomp-thr-v" style="color:#bbb">-18</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-rat="1"><span class="wv" id="mastercomp-rat-v" style="color:#bbb">4</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-atk="1"><span class="wv" id="mastercomp-atk-v" style="color:#bbb">3</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">L</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-masterlim-ceil="1"><span class="wv" id="masterlim-ceil-v" style="color:#bbb">-3</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">TALK</span><button class="dm-btn dm-audioeffects vh-audioeffects" id="masterTalkBtn" data-mastertalk="1">T</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></span><span class="mixer-solo-slot"><span class="vh-mlabel">SOLO</span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button></span><button class="bgtoggle" id="masterBtn"><svg viewBox="0 0 24 24" width="14" height="14" style="display:block" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7.5 8 l1.2 1.2 L11 7"/><path d="M13 8 h4"/><path d="M7.5 13 l1.2 1.2 L11 12"/><path d="M13 13 h4"/><path d="M7.5 18 l1.2 1.2 L11 17"/><path d="M13 18 h4"/></svg></button></div>
+    <div class="sec-hdr" id="mixerHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMixer">Mixer</span><span class="rule"></span><span class="mixer-fx-slot"><span class="mixer-fxgroup-slot"><span class="vh-mlabel">FX</span><button class="dm-btn dm-fxgroup vh-msolo" id="vhFxGroupBtn" title="DJ FX group — lit when any channel has FX on; tap to clear all">FX</button></span><span class="mixer-fx-mod"><span class="vh-mlabel">ECHO</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-echo="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12 L4 8 M4 8 L9 8 M9 8 L9 16 M9 16 L14 16 M14 16 L14 10 M14 10 L19 10 M19 10 L19 14"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-echo-amt="1"><span class="wv" id="audioeffects-echo-amt-v" style="color:#bbb">3</span></span></span><span class="mixer-fx-mod"><span class="vh-mlabel">FILTER</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-filter="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7 L21 7 M6 12 L18 12 M9 17 L15 17"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-filter-amt="1"><span class="wv" id="audioeffects-filter-amt-v" style="color:#bbb">5</span></span></span></span><span id="masterCtlGroup"><span class="vh-mlabel">REVERB</span><button class="dm-btn dm-audioeffects vh-audioeffects" data-audioeffects-reverb="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-audioeffects-reverb-amt="1"><span class="wv" id="audioeffects-reverb-amt-v" style="color:#bbb">1</span></span><span class="mproc-sep"></span><span class="vh-mlabel">EQ</span><span class="mproc mproc-eq" data-mproc="eq"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-high="1"><span class="wv" id="mastereq-high-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-mid="1"><span class="wv" id="mastereq-mid-v" style="color:#bbb">0</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastereq-low="1"><span class="wv" id="mastereq-low-v" style="color:#bbb">0</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">C</span><span class="mproc mproc-comp" data-mproc="comp"><button class="dm-btn dm-audioeffects vh-audioeffects" data-mastercomp="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6 L10 6 L14 18 L21 18"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-thr="1"><span class="wv" id="mastercomp-thr-v" style="color:#bbb">-18</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-rat="1"><span class="wv" id="mastercomp-rat-v" style="color:#bbb">4</span></span><span class="wheel dm-wheel vh-audioeffects-amt" data-mastercomp-atk="1"><span class="wv" id="mastercomp-atk-v" style="color:#bbb">3</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">L</span><span class="mproc mproc-limit" data-mproc="limit"><button class="dm-btn dm-audioeffects vh-audioeffects" data-masterlimit="1"><svg viewBox="0 0 24 24" width="15" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 L21 8 M3 16 L21 16 M7 8 L7 16 M17 8 L17 16"/></svg></button><span class="wheel dm-wheel vh-audioeffects-amt" data-masterlim-ceil="1"><span class="wv" id="masterlim-ceil-v" style="color:#bbb">-3</span></span></span><span class="mproc-sep"></span><span class="vh-mlabel">TALK</span><button class="dm-btn dm-audioeffects vh-audioeffects" id="masterTalkBtn" data-mastertalk="1">T</button><span class="mproc-sep"></span><span class="vh-mlabel">VOL</span><span class="mproc mproc-vol" data-mproc="vol"><span class="wheel dm-wheel vh-audioeffects-amt" data-mastervol-amt="1"><span class="wv" id="mastervol-amt-v" style="color:#bbb">10</span></span></span><span class="mproc-sep"></span><button class="dm-btn dm-kill vh-mkill" id="vhKillBtn">⏻</button></span><span class="mixer-solo-slot"><span class="vh-mlabel">SOLO</span><button class="dm-btn dm-solo vh-msolo" id="vhSoloBtn">S</button></span><button class="bgtoggle" id="masterBtn"><svg viewBox="0 0 24 24" width="14" height="14" style="display:block" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M7.5 8 l1.2 1.2 L11 7"/><path d="M13 8 h4"/><path d="M7.5 13 l1.2 1.2 L11 12"/><path d="M13 13 h4"/><path d="M7.5 18 l1.2 1.2 L11 17"/><path d="M13 18 h4"/></svg></button></div>
     <div class="devstrip" id="mixStrip"></div>
 
     <div class="sec-hdr" id="matrixHdr"><span class="bar" style="background:#00d4ff"></span><span class="txt" style="color:#00d4ff" data-hint="lblMatrix">MATRIX</span><button class="bgtoggle vert" id="rollOriBtn" title="piano-roll orientation — vertical (columns, time flows up) / horizontal (lanes, time flows left)"><span class="ori-h"></span><span class="ori-v"></span></button><span class="rule"></span></div>
@@ -721,6 +735,45 @@
     </div>
    </div><!-- /panelGlover -->
 
+   <div class="panel" id="panelLearn">
+    <div style="max-width:640px;">
+      <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">General</div>
+      <div style="color:#888;font-size:13px;line-height:1.6;margin-top:10px;">Below you can find a listing of many of the key YouTube videos, documents, and other resources that were referenced in learning the skills required to bring Chippy to life.</div>
+
+      <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">Inspiration</div>
+      <div style="color:#888;font-size:12px;line-height:1.5;margin-bottom:2px;">The people, companies, and communities whose work shaped Chippy.</div>
+      <div class="ab-h">PEOPLE</div>
+      <div style="color:#888;font-size:12px;line-height:1.6;"><a href="https://www.youtube.com/@elekktronaut" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Bileam Tschepe (elekktronaut)</a>, Bob Moog, Chris Wilson, Christoph Guttandin, Dave Smith, Deadmau5, Dennis &quot;Thresh&quot; Fong, <a href="https://www.youtube.com/@TheDucky3D" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Ducky 3D</a>, <a href="https://www.youtube.com/@ELPHNT" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">ELPHNT</a>, Fatboy Slim, FOMO, Gerhard Behles, Ikutaro Kakehashi, Masato Tsutsui, <a href="https://www.youtube.com/@NedRush" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Ned Rush</a>, Robert Henke, Tadao Kikumoto, Tom Cosm, <a href="https://www.youtube.com/@Xan3D" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Xan3D</a>, <a href="https://www.youtube.com/@acrylicode" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">acrylicode</a>, <a href="https://www.youtube.com/@AmazingMaxStuff" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">AmazingMaxStuff</a>, <a href="https://www.youtube.com/@blenderguru" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">blenderguru</a>, <a href="https://www.youtube.com/@Bthelick" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Bthelick</a>, <a href="https://www.youtube.com/@DanWorrall" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">DanWorrall</a>, <a href="https://www.youtube.com/@dillonbastan246" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">dillonbastan246</a>, <a href="https://www.youtube.com/@grabbitt" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">grabbitt</a>, <a href="https://www.youtube.com/@harryblends" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">harryblends</a>, <a href="https://www.youtube.com/@KaizenTutorials" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">KaizenTutorials</a>, <a href="https://www.youtube.com/@blankensmithing" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">blankensmithing</a>, <a href="https://www.youtube.com/@warpacademy" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">warpacademy</a>, <a href="https://www.youtube.com/@yousuckatproducing" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">yousuckatproducing</a></div>
+      <div class="ab-h">COMPANIES</div>
+      <div style="color:#888;font-size:12px;line-height:1.6;"><a href="https://www.ableton.com/en/" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Ableton</a>, <a href="https://www.anthropic.com/" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Anthropic</a>, <a href="https://cycling74.com/" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Cycling &apos;74</a>, DJ Tech Tools, DJ.Studio, EboSuite, <a href="https://www.eclerdj.com/" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Ecler</a>, <a href="https://www.moogmusic.com/" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Moog Music</a>, Pioneer, Serato, Showsync, <a href="https://yaeltex.com/" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Yaeltex</a>, ZwoBot, <a href="https://www.youtube.com/@AppleDeveloper" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Apple</a>, <a href="https://www.youtube.com/@BlenderOfficial" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Blender</a>, <a href="https://www.youtube.com/@JUCElibrary" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">JUCE</a>, <a href="https://www.youtube.com/@MoogSynthesizers" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Moog Synthesizers</a>, <a href="https://www.youtube.com/@TouchDesignerOfficial" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">TouchDesigner</a>, <a href="https://www.youtube.com/@DJcityTV" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">DJcity</a>, <a href="https://www.youtube.com/@intechstudio" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Intech Studio</a></div>
+      <div class="ab-h">COMMUNITIES</div>
+      <div style="color:#888;font-size:12px;line-height:1.6;">Kick &amp; Bass Community, W3C&apos;s &quot;GPU for the Web&quot; Community Group</div>
+      <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">Videos</div>
+      <div style="color:#888;font-size:12px;line-height:1.5;">
+        <div><a href="https://www.youtube.com/watch?v=MHb6nU4EudY" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">A bit more self-modulation</a><br><span style="color:#666;">Sounds of Voltage (Jeff) [video]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=HBl25OB0E58" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Ableton Operator Synth Tutorial Deep Dive</a><br><span style="color:#666;">Seed to Stage [tutorial]</span></div>
+        <div><a href="https://youtu.be/4ZAJHl02X7s" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Capturing and Transferring Expressive Microtiming in Drumming</a><br><span style="color:#666;">Eemi Fagerlund &mdash; ADCx Copenhagen [talk]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=0-pcZVeyJNE" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">FM (Frequency Modulation) Synthesis in MaxMSP</a><br><span style="color:#666;">channel unconfirmed [tutorial]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=u9nuZvxukNI" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">FM Synthesis: How does it work?</a><br><span style="color:#666;">channel unconfirmed [video]</span></div>
+        <div><a href="https://youtu.be/_VvKeiwddPI" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Music Theory COMPLETE course</a><br><span style="color:#666;">everything you need to know [course]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=3BU-WAQo4P8" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Operator Sound Design</a><br><span style="color:#666;">Seed to Stage [tutorial]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=RnFh5CrR9zk" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">The Only Ableton Operator Tutorial You Need</a><br><span style="color:#666;">EDMProd (John) [tutorial]</span></div>
+        <div><a href="https://youtube.com/playlist?list=PLUKhEHilRBxQydqw_kiAdAhegPZMgjVCX" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Understanding Frequency Modulation</a><br><span style="color:#666;">Sound + Voltage (Jeff) &mdash; full playlist [playlist]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=Qy3Kwkr-dgM" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Web Audio API and React Part 1: Audio Concepts</a><br><span style="color:#666;">SingleWingAcademy (confirm channel form) [tutorial]</span></div>
+        <div><a href="https://youtu.be/7MpDAHd7rbw" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">What Is Documented Shall Never Die</a><br><span style="color:#666;">Astrid Bin (Bela) &mdash; Audio Developer Conference [talk]</span></div>
+        <div><a href="https://www.youtube.com/watch?v=L7ylGu1vFdc" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">WWDC26: Meet the Music Understanding framework</a><br><span style="color:#666;">Apple [talk]</span></div>
+      </div>
+
+      <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">Other Material</div>
+      <div style="color:#888;font-size:12px;line-height:1.5;">
+        <div><a href="https://developer.apple.com/documentation/musicunderstanding" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Apple Music Understanding (AMU)</a><br><span style="color:#666;">Apple developer framework &mdash; developer.apple.com/documentation/musicunderstanding [framework docs]</span></div>
+        <div><a href="https://developer.apple.com/design/human-interface-guidelines" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Human Interface Guidelines</a><br><span style="color:#666;">Apple &mdash; developer.apple.com/design/human-interface-guidelines [guidelines]</span></div>
+        <div><span style="color:#c77dff;">Response delays and the timing of discrete motor responses</span><br><span style="color:#666;">Wing, A. &amp; Kristofferson, A. (1973) &mdash; Perception &amp; Psychophysics 13, 455&ndash;460 [paper]</span></div>
+        <div><a href="https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">The Synthesis of Complex Audio Spectra by Means of Frequency Modulation</a><br><span style="color:#666;">John M. Chowning &mdash; JAES vol.21 no.7, 1973 [paper]</span></div>
+      </div>
+    </div>
+    <div style="color:#c77dff;font-size:16px;font-weight:700;letter-spacing:6px;text-align:center;margin-top:20px;font-family:'Courier New',monospace;">PLUR</div>
+   </div>
    <div class="panel" id="panelAbout">
     <div style="max-width:640px;">
       <div style="color:#00d4ff;font-size:17px;font-weight:600;margin-top:20px;">Chippy is a techno rave chiptune love song generator.</div>
@@ -729,20 +782,6 @@
       <div class="ab-h">WTF</div>
       <div class="ab-p">Chippy generates fun chiptune loops in the browser — no DAW, no files, no dependencies. V0 plays one embedded hardcoded loop across seven lanes: drums, percussion, bass, lead, synth, accents, fills. Press generate to re-roll the pattern with playback transforms — transpose, swing, and per-voice re-seeding — over the same groove. The synthesis is pure Web Audio: variable-duty pulse waves (via PeriodicWave), a triangle bass, and a real LFSR-style noise channel from a buffer source. Each lane is an independent voice with its own oscillator type and short snappy envelope — the timbre is what makes it chiptune, not the voice count.</div>
 
-      <div class="ab-h">INSPIRATION</div>
-      <div style="color:#888;font-size:12px;line-height:1.9;">
-        <div><span style="color:#c77dff;">People</span> <span style="color:#666;margin-left:8px;">Bileam Tschepe (elekktronaut), Bob Moog, Chris Wilson, Christoph Guttandin, Dave Smith, Deadmau5, Dennis &quot;Thresh&quot; Fong, Ducky 3D, ELPHNT, Fatboy Slim, FOMO, Gerhard Behles, Ikutaro Kakehashi, Masato Tsutsui, Ned Rush, Robert Henke, Tadao Kikumoto, Tom Cosm, Xan3D</span></div>
-        <div style="margin-top:8px;"><span style="color:#c77dff;">Companies</span> <span style="color:#666;margin-left:8px;">Ableton, Cycling &apos;74, DJ Tech Tools, DJ.Studio, EboSuite, Pioneer, Serato, Showsync, Yaeltex, ZwoBot</span></div>
-        <div style="margin-top:8px;"><span style="color:#c77dff;">Communities</span> <span style="color:#666;margin-left:8px;">Kick &amp; Bass Community, W3C&apos;s &quot;GPU for the Web&quot; Community Group</span></div>
-      </div>
-
-      <div class="ab-h">RESEARCH &amp; REFERENCES</div>
-      <div style="color:#888;font-size:12px;line-height:1.9;">
-        <div><a href="https://developer.apple.com/documentation/musicunderstanding" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Apple Music Understanding (AMU)</a> <span style="color:#666;margin-left:8px;">Apple developer framework &mdash; developer.apple.com/documentation/musicunderstanding [framework docs]</span></div>
-        <div><a href="https://youtu.be/4ZAJHl02X7s" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">Capturing and Transferring Expressive Microtiming in Drumming</a> <span style="color:#666;margin-left:8px;">Eemi Fagerlund &mdash; ADCx Copenhagen [talk]</span></div>
-        <div><span style="color:#c77dff;">Response delays and the timing of discrete motor responses</span> <span style="color:#666;margin-left:8px;">Wing, A. &amp; Kristofferson, A. (1973) &mdash; Perception &amp; Psychophysics 13, 455&ndash;460 [paper]</span></div>
-        <div><a href="https://youtu.be/7MpDAHd7rbw" target="_blank" rel="noopener" style="color:#c77dff;text-decoration:none;">What Is Documented Shall Never Die</a> <span style="color:#666;margin-left:8px;">Astrid Bin (Bela) &mdash; Audio Developer Conference [talk]</span></div>
-      </div>
 
       <div class="ab-h">CREATED BY</div>
       <div style="color:#888;font-size:12px;line-height:1.9;">
@@ -1201,7 +1240,7 @@
   // ============================================================
   let actx=null, master=null, noiseBuf=null, pinkBuf=null, brownBuf=null, reverbBus=null, reverbWet=null;
   let echoDelay=null, echoFeedback=null, echoWet=null, echoHiPass=null;   // ECHO (audio effect): master-bus tempo-synced delay w/ low-cut feedback
-  let filterLP=null, filterHP=null;   // FILTER (audio effect): master-bus insert — bipolar DJ filter (50=off, <50 low-pass sweep, >50 high-pass sweep)
+  let filterLP=null, filterHP=null, filterLP2=null, filterHP2=null, filterShaper=null;   // BLOG0136: cascaded 24dB/oct + analog saturation   // FILTER (audio effect): master-bus insert — bipolar DJ filter (50=off, <50 low-pass sweep, >50 high-pass sweep)
   let brakeLowpass=null, brakeGain=null, brakePitch=null;   // BACKSPIN/TAPE-STOP: pitch-drop delay + lowpass + gain sag on hold
   // MASTER PROCESSING (session config, end of master bus, before volume+kill). Each processor is a
   // self-contained, namespaced module so any one can be rebuilt/retuned — or later expanded into a
@@ -1214,6 +1253,10 @@
   let masterCompOn=false, masterCompAmt=40;                 // (legacy macro, retained for compat)
   let masterCompThresh=-18, masterCompRatioV=4, masterCompAttackMs=3;  // BLOG0127 real comp params
   let masterLimitOn=false, masterLimitCeil=-3;             // limiter on/off + adjustable ceiling dB
+  // BLOG0136: DJ FX per-channel assignment (Solo-style). armedFX = which header effect the per-channel
+  // FX buttons currently paint ("filter" | "echo" | null). Per-voice engage lives on v.fx = {filter:bool, echo:bool}.
+  let armedFX=null;
+
   let masterVolume=100;                                     // master output volume 0..100 (100 = unity within master*0.5)
   let masterTalkOn=false;                                   // BLOG0131 talk-over: dims master ~10 dB when on
   let airDest=null, airEl=null, airBridge=false;   // audio routes through an <audio> element (routable)
@@ -1255,6 +1298,13 @@
   let audioEffectsBrakeLen=50, audioEffectsBrakeHeld=false;   // BACKSPIN duration 0..100 → 16th note (fast snap) .. 1 bar (long sag); held = momentary engage
   const pulseWaves={};   // duty -> PeriodicWave cache
 
+  // BLOG0136: analog-style saturation curve for the DJ filter. drive 0 = clean (near-linear);
+  // higher drive = softer knee + more harmonic grit (tanh-ish), the "distorts pleasantly when pushed" character.
+  function makeSatCurve(drive){
+    const n=1024, c=new Float32Array(n), k=drive*60;   // k scales the bend
+    for(let i=0;i<n;i++){ const x=(i/(n-1))*2-1; c[i]=(1+k)*x/(1+k*Math.abs(x)); }
+    return c;
+  }
   function makePulseWave(duty){
     // build a band-limited-ish pulse via Fourier series for the duty cycle
     const N=32, real=new Float32Array(N), imag=new Float32Array(N);
@@ -1277,21 +1327,15 @@
     // At neutral (pos 50) HP sits at ~20Hz and LP at ~20kHz = fully transparent. Sweeping the wheel
     // moves ONE of them: pos<50 pulls the LP cutoff down (muffle/underwater), pos>50 pushes the HP
     // cutoff up (thin/bass-out). filterLP is the master OUTPUT bus — everything downstream taps it.
-    filterHP=actx.createBiquadFilter(); filterHP.type="highpass"; filterHP.frequency.value=20;  filterHP.Q.value=0.7;
-    filterLP=actx.createBiquadFilter(); filterLP.type="lowpass";  filterLP.frequency.value=20000; filterLP.Q.value=0.7;
-    master.connect(filterHP); filterHP.connect(filterLP);
-    // BACKSPIN / TAPE-STOP (audio effect) — a brake stage after the filter. Both nodes default
-    // transparent; on hold, brakeLowpass sweeps DOWN and brakeGain sags toward silence over the
-    // chosen duration (16th note .. 1 bar), giving the powering-down/tape-stop sound. Release snaps
-    // both back. The transport CLOCK is never touched — only what you HEAR is braked, so on release
-    // playback continues exactly on the live grid (no time lost).
-    brakeLowpass=actx.createBiquadFilter(); brakeLowpass.type="lowpass"; brakeLowpass.frequency.value=20000; brakeLowpass.Q.value=0.9;
-    brakeGain=actx.createGain(); brakeGain.gain.value=1;
-    // brakePitch — a DelayNode whose delay time RISES during the brake. A steadily increasing delay
-    // pitch-shifts the signal DOWNWARD (Doppler) — this is the "vviuuup" spin-down. At rest delay=0
-    // (transparent). Chain: filterLP → brakePitch → brakeLowpass → brakeGain → out.
-    brakePitch=actx.createDelay(1.5); brakePitch.delayTime.value=0;
-    filterLP.connect(brakePitch); brakePitch.connect(brakeLowpass); brakeLowpass.connect(brakeGain);
+    // BLOG0136: DJ FILTER SWEEP — Ableton-Auto-Filter-style. Cascaded 24dB/oct (two biquads per side)
+    // for a steep, dramatic sweep, plus a WaveShaper that saturates as the filter is pushed (the
+    // "distorts pleasantly / analog circuit" grit). Chain: master -> HP -> HP2 -> LP -> LP2 -> shaper -> EQ.
+    filterHP =actx.createBiquadFilter(); filterHP.type ="highpass"; filterHP.frequency.value=20;    filterHP.Q.value=0.7;
+    filterHP2=actx.createBiquadFilter(); filterHP2.type="highpass"; filterHP2.frequency.value=20;   filterHP2.Q.value=0.7;
+    filterLP =actx.createBiquadFilter(); filterLP.type ="lowpass";  filterLP.frequency.value=20000; filterLP.Q.value=0.7;
+    filterLP2=actx.createBiquadFilter(); filterLP2.type="lowpass";  filterLP2.frequency.value=20000; filterLP2.Q.value=0.7;
+    filterShaper=actx.createWaveShaper(); filterShaper.curve=makeSatCurve(0); filterShaper.oversample="2x";  // drive set by applyFilter
+    master.connect(filterHP); filterHP.connect(filterHP2); filterHP2.connect(filterLP); filterLP.connect(filterLP2); filterLP2.connect(filterShaper);
     // MASTER PROCESSING chain (end of the master bus, before output). Each node defaults transparent:
     // EQ bands at 0dB, comp/limiter bypassed via wide-open thresholds, volume at unity. So inserting the
     // whole chain changes NOTHING audible until a control is moved.
@@ -1307,7 +1351,8 @@
     masterLimit.threshold.value=0; masterLimit.ratio.value=20; masterLimit.knee.value=0; masterLimit.attack.value=0.001; masterLimit.release.value=0.1;
     // VOLUME — final master gain (live control), unity by default.
     masterVolGain=actx.createGain(); masterVolGain.gain.value=1;
-    brakeGain.connect(eqLow); eqLow.connect(eqMid); eqMid.connect(eqHigh);
+    filterShaper.connect(eqLow);   // BLOG0136: saturated filter output feeds the master EQ chain
+     eqLow.connect(eqMid); eqMid.connect(eqHigh);
     eqHigh.connect(masterComp); masterComp.connect(masterLimit); masterLimit.connect(masterVolGain);
     const outBus=masterVolGain;   // final master output — route this to the OS bridge / destination
     // BLOG0016: master level meter — READ-ONLY stereo tap (splitter -> L/R analysers) on the final master
@@ -1422,6 +1467,9 @@
 
   function playPulse(duty, hz, dur, level, when){
     const o=actx.createOscillator(), g=actx.createGain();
+    // BLOG0136: cache-on-demand — if this duty was never pre-cached, build it now so setPeriodicWave
+    // never receives undefined (was throwing "parameter 1 is not of type PeriodicWave" for non-standard duties).
+    if(!pulseWaves[duty]) pulseWaves[duty]=makePulseWave(duty);
     o.setPeriodicWave(pulseWaves[duty]); o.frequency.setValueAtTime(hz, when);
     g.gain.setValueAtTime(0.0001, when);
     g.gain.linearRampToValueAtTime(level, when+0.004);
@@ -2893,9 +2941,11 @@
       d.className="devmod"+(v.on?" on":" off");
       d.style.color=v.color;
       d.title=v.name+" channel  ·  click to mute · scroll/drag the level";
+      if(v.fxArmed===undefined) v.fxArmed=false;
       d.innerHTML=
         '<div class="dm-row">'+
-          '<span class="wheel dm-wheel" data-lvl="'+v.id+'" title="level — scroll or drag"><span class="wv" id="lvl-'+v.id+'" style="color:'+v.color+'">'+Math.round(v.lvl*100)+'</span></span>'+
+          '<button class="dm-btn dm-fx" data-fx="'+v.id+'" title="FX \u2014 apply the armed DJ effect to this channel">FX</button>'+
+          '<span class="wheel dm-wheel dm-lvl" data-lvl="'+v.id+'" title="level — scroll or drag"><span class="wv" id="lvl-'+v.id+'" style="color:'+v.color+'">'+Math.round(v.lvl*100)+'</span></span>'+
           '<button class="dm-btn dm-solo" data-solo="'+v.id+'" title="solo \u2014 play only soloed channels (silences the rest)">S</button>'+
           '<button class="dm-btn dm-kill" data-mute="'+v.id+'" title="kill \u2014 mute this channel">\u23fb</button>'+
         '</div>';
@@ -2908,6 +2958,14 @@
         soloBtn.classList.toggle("soloon", !!v.solo);
         syncMasterSolo();
         msgState("solo", v.name, v.solo); draw(); };
+      const fxBtn=d.querySelector('[data-fx="'+v.id+'"]');
+      fxBtn.classList.toggle("fxon", !!v.fxArmed);
+      fxBtn.onclick=(e)=>{ e.stopPropagation();   // free toggle — like Solo. No effect-arming needed.
+        v.fxArmed=!v.fxArmed;
+        fxBtn.classList.toggle("fxon", !!v.fxArmed);
+        syncFxGroup();
+        if(typeof applyChannelFX==="function") applyChannelFX();   // audio routing (next iteration)
+        msgState("fxEngage", v.name, v.fxArmed); };
       const toggle=()=>{ v.on=!v.on; d.className="devmod"+(v.on?" on":" off");
         lvlSpan.style.color=v.on?v.color:"#555";
         killBtn.classList.toggle("killed",!v.on);
@@ -2976,23 +3034,38 @@
     if(!filterHP || !filterLP || !actx) return;
     const t=actx.currentTime;
     if(!audioEffectsFilterOn){   // BYPASS — both filters wide open, transparent; stored position untouched
-      filterHP.frequency.setTargetAtTime(20, t, 0.02);
-      filterLP.frequency.setTargetAtTime(20000, t, 0.02);
+      filterHP.frequency.setTargetAtTime(20, t, 0.02);   filterHP2.frequency.setTargetAtTime(20, t, 0.02);
+      filterLP.frequency.setTargetAtTime(20000, t, 0.02); filterLP2.frequency.setTargetAtTime(20000, t, 0.02);
+      filterHP.Q.setTargetAtTime(0.7, t, 0.02); filterLP.Q.setTargetAtTime(0.7, t, 0.02);
+      filterHP2.Q.setTargetAtTime(0.7, t, 0.02); filterLP2.Q.setTargetAtTime(0.7, t, 0.02);
+      if(filterShaper) filterShaper.curve=makeSatCurve(0);
       return;
     }
     const pos=audioEffectsFilterPos;
+    // BLOG0136: resonance rises toward the extremes so the sweep SINGS (DJM/Ableton character),
+    // not a flat tone control. Q eases from 0.7 (transparent at center) up to ~9 at the far ends.
     if(pos<=50){
-      // low-pass sweep: pos 50 -> 20kHz (open), pos 0 -> ~200Hz (heavily muffled). HP stays open.
+      // low-pass sweep: pos 50 -> 20kHz (open), pos 0 -> ~120Hz (heavy muffle). HP stays open.
       const frac=pos/50;                                  // 1 at center, 0 at far-left
-      const lp=200*Math.pow(20000/200, frac);             // 200Hz..20kHz, log
-      filterLP.frequency.setTargetAtTime(lp, t, 0.02);
-      filterHP.frequency.setTargetAtTime(20, t, 0.02);
+      const depth=1-frac;                                 // 0 at center .. 1 at far-left
+      const lp=120*Math.pow(20000/120, frac);             // 120Hz..20kHz, log
+      const q=0.7 + depth*depth*8.3;                      // 0.7 -> ~9 resonance
+      filterLP.frequency.setTargetAtTime(lp, t, 0.02);  filterLP2.frequency.setTargetAtTime(lp, t, 0.02);
+      filterLP.Q.setTargetAtTime(q, t, 0.02);           filterLP2.Q.setTargetAtTime(q*0.6, t, 0.02);
+      filterHP.frequency.setTargetAtTime(20, t, 0.02);  filterHP2.frequency.setTargetAtTime(20, t, 0.02);
+      filterHP.Q.setTargetAtTime(0.7, t, 0.02);         filterHP2.Q.setTargetAtTime(0.7, t, 0.02);
+      filterShaper.curve=makeSatCurve(depth);            // saturate more as it closes
     } else {
-      // high-pass sweep: pos 50 -> 20Hz (open), pos 100 -> ~4kHz (bass fully gone). LP stays open.
+      // high-pass sweep: pos 50 -> 20Hz (open), pos 100 -> ~5kHz (bass fully gone). LP stays open.
       const frac=(pos-50)/50;                             // 0 at center, 1 at far-right
-      const hp=20*Math.pow(4000/20, frac);                // 20Hz..4kHz, log
-      filterHP.frequency.setTargetAtTime(hp, t, 0.02);
-      filterLP.frequency.setTargetAtTime(20000, t, 0.02);
+      const depth=frac;                                   // 0 at center .. 1 at far-right
+      const hp=20*Math.pow(5000/20, frac);                // 20Hz..5kHz, log
+      const q=0.7 + depth*depth*8.3;                      // 0.7 -> ~9 resonance
+      filterHP.frequency.setTargetAtTime(hp, t, 0.02);  filterHP2.frequency.setTargetAtTime(hp, t, 0.02);
+      filterHP.Q.setTargetAtTime(q, t, 0.02);           filterHP2.Q.setTargetAtTime(q*0.6, t, 0.02);
+      filterLP.frequency.setTargetAtTime(20000, t, 0.02); filterLP2.frequency.setTargetAtTime(20000, t, 0.02);
+      filterLP.Q.setTargetAtTime(0.7, t, 0.02);         filterLP2.Q.setTargetAtTime(0.7, t, 0.02);
+      filterShaper.curve=makeSatCurve(depth);            // saturate more as it thins
     }
   }
   (function(){
@@ -3002,7 +3075,7 @@
     document.getElementById("audioeffects-filter-amt-v").textContent=Math.round(audioEffectsFilterPos/10);
     if(fBtn){
       fBtn.classList.toggle("audioEffectsOn", audioEffectsFilterOn);
-      fBtn.onclick=(e)=>{ e.stopPropagation();   // BYPASS toggle — flips filter in/out; wheel value is kept
+      fBtn.onclick=(e)=>{ e.stopPropagation();   // BYPASS toggle — filter applies to FX-armed channels
         audioEffectsFilterOn=!audioEffectsFilterOn;
         fBtn.classList.toggle("audioEffectsOn", audioEffectsFilterOn);
         applyFilter(); msgState("audioEffectsFilter", audioEffectsFilterOn?audioEffectsFilterPos:-1); };
@@ -3534,6 +3607,13 @@
   // tap clears ALL solos (returns the full mix). Dim when nothing is soloed (tap is a no-op).
   const vhSoloBtn=document.getElementById("vhSoloBtn");
   function syncMasterSolo(){ if(vhSoloBtn) vhSoloBtn.classList.toggle("soloon", _anySolo()); }
+  // BLOG0136: DJ FX group button — mirrors master-solo. Lit when any channel has FX on; tap clears all.
+  const vhFxGroupBtn=document.getElementById("vhFxGroupBtn");
+  function _anyFx(){ return VOICES.some(v=>v.fxArmed); }
+  function syncFxGroup(){ if(vhFxGroupBtn) vhFxGroupBtn.classList.toggle("soloon", _anyFx()); }
+  if(vhFxGroupBtn) vhFxGroupBtn.onclick=(e)=>{ e.stopPropagation();
+    VOICES.forEach(v=>v.fxArmed=false); buildMixer(); syncFxGroup();
+    if(typeof applyChannelFX==="function") applyChannelFX(); draw(); };
   if(vhSoloBtn) vhSoloBtn.onclick=(e)=>{ e.stopPropagation();
     if(!_anySolo()) return;                 // nothing soloed → no-op
     VOICES.forEach(v=>v.solo=false);        // clear all solos
@@ -4159,6 +4239,7 @@
       // tabs
       genTab:     "MUSIC — make loops: pick genre + length, generate, or run a selecta set",
       gloverTab:    "GLOVER — full-screen beat-reactive light show",
+      learnTab:   "LEARN — research, references & ways to learn this stuff",
       aboutTab:   "ABOUT — what Chippy is, who made it, the license",
       // tab-bar buttons
       bgBtn:      "Persistence — keep playing when you switch tabs",
@@ -4557,8 +4638,22 @@
     window.addEventListener("resize", ()=>{ if(document.body.classList.contains("glover-fs")) _prOriAt = Date.now(); });
     // tabs
     window.prTab=function(w){
-      const m=document.getElementById("prMusic"), g=document.getElementById("prGlover");
-      const tm=document.getElementById("prTabMusic"), tg=document.getElementById("prTabGlover");
+      const m=document.getElementById("prMusic"), g=document.getElementById("prGlover"), a=document.getElementById("prAbout");
+      const tm=document.getElementById("prTabMusic"), tg=document.getElementById("prTabGlover"), ta=document.getElementById("prTabAbout");
+      if(w==="about"){
+        // BLOG0135: expose ABOUT on Pocket Rave. Clone the desktop #panelAbout content once (single source of truth).
+        if(a && !a.dataset.filled){
+          const src=document.getElementById("panelAbout");
+          if(src){ a.innerHTML=src.innerHTML; a.dataset.filled="1"; }
+        }
+        document.body.classList.remove("glover-fs");
+        g.style.display="none"; g.classList.remove("pr-fs"); g.onclick=null;
+        m.style.display="none"; a.style.display="block";
+        tm.classList.remove("active"); tg.classList.remove("active"); ta.classList.add("active");
+        if(window._gloverOn) window._gloverOn(false);
+        return;
+      }
+      if(a){ a.style.display="none"; } if(ta){ ta.classList.remove("active"); }
       if(w==="glover"){
         m.style.display="none"; g.style.display="block"; g.classList.add("pr-fs"); tm.classList.remove("active"); tg.classList.add("active");
         // move the REAL #glover canvas into the full-screen mobile panel and start the real engine (Tracers)
