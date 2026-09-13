@@ -1,6 +1,17 @@
-# OMS Chippy [Beta V1_15_0] — RELEASE NOTES
+# OMS Chippy [Beta V1_16_0] — RELEASE NOTES
 
 **Live at chippy.onemanshyo.com**
+
+## V1.16.0 — Easter eggs, a cleaner surface, and everything on the grid
+
+The V1.15.x line, published. This release is mostly play and polish on top of the V1.15.0 mixing surface.
+
+- **Chippy changes its face.** On every new song, Chippy swaps to a random expression — cool shades, star eyes, a goofy look, a disco-ball head, an 8-ball. A small Easter egg; it holds between songs and rolls on the change. (The 8-ball even rolls its number as it bounces.)
+- **The dice stays in time.** Hitting generate used to cut the song mid-bar. Now a new roll drops in on the next bar line — continuous, musical, no stutter. Everything lands on the master clock.
+- **Panels close naturally.** The slide-out panels close when you click outside them (the X still works too) — easier, especially on a phone.
+- **One sound source, for now.** The SID chip was pulled back out to a single clean source (Ricoh 2A03) — groundwork for a proper modular sound-source system coming next.
+- **Small fixes.** Mobile Pocket Rave no longer overlaps its header; a new tab icon (the Yobot mark); a piano-roll direction-reverse toggle.
+
 
 ## V1.15.0 — The Master panel, and a real mixing surface
 

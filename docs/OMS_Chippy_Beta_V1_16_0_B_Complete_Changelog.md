@@ -1,5 +1,20 @@
 # OMS Chippy — Changelog
 
+## V1.16.0 — Easter-egg expressions, panel UX + musical-grid fixes, SID removed (2026-09-13)
+Rolled up from iterations V1.15.06…V1.15.14 (the line following the V1.15.0 release). Live at chippy.onemanshyo.com.
+### Added
+- **Chippy expression Easter egg** (BLOG0143) — the face swaps to a random expression on each song change (both the desktop main view and Pocket Rave). Six expressions, all drawn from scratch in Chippy's style (IP-clean): classic, cool (shades), star eyes, goofy (asymmetric eyes), disco ball, 8-ball. Driven by the master clock; changes on song change only, holds between songs.
+- **8-ball rolling physics** (BLOG0145) — the 8-ball expression's number counter-rolls against the ball's travel (magic-8-ball elasticity).
+- **Piano-roll direction-reverse toggle** (BLOG0144) — MATRIX piano-roll only; a toggle beside the orientation toggle reverses flow (vertical: down vs up; horizontal: right→left vs left→right). Works in both orientations.
+- **Yobot Squint favicon** (BLOG0142) — embedded SVG tab icon (headphones + angry squint eyes) so OMS tabs are identifiable; white chip so it reads on dark tabs.
+### Changed
+- **SID 6581 sound source removed** (BLOG0146) — single sound source (Ricoh 2A03). SOURCE is now a static display, not a dropdown. All two-source machinery (chipMode, sidFilter, source profiles, per-voice branches, random-chip roll) stripped. Groundwork for the plug-in sound-source architecture (CPI).
+- **Slide-out panels: click-outside-to-close restored** (BLOG0149) — Lineup and Master panels close on an outside click (X still works); non-blocking, no dimming.
+### Fixed
+- **Mobile Pocket Rave header overlap** (BLOG0140) — a stray always-visible ABOUT panel (flex:1) was shoving the surface up over the ONEMANSHYO header; hidden by default.
+- **Dice/generate now lands on the bar** (BLOG0150) — regeneration was cutting mid-bar (play/stop artifacts); a new song now drops on the next bar line, continuous play. Everything on the master grid.
+
+
 ## V1.15.0 — Master panel + mixer/master restructure + design-system hardening (2026-09-05)
 Rolled up from iterations V1.15.01…V1.14.18. Live at chippy.onemanshyo.com.
 ### Added

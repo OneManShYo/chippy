@@ -1,8 +1,8 @@
-# OMS CHIPPY [Beta V1_15_0] — DEVELOPER DOCUMENTATION
+# OMS CHIPPY [Beta V1_16_0] — DEVELOPER DOCUMENTATION
 
-**Run date:** 2026-09-03  
-**Current Unix Epoch:** 1788473550  
-**App Version:** Chippy Beta V1_15_0  
+**Run date:** 2026-09-13  
+**Current Unix Epoch:** 1789310495  
+**App Version:** Chippy Beta V1_16_0  
 **License:** GPL-3.0  
 
 **Purpose:** The explanatory technical spec for OMS Chippy — how each system works and why. Modeled on
@@ -192,6 +192,13 @@ The layer that turns scheduled events into audible sound. All sound is synthesiz
 - **Oscillator voices** — variable-duty **pulse** waves via `PeriodicWave`, a **triangle** bass, and a
   **noise** channel from a buffer source (LFSR-style). Each voice = oscillator/noise + a short snappy
   envelope. The *timbre* (not the voice count) is what makes it chiptune.
+- **Sound source — single (V1.16.0).** As of V1.16.0 there is ONE sound source (Ricoh 2A03); the SID
+  6581 source and all two-source machinery (chipMode branch, sidFilter node, per-source voice profiles,
+  per-voice source forks, random-chip roll) were removed (BLOG0146). SOURCE is a static display, not a
+  selector. This is deliberate groundwork for the plug-in sound-source architecture (the CPI — see the
+  CPI Specification companion doc, BLOG0147/0148): a future clean seam so sources are added modularly
+  instead of hand-wired. The current 8 channels are: drums (kick synth), perc/bass/lead/synth/accent/
+  fills (2A03 oscillator/noise voices), fx (swept-noise/filter engine).
 - **Noise buffers** — white `noiseBuf`; pink/brown buffers also generated (used by some FX).
 - **Kick synth** — the DRUMS lane is a dedicated pitch-dropping sine + click transient (`playKick`), with
   flavors (909 / 808 / punch / click / noise).
